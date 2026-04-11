@@ -489,68 +489,19 @@ function laborCostFromHours(hrs){ return (hrs||0)*(ccFees.laborRate||15); }
 let isSyncing    = false;
 let lastSynced   = null;
 
-// ── Local data ──
-let ingCats  = ["Coffee","Dairy","Dairy Alt","Food","Syrups","Tea","Toppings","Supplies","Other"];
-let menuCats = ["Hot Coffee","Hot Drinks","Cold Drinks","Food","Other"];
-
-let ingredients = [
-  {name:"Espresso Beans",cat:"Coffee",packSz:5,packUnit:"lb",packCost:45,useUnit:"oz",unitsPerPack:80,updatedAt:null,dateModified:null},
-  {name:"Whole Milk",cat:"Dairy",packSz:1,packUnit:"gal",packCost:5.5,useUnit:"oz",unitsPerPack:128,updatedAt:null,dateModified:null},
-  {name:"Oat Milk",cat:"Dairy Alt",packSz:0.5,packUnit:"gal",packCost:4.25,useUnit:"oz",unitsPerPack:64,updatedAt:null,dateModified:null},
-  {name:"Simple Syrup",cat:"Syrups",packSz:1,packUnit:"L",packCost:3,useUnit:"oz",unitsPerPack:33.8,updatedAt:null,dateModified:null},
-  {name:"Vanilla Syrup",cat:"Syrups",packSz:750,packUnit:"ml",packCost:8.5,useUnit:"oz",unitsPerPack:25.4,updatedAt:null,dateModified:null},
-  {name:"Hazelnut Syrup",cat:"Syrups",packSz:750,packUnit:"ml",packCost:8.5,useUnit:"oz",unitsPerPack:25.4,updatedAt:null,dateModified:null},
-  {name:"Whipped Cream",cat:"Dairy",packSz:1,packUnit:"can",packCost:4,useUnit:"oz",unitsPerPack:14,updatedAt:null,dateModified:null},
-  {name:"Caramel Sauce",cat:"Toppings",packSz:12,packUnit:"oz",packCost:5,useUnit:"oz",unitsPerPack:12,updatedAt:null,dateModified:null},
-  {name:"Chocolate Powder",cat:"Toppings",packSz:2,packUnit:"lb",packCost:12,useUnit:"oz",unitsPerPack:32,updatedAt:null,dateModified:null},
-  {name:"Chai Concentrate",cat:"Tea",packSz:32,packUnit:"oz",packCost:9,useUnit:"oz",unitsPerPack:32,updatedAt:null,dateModified:null},
-  {name:"Matcha Powder",cat:"Tea",packSz:100,packUnit:"g",packCost:18,useUnit:"g",unitsPerPack:100,updatedAt:null,dateModified:null},
-  {name:"Drip Coffee Blend",cat:"Coffee",packSz:5,packUnit:"lb",packCost:38,useUnit:"oz",unitsPerPack:80,updatedAt:null,dateModified:null},
-  {name:"Paper Cup 12oz",cat:"Supplies",packSz:1000,packUnit:"each",packCost:85,useUnit:"each",unitsPerPack:1000,updatedAt:null,dateModified:null},
-  {name:"Paper Cup 16oz",cat:"Supplies",packSz:1000,packUnit:"each",packCost:95,useUnit:"each",unitsPerPack:1000,updatedAt:null,dateModified:null},
-  {name:"Plastic Lid",cat:"Supplies",packSz:1000,packUnit:"each",packCost:40,useUnit:"each",unitsPerPack:1000,updatedAt:null,dateModified:null},
-  {name:"Pastry Bag",cat:"Supplies",packSz:500,packUnit:"each",packCost:25,useUnit:"each",unitsPerPack:500,updatedAt:null,dateModified:null},
-  {name:"Avocado",cat:"Food",packSz:1,packUnit:"each",packCost:1.2,useUnit:"each",unitsPerPack:1,updatedAt:null,dateModified:null},
-  {name:"Sourdough Bread",cat:"Food",packSz:1,packUnit:"loaf",packCost:4.5,useUnit:"slice",unitsPerPack:12,updatedAt:null,dateModified:null},
-  {name:"Cream Cheese",cat:"Food",packSz:8,packUnit:"oz",packCost:3.2,useUnit:"oz",unitsPerPack:8,updatedAt:null,dateModified:null},
-  {name:"Everything Bagel",cat:"Food",packSz:6,packUnit:"each",packCost:5.4,useUnit:"each",unitsPerPack:6,updatedAt:null,dateModified:null},
-];
-
-let recipes = [
-  {name:"Vanilla Latte",cat:"Hot Drinks",price:5.75,laborHours:0,ingredients:[{name:"Espresso Beans",qty:2},{name:"Whole Milk",qty:8},{name:"Vanilla Syrup",qty:1},{name:"Paper Cup 12oz",qty:1},{name:"Plastic Lid",qty:1}]},
-  {name:"Iced Oat Matcha",cat:"Cold Drinks",price:6.50,laborHours:0,ingredients:[{name:"Matcha Powder",qty:5},{name:"Oat Milk",qty:8},{name:"Simple Syrup",qty:0.5},{name:"Paper Cup 16oz",qty:1},{name:"Plastic Lid",qty:1}]},
-  {name:"Avocado Toast",cat:"Food",price:9.50,laborHours:0,ingredients:[{name:"Avocado",qty:1},{name:"Sourdough Bread",qty:2},{name:"Cream Cheese",qty:1},{name:"Pastry Bag",qty:1}]},
-];
-
-let menuItems = [
-  {name:"Espresso",cat:"Hot Coffee",price:3.50,cogs:0.45,laborCost:0,notes:"",updatedAt:null},
-  {name:"Americano",cat:"Hot Coffee",price:4.00,cogs:0.50,laborCost:0,notes:"",updatedAt:null},
-  {name:"Vanilla Latte",cat:"Hot Coffee",price:5.75,cogs:1.12,laborCost:0,notes:"",updatedAt:null},
-  {name:"Cappuccino",cat:"Hot Coffee",price:5.25,cogs:0.98,laborCost:0,notes:"",updatedAt:null},
-  {name:"Flat White",cat:"Hot Coffee",price:5.50,cogs:1.05,laborCost:0,notes:"",updatedAt:null},
-  {name:"Iced Oat Matcha",cat:"Cold Drinks",price:6.50,cogs:1.38,laborCost:0,notes:"",updatedAt:null},
-  {name:"Cold Brew",cat:"Cold Drinks",price:5.00,cogs:0.85,laborCost:0,notes:"",updatedAt:null},
-  {name:"Chai Latte",cat:"Hot Drinks",price:5.50,cogs:1.20,laborCost:0,notes:"",updatedAt:null},
-  {name:"Hot Chocolate",cat:"Hot Drinks",price:5.00,cogs:1.10,laborCost:0,notes:"",updatedAt:null},
-  {name:"Drip Coffee",cat:"Hot Coffee",price:3.00,cogs:0.35,laborCost:0,notes:"",updatedAt:null},
-  {name:"Avocado Toast",cat:"Food",price:9.50,cogs:2.85,laborCost:0,notes:"",updatedAt:null},
-  {name:"Bagel & CC",cat:"Food",price:7.00,cogs:1.95,laborCost:0,notes:"",updatedAt:null},
-  {name:"Croissant",cat:"Food",price:4.50,cogs:1.20,laborCost:0,notes:"",updatedAt:null},
-  {name:"Muffin",cat:"Food",price:3.75,cogs:0.90,laborCost:0,notes:"",updatedAt:null},
-  {name:"Granola Bowl",cat:"Food",price:8.50,cogs:2.40,laborCost:0,notes:"",updatedAt:null},
-];
+// ── Local data (empty — populated on pull from Google Sheets) ──
+let ingCats  = [];
+let menuCats = [];
+let ingredients = [];
+let recipes     = [];
+let menuItems   = [];
 
 const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 let plData={
-  foodBev:[28500,29200,31000,30500,32000,33500,34000,33000,31500,30000,29500,35000],
-  otherRev:[500,500,600,600,700,700,800,800,600,600,500,900],
-  coffee:[5700,5840,6200,6100,6400,6700,6800,6600,6300,6000,5900,7000],
-  food:[2850,2920,3100,3050,3200,3350,3400,3300,3150,3000,2950,3500],
-  supplies:[855,876,930,915,960,1005,1020,990,945,900,885,1050],
-  rent:[4500,4500,4500,4500,4500,4500,4500,4500,4500,4500,4500,4500],
-  labor:[9000,9200,9500,9300,9600,10000,10200,9900,9400,9100,9000,10500],
-  utilities:[800,800,750,750,700,700,650,650,700,750,800,850],
-  marketing:[500,500,600,600,700,700,800,800,600,500,500,1000],
+  foodBev:Array(12).fill(0), otherRev:Array(12).fill(0),
+  coffee:Array(12).fill(0),  food:Array(12).fill(0), supplies:Array(12).fill(0),
+  rent:Array(12).fill(0),    labor:Array(12).fill(0),
+  utilities:Array(12).fill(0), marketing:Array(12).fill(0),
 };
 
 let selectedRecipe = null;
@@ -644,7 +595,7 @@ function initOAuth(){
       $('sync-btn').style.display='';
       $('pull-btn').style.display='';
       toast('✓ Signed in to Google');
-      syncAll();
+      connectAndSync();
     }
   });
 }
@@ -654,7 +605,7 @@ function handleAuthClick(){
     $('setup-modal').style.display='flex'; return;
   }
   if(!tokenClient){initOAuth();}
-  if(accessToken){syncAll();return;}
+  if(accessToken){syncAll();return;}  // re-auth: push current data
   setSyncStatus('syncing','Authenticating…');
   tokenClient.requestAccessToken({prompt:'consent'});
 }
@@ -798,6 +749,25 @@ async function pushCategories(){
   ]);
 }
 
+// On first connect: pull if sheet has data, push if sheet is empty
+async function connectAndSync(){
+  setSyncStatus('syncing','Checking sheet…');
+  try {
+    const check = await sheetsGet("'Ingredient Library'!A4:A5");
+    const hasData = check.values && check.values.some(r=>r[0]&&r[0].toString().trim()!=='');
+    if(hasData){
+      toast('Sheet has data — pulling from Google Sheets…');
+      await pullFromSheets();
+    } else {
+      toast('Sheet is empty — pushing local data to Google Sheets…');
+      await syncAll();
+    }
+  } catch(e){
+    setSyncStatus('error','Connect failed');
+    toast('Connect error: '+e.message, true);
+  }
+}
+
 async function syncAll(){
   if(!accessToken){toast('Sign in first.');return;}
   if(isSyncing) return;
@@ -838,8 +808,23 @@ function renderCurrentPage(){
 // ════════════════════════════════════════════════
 function renderDashboard(){
   setGreeting();
-  const avgPrice=menuItems.reduce((s,m)=>s+m.price,0)/menuItems.length;
-  const avgCogsPct=menuItems.reduce((s,m)=>s+m.cogs/m.price,0)/menuItems.length;
+
+  // Empty state — no data yet
+  if(!menuItems.length && !ingredients.length){
+    $('kpi-row').innerHTML=`
+      <div style="grid-column:1/-1;text-align:center;padding:2.5rem 1rem;">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">☕</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--forest);margin-bottom:0.5rem;">No data yet</div>
+        <div style="font-size:0.875rem;color:var(--warm-gray);">Connect your Google Sheet using the button in the top-right corner to load your cafe data.</div>
+      </div>`;
+    $('dash-menu-table').querySelector('tbody').innerHTML=`<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--warm-gray);font-size:0.85rem;">No menu items — connect your sheet to load data.</td></tr>`;
+    $('dash-pl-chart').innerHTML=`<div style="text-align:center;padding:2rem;color:var(--warm-gray);font-size:0.85rem;">No P&L data yet.</div>`;
+    $('dash-ing-table').querySelector('tbody').innerHTML=`<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--warm-gray);font-size:0.85rem;">No ingredients — connect your sheet to load data.</td></tr>`;
+    return;
+  }
+
+  const avgPrice=menuItems.length?menuItems.reduce((s,m)=>s+m.price,0)/menuItems.length:0;
+  const avgCogsPct=menuItems.length?menuItems.reduce((s,m)=>s+(m.price>0?m.cogs/m.price:0),0)/menuItems.length:0;
   const totalRevYTD=plData.foodBev.reduce((a,b)=>a+b,0)+plData.otherRev.reduce((a,b)=>a+b,0);
   const totalCogsYTD=plData.coffee.reduce((a,b)=>a+b,0)+plData.food.reduce((a,b)=>a+b,0)+plData.supplies.reduce((a,b)=>a+b,0);
 
@@ -852,7 +837,7 @@ function renderDashboard(){
     <div class="kpi"><div class="kpi-label">YTD COGS</div><div class="kpi-value">${fmt(totalCogsYTD,0)}</div></div>
   `;
   $('dash-menu-table').querySelector('tbody').innerHTML=menuItems.slice(0,8).map(m=>{
-    const margin=(m.price-m.cogs)/m.price;
+    const margin=m.price>0?(m.price-m.cogs)/m.price:0;
     return`<tr><td>${m.name}</td><td><span class="badge badge-gray">${m.cat}</span></td><td class="num">${fmt(m.price)}</td><td class="num">${barHTML(m.cogs/m.price,0.5)}${pct(margin)}</td></tr>`;
   }).join('');
   const netProfits=MONTHS.map((_,i)=>{
@@ -861,7 +846,7 @@ function renderDashboard(){
     const opex=plData.rent[i]+plData.labor[i]+plData.utilities[i]+plData.marketing[i];
     return rev-cogs-opex;
   });
-  const maxP=Math.max(...netProfits);
+  const maxP=Math.max(1,...netProfits);
   $('dash-pl-chart').innerHTML=`
     <div style="display:flex;align-items:flex-end;gap:6px;height:120px;padding-bottom:1.5rem;position:relative;">
       ${netProfits.map((v,i)=>{
@@ -874,10 +859,11 @@ function renderDashboard(){
     </div>
     <div style="text-align:center;font-size:0.75rem;color:var(--warm-gray);margin-top:4px;">Monthly Net Profit · avg ${fmt(netProfits.reduce((a,b)=>a+b,0)/12)}</div>`;
   const sorted=[...ingredients].sort((a,b)=>costPerUnit(b)-costPerUnit(a)).slice(0,10);
-  $('dash-ing-table').querySelector('tbody').innerHTML=sorted.map(ing=>`
+  $('dash-ing-table').querySelector('tbody').innerHTML=sorted.length?sorted.map(ing=>`
     <tr><td>${ing.name}</td><td><span class="badge badge-gray">${ing.cat}</span></td>
     <td class="num">${fmt(ing.packCost)}</td><td class="num" style="font-weight:600;">$${costPerUnit(ing).toFixed(4)}</td>
-    <td class="center" style="font-size:0.8rem;color:var(--warm-gray);">per ${ing.useUnit}</td></tr>`).join('');
+    <td class="center" style="font-size:0.8rem;color:var(--warm-gray);">per ${ing.useUnit}</td></tr>`).join('')
+    :`<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--warm-gray);">No ingredients yet.</td></tr>`;
 }
 
 // ════════════════════════════════════════════════
