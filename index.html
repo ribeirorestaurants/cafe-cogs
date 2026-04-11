@@ -294,13 +294,31 @@
     <div class="toolbar">
       <label>Category:</label>
       <select id="menu-cat-filter" onchange="renderMenu()"><option value="">All</option></select>
-      <label style="margin-left:auto;">Target COGS %:</label>
+      <label style="margin-left:auto;" title="Compared against Total Cost % (ingredients + labor)">Target Total Cost %:</label>
       <input type="number" id="target-cogs" value="30" min="1" max="100" style="width:70px;" oninput="renderMenu()">
       <span style="font-size:0.85rem;color:var(--warm-gray);">%</span>
     </div>
     <div class="table-wrap">
-      <table><thead><tr><th>#</th><th>Menu Item</th><th>Category</th><th>Sell Price</th><th>COGS</th><th>Gross Profit</th><th>COGS %</th><th>Margin %</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+      <table><thead><tr>
+  <th>#</th><th>Menu Item</th><th>Category</th><th>Sell Price</th>
+  <th title="Ingredient costs only — from your recipe COGS">Ingr. COGS</th>
+  <th title="Labor hours × hourly rate set in Settings">Labor Cost</th>
+  <th title="Ingredient COGS + Labor Cost">Total Cost</th>
+  <th title="Sell Price minus Total Cost">Gross Profit</th>
+  <th title="Total Cost (ingredients + labor) as % of Sell Price">Total Cost %</th>
+  <th title="Gross Profit as % of Sell Price">Gross Margin %</th>
+  <th title="Gross Profit minus Square CC fee">Net After CC</th>
+  <th title="Strong = margin ≥ 70% | OK = 50–70% | Low = below 50%">Margin Health ⓘ</th>
+  <th>Notes</th><th></th>
+</tr></thead>
       <tbody id="menu-tbody"></tbody></table>
+    </div>
+    <div style="padding:0.6rem 1.25rem;background:var(--parchment);border-top:1px solid var(--border);display:flex;gap:1.5rem;font-size:0.75rem;color:var(--warm-gray);flex-wrap:wrap;">
+      <span><strong style="color:var(--espresso);">Column guide:</strong></span>
+      <span><strong>Total Cost %</strong> = (Ingr. COGS + Labor) ÷ Sell Price</span>
+      <span><strong>Gross Margin %</strong> = Gross Profit ÷ Sell Price</span>
+      <span><strong>Net After CC</strong> = Gross Profit − Square fee</span>
+      <span><strong>Margin Health:</strong> <span style="color:#15803d;">✓ Strong</span> ≥70% · <span style="color:#a16207;">~ OK</span> 50–70% · <span style="color:#b91c1c;">✗ Low</span> &lt;50%  <em>(based on Gross Margin %)</em></span>
     </div>
   </div>
 </div>
@@ -354,6 +372,44 @@
     </div>
   </div>
 
+  <!-- CC Fee Settings -->
+  <div class="card" style="margin-bottom:1.25rem;">
+    <div class="card-header"><h2>Credit Card Fee Settings</h2></div>
+    <div style="padding:1.25rem;">
+      <p style="font-size:0.85rem;color:var(--warm-gray);margin-bottom:1rem;">These fees are applied in the Menu and Recipe views to show your true net revenue per item after Square's processing costs.</p>
+      <div style="display:flex;gap:2rem;align-items:flex-end;flex-wrap:wrap;">
+        <div>
+          <label class="field-label" style="display:block;margin-bottom:4px;">Fixed fee per transaction</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:0.9rem;color:var(--warm-gray);">$</span>
+            <input type="number" id="cc-fixed" step="0.01" min="0" style="width:80px;" oninput="saveCCFees();renderMenu();">
+          </div>
+          <div style="font-size:0.72rem;color:var(--warm-gray);margin-top:3px;">Square default: $0.10</div>
+        </div>
+        <div>
+          <label class="field-label" style="display:block;margin-bottom:4px;">Percentage fee</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="number" id="cc-pct" step="0.1" min="0" style="width:70px;" oninput="saveCCFees();renderMenu();">
+            <span style="font-size:0.9rem;color:var(--warm-gray);">%</span>
+          </div>
+          <div style="font-size:0.72rem;color:var(--warm-gray);margin-top:3px;">Square default: 2.6%</div>
+        </div>
+        <div>
+          <label class="field-label" style="display:block;margin-bottom:4px;">Labor Rate ($/hr)</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:0.9rem;color:var(--warm-gray);">$</span>
+            <input type="number" id="cc-labor-rate" step="0.25" min="0" style="width:80px;" oninput="saveCCFees();">
+            <span style="font-size:0.9rem;color:var(--warm-gray);">/hr</span>
+          </div>
+          <div style="font-size:0.72rem;color:var(--warm-gray);margin-top:3px;">Used to calculate labor cost from hours in recipes</div>
+        </div>
+        <div style="padding:0.75rem 1rem;background:var(--parchment);border-radius:8px;font-size:0.82rem;color:var(--espresso);">
+          On a <strong>$5.00</strong> sale: CC fee = <strong id="cc-example">$0.23</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Category Manager -->
   <div class="card">
     <div class="card-header"><h2>Category Management</h2></div>
@@ -393,6 +449,20 @@
 let SHEET_CONFIG = JSON.parse(localStorage.getItem('cogs_sheet_config') || '{}');
 let tokenClient = null;
 let accessToken  = null;
+
+// CC fee + labor rate config (persisted to localStorage)
+let ccFees = JSON.parse(localStorage.getItem('cogs_cc_fees') || '{"fixed":0.10,"pct":2.6,"laborRate":15.00}');
+function saveCCFees(){
+  ccFees.fixed=+(($('cc-fixed')||{}).value||0.10);
+  ccFees.pct=+(($('cc-pct')||{}).value||2.6);
+  ccFees.laborRate=+(($('cc-labor-rate')||{}).value||15.00);
+  localStorage.setItem('cogs_cc_fees',JSON.stringify(ccFees));
+  const example=(5*ccFees.pct/100+ccFees.fixed).toFixed(2);
+  if($('cc-example')) $('cc-example').textContent='$'+example;
+  if(selectedRecipe!==null&&recipes[selectedRecipe]) renderRecipeDetail(selectedRecipe);
+}
+function ccFee(price){ return price*(ccFees.pct/100)+ccFees.fixed; }
+function laborCostFromHours(hrs){ return (hrs||0)*(ccFees.laborRate||15); }
 let isSyncing    = false;
 let lastSynced   = null;
 
@@ -424,27 +494,27 @@ let ingredients = [
 ];
 
 let recipes = [
-  {name:"Vanilla Latte",cat:"Hot Drinks",price:5.75,ingredients:[{name:"Espresso Beans",qty:2},{name:"Whole Milk",qty:8},{name:"Vanilla Syrup",qty:1},{name:"Paper Cup 12oz",qty:1},{name:"Plastic Lid",qty:1}]},
-  {name:"Iced Oat Matcha",cat:"Cold Drinks",price:6.50,ingredients:[{name:"Matcha Powder",qty:5},{name:"Oat Milk",qty:8},{name:"Simple Syrup",qty:0.5},{name:"Paper Cup 16oz",qty:1},{name:"Plastic Lid",qty:1}]},
-  {name:"Avocado Toast",cat:"Food",price:9.50,ingredients:[{name:"Avocado",qty:1},{name:"Sourdough Bread",qty:2},{name:"Cream Cheese",qty:1},{name:"Pastry Bag",qty:1}]},
+  {name:"Vanilla Latte",cat:"Hot Drinks",price:5.75,laborHours:0,ingredients:[{name:"Espresso Beans",qty:2},{name:"Whole Milk",qty:8},{name:"Vanilla Syrup",qty:1},{name:"Paper Cup 12oz",qty:1},{name:"Plastic Lid",qty:1}]},
+  {name:"Iced Oat Matcha",cat:"Cold Drinks",price:6.50,laborHours:0,ingredients:[{name:"Matcha Powder",qty:5},{name:"Oat Milk",qty:8},{name:"Simple Syrup",qty:0.5},{name:"Paper Cup 16oz",qty:1},{name:"Plastic Lid",qty:1}]},
+  {name:"Avocado Toast",cat:"Food",price:9.50,laborHours:0,ingredients:[{name:"Avocado",qty:1},{name:"Sourdough Bread",qty:2},{name:"Cream Cheese",qty:1},{name:"Pastry Bag",qty:1}]},
 ];
 
 let menuItems = [
-  {name:"Espresso",cat:"Hot Coffee",price:3.50,cogs:0.45,notes:""},
-  {name:"Americano",cat:"Hot Coffee",price:4.00,cogs:0.50,notes:""},
-  {name:"Vanilla Latte",cat:"Hot Coffee",price:5.75,cogs:1.12,notes:""},
-  {name:"Cappuccino",cat:"Hot Coffee",price:5.25,cogs:0.98,notes:""},
-  {name:"Flat White",cat:"Hot Coffee",price:5.50,cogs:1.05,notes:""},
-  {name:"Iced Oat Matcha",cat:"Cold Drinks",price:6.50,cogs:1.38,notes:""},
-  {name:"Cold Brew",cat:"Cold Drinks",price:5.00,cogs:0.85,notes:""},
-  {name:"Chai Latte",cat:"Hot Drinks",price:5.50,cogs:1.20,notes:""},
-  {name:"Hot Chocolate",cat:"Hot Drinks",price:5.00,cogs:1.10,notes:""},
-  {name:"Drip Coffee",cat:"Hot Coffee",price:3.00,cogs:0.35,notes:""},
-  {name:"Avocado Toast",cat:"Food",price:9.50,cogs:2.85,notes:""},
-  {name:"Bagel & CC",cat:"Food",price:7.00,cogs:1.95,notes:""},
-  {name:"Croissant",cat:"Food",price:4.50,cogs:1.20,notes:""},
-  {name:"Muffin",cat:"Food",price:3.75,cogs:0.90,notes:""},
-  {name:"Granola Bowl",cat:"Food",price:8.50,cogs:2.40,notes:""},
+  {name:"Espresso",cat:"Hot Coffee",price:3.50,cogs:0.45,laborCost:0,notes:""},
+  {name:"Americano",cat:"Hot Coffee",price:4.00,cogs:0.50,laborCost:0,notes:""},
+  {name:"Vanilla Latte",cat:"Hot Coffee",price:5.75,cogs:1.12,laborCost:0,notes:""},
+  {name:"Cappuccino",cat:"Hot Coffee",price:5.25,cogs:0.98,laborCost:0,notes:""},
+  {name:"Flat White",cat:"Hot Coffee",price:5.50,cogs:1.05,laborCost:0,notes:""},
+  {name:"Iced Oat Matcha",cat:"Cold Drinks",price:6.50,cogs:1.38,laborCost:0,notes:""},
+  {name:"Cold Brew",cat:"Cold Drinks",price:5.00,cogs:0.85,laborCost:0,notes:""},
+  {name:"Chai Latte",cat:"Hot Drinks",price:5.50,cogs:1.20,laborCost:0,notes:""},
+  {name:"Hot Chocolate",cat:"Hot Drinks",price:5.00,cogs:1.10,laborCost:0,notes:""},
+  {name:"Drip Coffee",cat:"Hot Coffee",price:3.00,cogs:0.35,laborCost:0,notes:""},
+  {name:"Avocado Toast",cat:"Food",price:9.50,cogs:2.85,laborCost:0,notes:""},
+  {name:"Bagel & CC",cat:"Food",price:7.00,cogs:1.95,laborCost:0,notes:""},
+  {name:"Croissant",cat:"Food",price:4.50,cogs:1.20,laborCost:0,notes:""},
+  {name:"Muffin",cat:"Food",price:3.75,cogs:0.90,laborCost:0,notes:""},
+  {name:"Granola Bowl",cat:"Food",price:8.50,cogs:2.40,laborCost:0,notes:""},
 ];
 
 const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -615,7 +685,7 @@ async function pullFromSheets(){
     if(menuData.values){
       menuItems=menuData.values.filter(r=>r[0]).map(r=>({
         name:r[0]||'',cat:r[1]||'Other',price:parseFloat(r[2])||0,
-        cogs:parseFloat(r[3])||0,notes:r[8]||''
+        cogs:parseFloat(r[3])||0,laborCost:parseFloat(r[4])||0,notes:r[8]||''
       }));
     }
 
@@ -659,7 +729,7 @@ async function pushIngredients(){
 }
 
 async function pushMenu(){
-  const rows=menuItems.map(m=>[m.name,m.cat,m.price,m.cogs,'','','','',m.notes]);
+  const rows=menuItems.map(m=>[m.name,m.cat,m.price,m.cogs,m.laborCost||0,'','','',m.notes]);
   while(rows.length<200) rows.push(Array(9).fill(''));
   await sheetsBatchUpdate([{range:"'Menu Dashboard'!B8:J207",values:rows}]);
 }
@@ -736,7 +806,7 @@ function renderDashboard(){
   $('kpi-row').innerHTML=`
     <div class="kpi"><div class="kpi-label">Menu Items</div><div class="kpi-value">${menuItems.length}</div></div>
     <div class="kpi"><div class="kpi-label">Avg Selling Price</div><div class="kpi-value">${fmt(avgPrice)}</div></div>
-    <div class="kpi"><div class="kpi-label">Avg COGS %</div><div class="kpi-value ${avgCogsPct>0.3?'amber':''}">${pct(avgCogsPct)}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Total Cost %</div><div class="kpi-value ${avgCogsPct>0.3?'amber':''}">${pct(avgCogsPct)}</div></div>
     <div class="kpi"><div class="kpi-label">Avg Gross Margin</div><div class="kpi-value">${pct(1-avgCogsPct)}</div></div>
     <div class="kpi"><div class="kpi-label">YTD Revenue</div><div class="kpi-value">${fmt(totalRevYTD,0)}</div></div>
     <div class="kpi"><div class="kpi-label">YTD COGS</div><div class="kpi-value">${fmt(totalCogsYTD,0)}</div></div>
@@ -812,16 +882,25 @@ function recipeTotal(r){return r.ingredients.reduce((s,ri)=>{const ing=ingByName
 function renderRecipes(){
   $('recipe-list').innerHTML=recipes.map((r,i)=>{
     const total=recipeTotal(r); const margin=r.price>0?(r.price-total)/r.price:0;
+    const laborCostR=laborCostFromHours(r.laborHours||0);
     return`<div class="recipe-list-item${selectedRecipe===i?' selected':''}" onclick="selectRecipe(${i})">
-      <h3>${r.name}</h3><p>${r.cat} · ${fmt(r.price)} · ${pct(margin)} margin</p></div>`;
+      <h3>${r.name}</h3><p>${r.cat} · ${fmt(r.price)} · ${pct(margin)} margin · ${(r.laborHours||0).toFixed(2)}hr labor</p></div>`;
   }).join('')||'<div style="padding:1rem;color:var(--warm-gray);font-size:0.85rem;">No recipes yet.</div>';
   if(selectedRecipe!==null&&recipes[selectedRecipe]) renderRecipeDetail(selectedRecipe);
 }
 function selectRecipe(i){selectedRecipe=i;renderRecipes();}
 
 function renderRecipeDetail(i){
-  const r=recipes[i]; const total=recipeTotal(r); const gp=r.price-total;
+  const r=recipes[i]; const total=recipeTotal(r);
+  const labor=laborCostFromHours(r.laborHours||0);
+  const totalWithLabor=total+labor;
+  const fee=ccFee(r.price);
+  const netRevenue=r.price-fee;
+  const gp=r.price-totalWithLabor;
+  const netAfterFee=netRevenue-totalWithLabor;
   const margin=r.price>0?gp/r.price:0;
+  const netMargin=r.price>0?netAfterFee/r.price:0;
+
   const rows=r.ingredients.map((ri,ridx)=>{
     const ing=ingByName(ri.name); const cpu=ing?costPerUnit(ing):0;
     return`<tr>
@@ -833,6 +912,7 @@ function renderRecipeDetail(i){
       <td><button class="btn btn-danger btn-sm" onclick="deleteRecipeIng(${i},${ridx})">✕</button></td>
     </tr>`;
   }).join('');
+
   $('recipe-detail-panel').innerHTML=`<div class="recipe-detail">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
       <div>
@@ -841,12 +921,62 @@ function renderRecipeDetail(i){
       </div>
       <button class="btn btn-danger btn-sm" onclick="deleteRecipe(${i})">Delete</button>
     </div>
-    <div class="recipe-summary">
-      <div class="r-stat"><label>Selling Price</label><div style="display:flex;align-items:center;gap:4px;"><span style="color:var(--warm-gray);">$</span><input type="number" value="${r.price}" step="0.25" style="font-family:'Playfair Display',serif;font-size:1.1rem;width:80px;border:none;border-bottom:2px solid var(--border);border-radius:0;color:var(--blue);" onchange="updateRecipe(${i},'price',+this.value)"></div></div>
-      <div class="r-stat"><label>Total COGS</label><span>${fmt(total)}</span></div>
-      <div class="r-stat"><label>Gross Profit</label><span style="color:${gp>=0?'var(--green)':'var(--red)'};">${fmt(gp)}</span></div>
-      <div class="r-stat"><label>Margin</label><span>${marginRing(margin)}</span></div>
+
+    <!-- Row 1: core inputs -->
+    <div class="recipe-summary" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
+      <div class="r-stat"><label>Selling Price</label>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="color:var(--warm-gray);">$</span>
+          <input type="number" value="${r.price}" step="0.25" style="font-family:'Playfair Display',serif;font-size:1.1rem;width:80px;border:none;border-bottom:2px solid var(--border);border-radius:0;color:var(--blue);" onchange="updateRecipe(${i},'price',+this.value)">
+        </div>
+      </div>
+      <div class="r-stat"><label>Ingredient COGS</label><span>${fmt(total)}</span></div>
+      <div class="r-stat">
+        <label>Labor Hours</label>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <input type="number" value="${(r.laborHours||0).toFixed(2)}" step="0.05" min="0" style="font-family:'Playfair Display',serif;font-size:1.1rem;width:70px;border:none;border-bottom:2px solid var(--blue);border-radius:0;color:var(--blue);" onchange="updateRecipe(${i},'laborHours',+this.value)">
+          <span style="color:var(--warm-gray);font-size:0.85rem;">hrs</span>
+        </div>
+        <span style="font-size:0.68rem;color:var(--warm-gray);">@ ${fmt(ccFees.laborRate||15)}/hr = <strong>${fmt(labor)}</strong></span>
+      </div>
     </div>
+
+    <!-- Row 2: calculated outputs -->
+    <div class="recipe-summary" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.25rem;">
+      <div class="r-stat" style="background:#f0f7f3;">
+        <label>Total Cost (COGS+Labor)</label>
+        <span style="color:var(--forest);">${fmt(totalWithLabor)}</span>
+      </div>
+      <div class="r-stat" style="background:#f0f7f3;">
+        <label>Gross Profit</label>
+        <span style="color:${gp>=0?'var(--green)':'var(--red)'};">${fmt(gp)}</span>
+      </div>
+      <div class="r-stat" style="background:#fff8f0;">
+        <label>CC Fee (${ccFees.pct}% + $${ccFees.fixed.toFixed(2)})</label>
+        <span style="color:var(--amber);">−${fmt(fee)}</span>
+      </div>
+      <div class="r-stat" style="background:#fff8f0;">
+        <label>Net After CC Fee</label>
+        <span style="color:${netAfterFee>=0?'var(--green)':'var(--red)'};">${fmt(netAfterFee)}</span>
+      </div>
+    </div>
+
+    <!-- Margin pills -->
+    <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;">
+      <div style="background:var(--parchment);border-radius:8px;padding:8px 14px;font-size:0.8rem;">
+        <span style="color:var(--warm-gray);">Gross margin</span>
+        <strong style="margin-left:8px;color:${margin>=0.6?'var(--green)':margin>=0.4?'var(--amber)':'var(--red)'};">${pct(margin)}</strong>
+      </div>
+      <div style="background:var(--parchment);border-radius:8px;padding:8px 14px;font-size:0.8rem;">
+        <span style="color:var(--warm-gray);">Net margin (after CC fee)</span>
+        <strong style="margin-left:8px;color:${netMargin>=0.6?'var(--green)':netMargin>=0.4?'var(--amber)':'var(--red)'};">${pct(netMargin)}</strong>
+      </div>
+      <div style="background:var(--parchment);border-radius:8px;padding:8px 14px;font-size:0.8rem;">
+        <span style="color:var(--warm-gray);">Net revenue (after CC)</span>
+        <strong style="margin-left:8px;">${fmt(netRevenue)}</strong>
+      </div>
+    </div>
+
     <table><thead><tr><th>Ingredient</th><th>Qty</th><th>Unit</th><th>Cost/Unit</th><th>Line Cost</th><th></th></tr></thead><tbody>${rows}</tbody></table>
     <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="addRecipeIng(${i})">+ Add Ingredient</button>
   </div>`;
@@ -855,7 +985,7 @@ function updateRecipe(i,k,v){recipes[i][k]=v;renderRecipes();}
 function updateRecipeIng(ri,ii,k,v){recipes[ri].ingredients[ii][k]=v;renderRecipeDetail(ri);renderRecipes();}
 function deleteRecipeIng(ri,ii){recipes[ri].ingredients.splice(ii,1);renderRecipeDetail(ri);renderRecipes();}
 function addRecipeIng(ri){recipes[ri].ingredients.push({name:ingredients[0]?.name||'',qty:1});renderRecipeDetail(ri);}
-function addRecipe(){recipes.push({name:"New Recipe",cat:menuCats[0]||"Other",price:0,ingredients:[]});selectedRecipe=recipes.length-1;renderRecipes();}
+function addRecipe(){recipes.push({name:"New Recipe",cat:menuCats[0]||"Other",price:0,laborHours:0,ingredients:[]});selectedRecipe=recipes.length-1;renderRecipes();}
 function deleteRecipe(i){
   if(!confirm(`Delete "${recipes[i].name}"?`)) return;
   recipes.splice(i,1); selectedRecipe=recipes.length>0?Math.min(i,recipes.length-1):null; renderRecipes();
@@ -870,36 +1000,47 @@ function renderMenu(){
   cf.innerHTML='<option value="">All</option>'+menuCats.sort().map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
   const target=(+($('target-cogs').value)||30)/100;
   const filtered=menuItems.filter(m=>!cur||m.cat===cur);
-  if(!filtered.length){$('menu-kpi-row').innerHTML='';$('menu-tbody').innerHTML='<tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--warm-gray);">No items</td></tr>';return;}
+  if(!filtered.length){$('menu-kpi-row').innerHTML='';$('menu-tbody').innerHTML='<tr><td colspan="14" style="text-align:center;padding:2rem;color:var(--warm-gray);">No items</td></tr>';return;}
   const avgCogs=filtered.reduce((s,m)=>s+m.cogs/m.price,0)/filtered.length;
   const avgPrice=filtered.reduce((s,m)=>s+m.price,0)/filtered.length;
+  const avgNetAfterFee=filtered.reduce((s,m)=>s+(m.price-ccFee(m.price)-(m.cogs||0)-(m.laborCost||0)),0)/filtered.length;
   $('menu-kpi-row').innerHTML=`
     <div class="kpi"><div class="kpi-label">Items Shown</div><div class="kpi-value">${filtered.length}</div></div>
     <div class="kpi"><div class="kpi-label">Avg Price</div><div class="kpi-value">${fmt(avgPrice)}</div></div>
-    <div class="kpi"><div class="kpi-label">Avg COGS %</div><div class="kpi-value ${avgCogs>target?'red':avgCogs>target*0.9?'amber':''}">${pct(avgCogs)}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Total Cost %</div><div class="kpi-value ${avgCogs>target?'red':avgCogs>target*0.9?'amber':''}">${pct(avgCogs)}</div></div>
     <div class="kpi"><div class="kpi-label">Avg Margin</div><div class="kpi-value">${pct(1-avgCogs)}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Net After CC</div><div class="kpi-value ${avgNetAfterFee<0?'red':''}">${fmt(avgNetAfterFee)}</div></div>
     <div class="kpi"><div class="kpi-label">Target COGS %</div><div class="kpi-value">${pct(target)}</div></div>`;
   $('menu-tbody').innerHTML=filtered.map((m,fi)=>{
-    const idx=menuItems.indexOf(m); const gp=m.price-m.cogs;
-    const cogsPct=m.price>0?m.cogs/m.price:0; const margin=m.price>0?gp/m.price:0;
+    const idx=menuItems.indexOf(m);
+    const labor=m.laborCost||0;
+    const totalCost=m.cogs+labor;
+    const gp=m.price-totalCost;
+    const fee=ccFee(m.price);
+    const netAfterFee=m.price-fee-totalCost;
+    const cogsPct=m.price>0?totalCost/m.price:0;  // Total Cost % = (ingr COGS + labor) / price
+    const margin=m.price>0?gp/m.price:0;
     const over=cogsPct>target;
     return`<tr style="${over?'background:#fff9f9 !important;':''}">
       <td class="center" style="color:var(--warm-gray);font-size:0.8rem;">${fi+1}</td>
-      <td><input type="text" value="${m.name}" onchange="updateMenuItem(${idx},'name',this.value)" style="width:160px;"></td>
+      <td><input type="text" value="${m.name}" onchange="updateMenuItem(${idx},'name',this.value)" style="width:140px;"></td>
       <td><select onchange="updateMenuItem(${idx},'cat',this.value)">${catOptions(menuCats,m.cat)}</select></td>
-      <td><input type="number" value="${m.price}" step="0.25" onchange="updateMenuItem(${idx},'price',+this.value)" style="width:80px;color:var(--blue);font-weight:600;"></td>
-      <td><input type="number" value="${m.cogs}" step="0.01" onchange="updateMenuItem(${idx},'cogs',+this.value)" style="width:80px;color:var(--blue);"></td>
+      <td><input type="number" value="${m.price}" step="0.25" onchange="updateMenuItem(${idx},'price',+this.value)" style="width:72px;color:var(--blue);font-weight:600;"></td>
+      <td><input type="number" value="${m.cogs}" step="0.01" onchange="updateMenuItem(${idx},'cogs',+this.value)" style="width:72px;color:var(--blue);"></td>
+      <td><input type="number" value="${labor.toFixed(2)}" step="0.01" min="0" onchange="updateMenuItem(${idx},'laborCost',+this.value)" style="width:72px;color:var(--blue);"></td>
+      <td class="num" style="font-weight:600;">${fmt(totalCost)}</td>
       <td class="num" style="color:var(--green);font-weight:600;">${fmt(gp)}</td>
-      <td class="num ${over?'':''}"><span style="font-weight:${over?700:400};color:${over?'var(--red)':'inherit'}">${pct(cogsPct)}</span></td>
+      <td class="num"><span style="font-weight:${over?700:400};color:${over?'var(--red)':'inherit'}">${pct(cogsPct)}</span></td>
       <td class="num">${barHTML(margin)}${pct(margin)}</td>
-      <td class="center">${marginBadge(margin)}</td>
-      <td><input type="text" value="${m.notes}" placeholder="notes…" onchange="updateMenuItem(${idx},'notes',this.value)" style="width:110px;"></td>
+      <td class="num" style="color:${netAfterFee>=0?'var(--green)':'var(--red)'};font-weight:600;">${fmt(netAfterFee)}</td>
+      <td class="center" title="Strong ≥70% | OK 50–70% | Low <50%">${marginBadge(margin)}</td>
+      <td><input type="text" value="${m.notes}" placeholder="notes…" onchange="updateMenuItem(${idx},'notes',this.value)" style="width:90px;"></td>
       <td><button class="btn btn-danger btn-sm" onclick="deleteMenuItem(${idx})">✕</button></td>
     </tr>`;
   }).join('');
 }
 function updateMenuItem(i,k,v){menuItems[i][k]=v;renderMenu();autoSave(pushMenu,'menu-sync-status');}
-function addMenuItem(){menuItems.push({name:"New Item",cat:menuCats[0]||"Other",price:0,cogs:0,notes:""});renderMenu();autoSave(pushMenu,'menu-sync-status');toast('Item added');}
+function addMenuItem(){menuItems.push({name:"New Item",cat:menuCats[0]||"Other",price:0,cogs:0,laborCost:0,notes:""});renderMenu();autoSave(pushMenu,'menu-sync-status');toast('Item added');}
 function deleteMenuItem(i){if(!confirm(`Delete "${menuItems[i].name}"?`))return;menuItems.splice(i,1);renderMenu();autoSave(pushMenu,'menu-sync-status');toast('Deleted');}
 
 // ════════════════════════════════════════════════
@@ -964,6 +1105,11 @@ function renderSettings(){
   if(SHEET_CONFIG.clientId) $('settings-client-id').value=SHEET_CONFIG.clientId;
   if(SHEET_CONFIG.sheetId)  $('settings-sheet-id').value=SHEET_CONFIG.sheetId;
   if(lastSynced) $('settings-sync-info').textContent='Last synced: '+lastSynced.toLocaleTimeString();
+  // Populate CC fee inputs from saved values
+  if($('cc-fixed')) $('cc-fixed').value=ccFees.fixed.toFixed(2);
+  if($('cc-pct'))   $('cc-pct').value=ccFees.pct;
+  if($('cc-labor-rate')) $('cc-labor-rate').value=(ccFees.laborRate||15).toFixed(2);
+  if($('cc-example')) $('cc-example').textContent='$'+(5*ccFees.pct/100+ccFees.fixed).toFixed(2);
   const badge=$('settings-conn-badge');
   if(accessToken){
     badge.innerHTML='<span style="color:#52b788;">● Connected</span>';
