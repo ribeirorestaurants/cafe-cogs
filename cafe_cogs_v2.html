@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Café COGS Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --forest: #1a4731; --forest-mid: #2d6a4f; --forest-light: #52b788;
+    --cream: #faf7f2; --parchment: #f0ebe0; --espresso: #2c1810;
+    --warm-gray: #8a8070; --border: #d4cfc4;
+    --red: #c0392b; --amber: #d97706; --green: #16a34a; --blue: #1d4ed8;
+    --shadow: 0 1px 3px rgba(44,24,16,0.08), 0 4px 16px rgba(44,24,16,0.06);
+    --shadow-lg: 0 8px 32px rgba(44,24,16,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--espresso); min-height: 100vh; }
+
+  header {
+    background: var(--forest); padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.25rem; color: #fff; display: flex; align-items: center; gap: 10px; }
+  .logo-sub { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; font-weight: 300; color: var(--forest-light); letter-spacing: 0.12em; text-transform: uppercase; display: block; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+
+  /* Sync status */
+  .sync-bar { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: rgba(255,255,255,0.7); }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #6b7280; }
+  .sync-dot.connected { background: #52b788; box-shadow: 0 0 6px #52b78880; }
+  .sync-dot.syncing { background: #fbbf24; animation: pulse 1s infinite; }
+  .sync-dot.error { background: #f87171; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  nav { display: flex; gap: 4px; }
+  nav button {
+    background: none; border: none; color: rgba(255,255,255,0.65);
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500;
+    padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
+  }
+  nav button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  nav button.active { background: rgba(255,255,255,0.15); color: #fff; }
+
+  main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .page { display: none; } .page.active { display: block; }
+
+  .page-header { margin-bottom: 1.75rem; display: flex; align-items: flex-start; justify-content: space-between; }
+  .page-header h1 { font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 600; color: var(--forest); }
+  .page-header p { font-size: 0.875rem; color: var(--warm-gray); margin-top: 4px; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; margin-bottom: 1.75rem; }
+  .kpi { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; box-shadow: var(--shadow); }
+  .kpi-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 6px; }
+  .kpi-value { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 600; color: var(--forest); }
+  .kpi-value.red { color: var(--red); } .kpi-value.amber { color: var(--amber); }
+
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; margin-bottom: 1.25rem; }
+  .card-header { background: var(--forest); color: #fff; padding: 0.75rem 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+  .card-header h2 { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  thead th { background: var(--parchment); color: var(--espresso); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { transition: background 0.1s; }
+  tbody tr:hover { background: #fdfbf8; }
+  tbody tr:nth-child(even) { background: #faf8f5; }
+  tbody tr:nth-child(even):hover { background: #f5f2ed; }
+  td { padding: 9px 12px; border-bottom: 1px solid #ece8e1; vertical-align: middle; }
+  td.num { text-align: right; font-family: 'DM Mono', monospace; font-size: 0.82rem; }
+  td.center { text-align: center; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
+  .badge-green { background: #dcfce7; color: #15803d; }
+  .badge-amber { background: #fef9c3; color: #a16207; }
+  .badge-red { background: #fee2e2; color: #b91c1c; }
+  .badge-gray { background: #f1f0ec; color: var(--warm-gray); }
+
+  .toolbar { padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  input[type=text], input[type=number], select {
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 10px; background: #fff; color: var(--espresso);
+    outline: none; transition: border-color 0.15s;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--forest-light); }
+  input[type=number] { width: 90px; } input[type=text] { width: 180px; }
+  label { font-size: 0.78rem; font-weight: 500; color: var(--warm-gray); }
+
+  .btn { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-primary { background: var(--forest); color: #fff; } .btn-primary:hover { background: var(--forest-mid); }
+  .btn-ghost { background: none; border-color: var(--border); color: var(--espresso); } .btn-ghost:hover { background: var(--parchment); }
+  .btn-danger { background: none; border-color: #fca5a5; color: var(--red); } .btn-danger:hover { background: #fee2e2; }
+  .btn-amber { background: none; border-color: #fcd34d; color: var(--amber); } .btn-amber:hover { background: #fffbeb; }
+  .btn-sm { padding: 4px 9px; font-size: 0.75rem; }
+
+  td input[type=text], td input[type=number] { border: 1px solid transparent; background: transparent; padding: 3px 6px; border-radius: 4px; width: 100%; font-family: 'DM Mono', monospace; font-size: 0.82rem; transition: border-color 0.15s; }
+  td input[type=text] { width: 140px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; }
+  td input[type=text]:focus, td input[type=number]:focus { border-color: var(--forest-light); background: #fff; outline: none; }
+  td select { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; padding: 3px 6px; border-radius: 4px; border: 1px solid transparent; background: transparent; }
+  td select:focus { border-color: var(--forest-light); background: #fff; outline: none; }
+
+  .bar-wrap { width: 70px; height: 6px; background: #ece8e1; border-radius: 3px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .bar-green { background: var(--green); } .bar-amber { background: var(--amber); } .bar-red { background: var(--red); }
+
+  .pl-section { font-family: 'Playfair Display', serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--forest); background: var(--parchment) !important; }
+  .pl-total { font-weight: 600; background: #f0ebe0 !important; }
+  .pl-pct { color: var(--warm-gray); font-style: italic; }
+  .total-col { background: #fdfcfa !important; font-weight: 600; }
+
+  .recipe-grid { display: grid; grid-template-columns: 280px 1fr; gap: 1.25rem; }
+  .recipe-list-item { padding: 12px 14px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border); margin-bottom: 8px; transition: all 0.15s; background: #fff; }
+  .recipe-list-item:hover { border-color: var(--forest-light); }
+  .recipe-list-item.selected { border-color: var(--forest); background: #f0f7f3; }
+  .recipe-list-item h3 { font-size: 0.9rem; font-weight: 600; }
+  .recipe-list-item p { font-size: 0.75rem; color: var(--warm-gray); margin-top: 2px; }
+  .recipe-detail { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; box-shadow: var(--shadow); }
+  .recipe-summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1.25rem; }
+  .r-stat { background: var(--parchment); border-radius: 8px; padding: 10px 12px; }
+  .r-stat label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--warm-gray); display: block; margin-bottom: 4px; }
+  .r-stat span { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--forest); }
+
+  .margin-ring { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; font-size: 0.72rem; font-weight: 700; }
+  .ring-green { background: #dcfce7; color: #15803d; border: 2px solid #16a34a; }
+  .ring-amber { background: #fef9c3; color: #a16207; border: 2px solid #d97706; }
+  .ring-red { background: #fee2e2; color: #b91c1c; border: 2px solid #dc2626; }
+
+  /* ── Category Manager ── */
+  .cat-manager { display: flex; gap: 1.25rem; }
+  .cat-panel { flex: 1; }
+  .cat-panel h3 { font-size: 0.85rem; font-weight: 600; color: var(--forest); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .cat-tag-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .cat-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--parchment); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px 4px 12px; font-size: 0.8rem; }
+  .cat-tag button { border: none; background: none; cursor: pointer; color: var(--warm-gray); font-size: 0.85rem; line-height: 1; padding: 0 2px; border-radius: 50%; transition: all 0.15s; }
+  .cat-tag button:hover { color: var(--red); background: #fee2e2; }
+  .cat-add-row { display: flex; gap: 8px; }
+  .cat-add-row input { flex: 1; }
+
+  /* ── Sheets Setup Modal ── */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(44,24,16,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; }
+  .modal { background: #fff; border-radius: 16px; padding: 2rem; width: 520px; max-width: 95vw; box-shadow: var(--shadow-lg); }
+  .modal h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--forest); margin-bottom: 0.5rem; }
+  .modal p { font-size: 0.875rem; color: var(--warm-gray); margin-bottom: 1.25rem; line-height: 1.6; }
+  .modal input[type=text] { width: 100%; margin-bottom: 10px; }
+  .modal .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.25rem; }
+  .step-list { list-style: none; counter-reset: steps; margin-bottom: 1.25rem; }
+  .step-list li { counter-increment: steps; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; font-size: 0.85rem; color: var(--espresso); }
+  .step-list li::before { content: counter(steps); min-width: 22px; height: 22px; background: var(--forest); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .step-list a { color: var(--blue); text-decoration: none; } .step-list a:hover { text-decoration: underline; }
+  .field-label { font-size: 0.78rem; font-weight: 600; color: var(--espresso); margin-bottom: 4px; display: block; }
+  .field-hint { font-size: 0.72rem; color: var(--warm-gray); margin-bottom: 10px; }
+
+  /* ── Toast ── */
+  #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--forest); color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; box-shadow: var(--shadow-lg); transform: translateY(60px); opacity: 0; transition: all 0.3s; z-index: 999; pointer-events: none; }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.error { background: var(--red); }
+
+  @media(max-width:768px) {
+    .recipe-grid { grid-template-columns: 1fr; }
+    .recipe-summary { grid-template-columns: repeat(2,1fr); }
+    nav button { font-size: 0.7rem; padding: 6px 8px; }
+    .cat-manager { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ SHEETS SETUP MODAL ══ -->
+<div class="modal-backdrop" id="setup-modal" style="display:none;">
+  <div class="modal">
+    <h2>☕ Connect to Google Sheets</h2>
+    <p>Link this dashboard to your Google Sheet so every change syncs automatically. You'll need a Google Cloud OAuth Client ID.</p>
+    <ol class="step-list">
+      <li>Go to <a href="https://console.cloud.google.com/apis/library/sheets.googleapis.com" target="_blank">Google Cloud Console</a> → Enable the Google Sheets API.</li>
+      <li>Create an <strong>OAuth 2.0 Client ID</strong> (Web Application type). Add <code>http://localhost</code> and your app URL to Authorized Origins.</li>
+      <li>Copy your <strong>Client ID</strong> below (ends in <code>.apps.googleusercontent.com</code>).</li>
+      <li>Open your Google Sheet, copy the <strong>Spreadsheet ID</strong> from the URL: <code>docs.google.com/spreadsheets/d/<strong>ID</strong>/edit</code>.</li>
+    </ol>
+    <label class="field-label">OAuth Client ID</label>
+    <div class="field-hint">From Google Cloud Console → APIs & Services → Credentials</div>
+    <input type="text" id="input-client-id" placeholder="xxxx.apps.googleusercontent.com">
+    <label class="field-label">Spreadsheet ID</label>
+    <div class="field-hint">From your Sheet URL: docs.google.com/spreadsheets/d/<strong>THIS_PART</strong>/edit</div>
+    <input type="text" id="input-sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeSetup()">Skip for now</button>
+      <button class="btn btn-primary" onclick="saveSheetConfig()">Connect &amp; Sign In</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">
+    <span>☕</span>
+    <div>Café COGS<span class="logo-sub">Cost of Goods Tracker</span></div>
+  </div>
+  <nav>
+    <button class="active" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button onclick="showPage('ingredients',this)">Ingredients</button>
+    <button onclick="showPage('recipes',this)">Recipes</button>
+    <button onclick="showPage('menu',this)">Menu</button>
+    <button onclick="showPage('pl',this)">P&amp;L</button>
+    <button onclick="showPage('settings',this)">Settings</button>
+  </nav>
+  <div class="header-right">
+    <div class="sync-bar">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Not connected</span>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="auth-btn" onclick="handleAuthClick()" style="color:#fff;border-color:rgba(255,255,255,0.3);">
+      Connect Sheets
+    </button>
+  </div>
+</header>
+
+<main>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div><h1 id="greeting">Good morning ☀️</h1><p>Here's a snapshot of your cafe's cost performance.</p></div>
+    <button class="btn btn-ghost btn-sm" onclick="syncAll()" id="sync-btn" style="display:none;">↑ Push to Sheets</button>
+    <button class="btn btn-ghost btn-sm" onclick="pullFromSheets()" id="pull-btn" style="display:none;">↓ Pull from Sheets</button>
+  </div>
+  <div class="kpi-row" id="kpi-row"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+    <div class="card">
+      <div class="card-header"><h2>Menu Margin Overview</h2></div>
+      <div class="table-wrap"><table id="dash-menu-table"><thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Margin</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h2>Monthly Net Profit</h2></div>
+      <div style="padding:1rem 1.25rem;" id="dash-pl-chart"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>Ingredient Cost Watch</h2><span style="font-size:0.75rem;opacity:0.7;">Top 10 by unit cost</span></div>
+    <div class="table-wrap"><table id="dash-ing-table"><thead><tr><th>Ingredient</th><th>Category</th><th>Pack Cost</th><th>Cost/Unit</th><th>Unit</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- ══ INGREDIENTS ══ -->
+<div class="page" id="page-ingredients">
+  <div class="page-header">
+    <div><h1>Ingredient Library</h1><p>All ingredients feed into recipe costing by name. Keep names consistent.</p></div>
+    <button class="btn btn-primary" onclick="addIngredient()">+ Add Ingredient</button>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>Ingredients</h2><div id="ing-sync-status" style="font-size:0.75rem;opacity:0.8;"></div></div>
+    <div class="toolbar">
+      <label>Category:</label>
+      <select id="ing-cat-filter" onchange="renderIngredients()"><option value="">All</option></select>
+      <input type="text" id="ing-search" placeholder="Search…" oninput="renderIngredients()" style="margin-left:auto;">
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Ingredient Name</th><th>Category</th><th>Pack Size</th><th>Pack Unit</th><th>Pack Cost</th><th>Unit of Use</th><th>Units/Pack</th><th>Cost/Unit</th><th></th></tr></thead>
+      <tbody id="ing-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RECIPES ══ -->
+<div class="page" id="page-recipes">
+  <div class="page-header"><div><h1>Recipe Costing</h1><p>Ingredient costs pull automatically from the library by name.</p></div></div>
+  <div class="recipe-grid">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span style="font-size:0.8rem;font-weight:600;color:var(--warm-gray);text-transform:uppercase;letter-spacing:0.06em;">Recipes</span>
+        <button class="btn btn-primary btn-sm" onclick="addRecipe()">+ New</button>
+      </div>
+      <div id="recipe-list"></div>
+    </div>
+    <div id="recipe-detail-panel">
+      <div class="recipe-detail" style="height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--warm-gray);">
+        <div style="font-size:2rem;">📋</div><p style="margin-top:8px;">Select a recipe to view details</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MENU ══ -->
+<div class="page" id="page-menu">
+  <div class="page-header">
+    <div><h1>Menu COGS Dashboard</h1><p>Edit prices and COGS inline. Margins and status update instantly.</p></div>
+    <button class="btn btn-primary" onclick="addMenuItem()">+ Add Item</button>
+  </div>
+  <div class="kpi-row" id="menu-kpi-row"></div>
+  <div class="card">
+    <div class="card-header"><h2>Menu Items</h2><div id="menu-sync-status" style="font-size:0.75rem;opacity:0.8;"></div></div>
+    <div class="toolbar">
+      <label>Category:</label>
+      <select id="menu-cat-filter" onchange="renderMenu()"><option value="">All</option></select>
+      <label style="margin-left:auto;">Target COGS %:</label>
+      <input type="number" id="target-cogs" value="30" min="1" max="100" style="width:70px;" oninput="renderMenu()">
+      <span style="font-size:0.85rem;color:var(--warm-gray);">%</span>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>#</th><th>Menu Item</th><th>Category</th><th>Sell Price</th><th>COGS</th><th>Gross Profit</th><th>COGS %</th><th>Margin %</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="menu-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ P&L ══ -->
+<div class="page" id="page-pl">
+  <div class="page-header"><div><h1>Monthly P&amp;L Tracker</h1><p>Click any value to edit. Totals and margins recalculate instantly.</p></div></div>
+  <div class="card">
+    <div class="card-header"><h2>Profit &amp; Loss — Full Year</h2><div id="pl-sync-status" style="font-size:0.75rem;opacity:0.8;"></div></div>
+    <div class="table-wrap" id="pl-table-wrap"></div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS ══ -->
+<div class="page" id="page-settings">
+  <div class="page-header"><div><h1>Settings</h1><p>Manage categories, Google Sheets connection, and sync preferences.</p></div></div>
+
+  <!-- Sheets Connection -->
+  <div class="card" style="margin-bottom:1.25rem;">
+    <div class="card-header">
+      <h2>Google Sheets Connection</h2>
+      <span id="settings-conn-badge" style="font-size:0.75rem;opacity:0.85;"></span>
+    </div>
+    <div style="padding:1.25rem;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div>
+          <label class="field-label" style="display:block;margin-bottom:4px;">OAuth Client ID</label>
+          <input type="text" id="settings-client-id" style="width:100%;font-family:'DM Mono',monospace;font-size:0.78rem;" placeholder="xxxx.apps.googleusercontent.com">
+          <div style="font-size:0.72rem;color:var(--warm-gray);margin-top:3px;">Google Cloud Console → APIs &amp; Services → Credentials</div>
+        </div>
+        <div>
+          <label class="field-label" style="display:block;margin-bottom:4px;">Spreadsheet ID</label>
+          <input type="text" id="settings-sheet-id" style="width:100%;font-family:'DM Mono',monospace;font-size:0.78rem;" placeholder="From your Sheet URL">
+          <div style="font-size:0.72rem;color:var(--warm-gray);margin-top:3px;">docs.google.com/spreadsheets/d/<strong>THIS_PART</strong>/edit</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="saveSheetConfig()">Save &amp; Connect</button>
+        <button class="btn btn-ghost" onclick="signOut()" id="signout-btn" style="display:none;">Sign Out</button>
+        <div style="width:1px;height:24px;background:var(--border);margin:0 2px;"></div>
+        <button class="btn btn-amber btn-sm" onclick="syncAll()" id="settings-push-btn">↑ Push to Sheets</button>
+        <button class="btn btn-ghost btn-sm" onclick="pullFromSheets()" id="settings-pull-btn">↓ Pull from Sheets</button>
+        <div style="width:1px;height:24px;background:var(--border);margin:0 2px;"></div>
+        <button class="btn btn-danger btn-sm" onclick="clearConfig()">✕ Clear credentials</button>
+        <span id="settings-sync-info" style="font-size:0.8rem;color:var(--warm-gray);margin-left:auto;"></span>
+      </div>
+      <div style="margin-top:1rem;padding:0.75rem;background:var(--parchment);border-radius:8px;font-size:0.8rem;color:var(--warm-gray);line-height:1.6;">
+        <strong style="color:var(--espresso);">Sheet tab layout expected:</strong><br>
+        Tab 1: <code>Config</code> (hidden) · Tab 2: <code>Ingredient Library</code> (rows 4–103, cols A–H) · Tab 3: <code>Recipe Costing</code> · Tab 4: <code>Menu Dashboard</code> (rows 8–207, cols A–J) · Tab 5: <code>Monthly P&amp;L</code> (rows 5–23, cols A–N)
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Manager -->
+  <div class="card">
+    <div class="card-header"><h2>Category Management</h2></div>
+    <div style="padding:1.25rem;">
+      <div class="cat-manager">
+        <div class="cat-panel">
+          <h3>🥬 Ingredient Categories</h3>
+          <div class="cat-tag-wrap" id="ing-cat-tags"></div>
+          <div class="cat-add-row">
+            <input type="text" id="new-ing-cat" placeholder="New category…" style="width:auto;flex:1;">
+            <button class="btn btn-primary btn-sm" onclick="addIngCat()">+ Add</button>
+          </div>
+        </div>
+        <div class="cat-panel">
+          <h3>🍵 Menu Categories</h3>
+          <div class="cat-tag-wrap" id="menu-cat-tags"></div>
+          <div class="cat-add-row">
+            <input type="text" id="new-menu-cat" placeholder="New category…" style="width:auto;flex:1;">
+            <button class="btn btn-primary btn-sm" onclick="addMenuCat()">+ Add</button>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:0.78rem;color:var(--warm-gray);margin-top:1rem;">
+        Deleting a category won't remove items already assigned to it — they'll keep their old category label until reassigned.
+      </p>
+    </div>
+  </div>
+</div>
+
+</main>
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// CONFIG & STATE
+// ════════════════════════════════════════════════
+let SHEET_CONFIG = JSON.parse(localStorage.getItem('cogs_sheet_config') || '{}');
+let tokenClient = null;
+let accessToken  = null;
+let isSyncing    = false;
+let lastSynced   = null;
+
+// ── Local data ──
+let ingCats  = ["Coffee","Dairy","Dairy Alt","Food","Syrups","Tea","Toppings","Supplies","Other"];
+let menuCats = ["Hot Coffee","Hot Drinks","Cold Drinks","Food","Other"];
+
+let ingredients = [
+  {name:"Espresso Beans",cat:"Coffee",packSz:5,packUnit:"lb",packCost:45,useUnit:"oz",unitsPerPack:80},
+  {name:"Whole Milk",cat:"Dairy",packSz:1,packUnit:"gal",packCost:5.5,useUnit:"oz",unitsPerPack:128},
+  {name:"Oat Milk",cat:"Dairy Alt",packSz:0.5,packUnit:"gal",packCost:4.25,useUnit:"oz",unitsPerPack:64},
+  {name:"Simple Syrup",cat:"Syrups",packSz:1,packUnit:"L",packCost:3,useUnit:"oz",unitsPerPack:33.8},
+  {name:"Vanilla Syrup",cat:"Syrups",packSz:750,packUnit:"ml",packCost:8.5,useUnit:"oz",unitsPerPack:25.4},
+  {name:"Hazelnut Syrup",cat:"Syrups",packSz:750,packUnit:"ml",packCost:8.5,useUnit:"oz",unitsPerPack:25.4},
+  {name:"Whipped Cream",cat:"Dairy",packSz:1,packUnit:"can",packCost:4,useUnit:"oz",unitsPerPack:14},
+  {name:"Caramel Sauce",cat:"Toppings",packSz:12,packUnit:"oz",packCost:5,useUnit:"oz",unitsPerPack:12},
+  {name:"Chocolate Powder",cat:"Toppings",packSz:2,packUnit:"lb",packCost:12,useUnit:"oz",unitsPerPack:32},
+  {name:"Chai Concentrate",cat:"Tea",packSz:32,packUnit:"oz",packCost:9,useUnit:"oz",unitsPerPack:32},
+  {name:"Matcha Powder",cat:"Tea",packSz:100,packUnit:"g",packCost:18,useUnit:"g",unitsPerPack:100},
+  {name:"Drip Coffee Blend",cat:"Coffee",packSz:5,packUnit:"lb",packCost:38,useUnit:"oz",unitsPerPack:80},
+  {name:"Paper Cup 12oz",cat:"Supplies",packSz:1000,packUnit:"each",packCost:85,useUnit:"each",unitsPerPack:1000},
+  {name:"Paper Cup 16oz",cat:"Supplies",packSz:1000,packUnit:"each",packCost:95,useUnit:"each",unitsPerPack:1000},
+  {name:"Plastic Lid",cat:"Supplies",packSz:1000,packUnit:"each",packCost:40,useUnit:"each",unitsPerPack:1000},
+  {name:"Pastry Bag",cat:"Supplies",packSz:500,packUnit:"each",packCost:25,useUnit:"each",unitsPerPack:500},
+  {name:"Avocado",cat:"Food",packSz:1,packUnit:"each",packCost:1.2,useUnit:"each",unitsPerPack:1},
+  {name:"Sourdough Bread",cat:"Food",packSz:1,packUnit:"loaf",packCost:4.5,useUnit:"slice",unitsPerPack:12},
+  {name:"Cream Cheese",cat:"Food",packSz:8,packUnit:"oz",packCost:3.2,useUnit:"oz",unitsPerPack:8},
+  {name:"Everything Bagel",cat:"Food",packSz:6,packUnit:"each",packCost:5.4,useUnit:"each",unitsPerPack:6},
+];
+
+let recipes = [
+  {name:"Vanilla Latte",cat:"Hot Drinks",price:5.75,ingredients:[{name:"Espresso Beans",qty:2},{name:"Whole Milk",qty:8},{name:"Vanilla Syrup",qty:1},{name:"Paper Cup 12oz",qty:1},{name:"Plastic Lid",qty:1}]},
+  {name:"Iced Oat Matcha",cat:"Cold Drinks",price:6.50,ingredients:[{name:"Matcha Powder",qty:5},{name:"Oat Milk",qty:8},{name:"Simple Syrup",qty:0.5},{name:"Paper Cup 16oz",qty:1},{name:"Plastic Lid",qty:1}]},
+  {name:"Avocado Toast",cat:"Food",price:9.50,ingredients:[{name:"Avocado",qty:1},{name:"Sourdough Bread",qty:2},{name:"Cream Cheese",qty:1},{name:"Pastry Bag",qty:1}]},
+];
+
+let menuItems = [
+  {name:"Espresso",cat:"Hot Coffee",price:3.50,cogs:0.45,notes:""},
+  {name:"Americano",cat:"Hot Coffee",price:4.00,cogs:0.50,notes:""},
+  {name:"Vanilla Latte",cat:"Hot Coffee",price:5.75,cogs:1.12,notes:""},
+  {name:"Cappuccino",cat:"Hot Coffee",price:5.25,cogs:0.98,notes:""},
+  {name:"Flat White",cat:"Hot Coffee",price:5.50,cogs:1.05,notes:""},
+  {name:"Iced Oat Matcha",cat:"Cold Drinks",price:6.50,cogs:1.38,notes:""},
+  {name:"Cold Brew",cat:"Cold Drinks",price:5.00,cogs:0.85,notes:""},
+  {name:"Chai Latte",cat:"Hot Drinks",price:5.50,cogs:1.20,notes:""},
+  {name:"Hot Chocolate",cat:"Hot Drinks",price:5.00,cogs:1.10,notes:""},
+  {name:"Drip Coffee",cat:"Hot Coffee",price:3.00,cogs:0.35,notes:""},
+  {name:"Avocado Toast",cat:"Food",price:9.50,cogs:2.85,notes:""},
+  {name:"Bagel & CC",cat:"Food",price:7.00,cogs:1.95,notes:""},
+  {name:"Croissant",cat:"Food",price:4.50,cogs:1.20,notes:""},
+  {name:"Muffin",cat:"Food",price:3.75,cogs:0.90,notes:""},
+  {name:"Granola Bowl",cat:"Food",price:8.50,cogs:2.40,notes:""},
+];
+
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+let plData={
+  foodBev:[28500,29200,31000,30500,32000,33500,34000,33000,31500,30000,29500,35000],
+  otherRev:[500,500,600,600,700,700,800,800,600,600,500,900],
+  coffee:[5700,5840,6200,6100,6400,6700,6800,6600,6300,6000,5900,7000],
+  food:[2850,2920,3100,3050,3200,3350,3400,3300,3150,3000,2950,3500],
+  supplies:[855,876,930,915,960,1005,1020,990,945,900,885,1050],
+  rent:[4500,4500,4500,4500,4500,4500,4500,4500,4500,4500,4500,4500],
+  labor:[9000,9200,9500,9300,9600,10000,10200,9900,9400,9100,9000,10500],
+  utilities:[800,800,750,750,700,700,650,650,700,750,800,850],
+  marketing:[500,500,600,600,700,700,800,800,600,500,500,1000],
+};
+
+let selectedRecipe = null;
+
+// ════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════
+const $=id=>document.getElementById(id);
+const fmt=(n,d=2)=>n==null?'—':'$'+n.toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const pct=n=>n==null?'—':(n*100).toFixed(1)+'%';
+const costPerUnit=ing=>ing.unitsPerPack>0?ing.packCost/ing.unitsPerPack:0;
+const ingByName=name=>ingredients.find(i=>i.name.toLowerCase()===name.toLowerCase());
+
+function toast(msg,isErr=false){
+  const t=$('toast'); t.textContent=msg;
+  t.className=isErr?'error show':'show';
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function setSyncStatus(state, label){
+  const dot=$('sync-dot'), lbl=$('sync-label');
+  dot.className='sync-dot'+(state?' '+state:'');
+  lbl.textContent=label;
+}
+
+function setGreeting(){
+  const h=new Date().getHours();
+  $('greeting').textContent=h<12?'Good morning ☀️':h<17?'Good afternoon ☁️':'Good evening 🌙';
+}
+
+function marginBadge(m){
+  if(m>=0.7)return'<span class="badge badge-green">✓ Strong</span>';
+  if(m>=0.5)return'<span class="badge badge-amber">~ OK</span>';
+  return'<span class="badge badge-red">✗ Low</span>';
+}
+function marginRing(m){
+  const cls=m>=0.7?'ring-green':m>=0.5?'ring-amber':'ring-red';
+  return`<span class="margin-ring ${cls}">${(m*100).toFixed(0)}%</span>`;
+}
+function barHTML(v,max=1){
+  const r=Math.min(v/max,1);
+  const cls=r<0.5?'bar-green':r<0.75?'bar-amber':'bar-red';
+  return`<div class="bar-wrap"><div class="bar-fill ${cls}" style="width:${r*100}%"></div></div>`;
+}
+function catOptions(cats, selected){
+  return cats.map(c=>`<option${c===selected?' selected':''}>${c}</option>`).join('');
+}
+
+// ════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════
+function showPage(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  $('page-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  const renders={dashboard:renderDashboard,ingredients:renderIngredients,recipes:renderRecipes,menu:renderMenu,pl:renderPL,settings:renderSettings};
+  if(renders[id]) renders[id]();
+}
+
+// ════════════════════════════════════════════════
+// GOOGLE SHEETS API
+// ════════════════════════════════════════════════
+const SCOPE='https://www.googleapis.com/auth/spreadsheets';
+const API='https://sheets.googleapis.com/v4/spreadsheets';
+
+function initOAuth(){
+  if(!SHEET_CONFIG.clientId) return;
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:SHEET_CONFIG.clientId,
+    scope:SCOPE,
+    callback:(resp)=>{
+      if(resp.error){setSyncStatus('error','Auth failed');toast('Auth failed: '+resp.error,true);return;}
+      accessToken=resp.access_token;
+      setSyncStatus('connected','Connected');
+      $('auth-btn').textContent='↻ Re-auth';
+      $('signout-btn').style.display='';
+      $('sync-btn').style.display='';
+      $('pull-btn').style.display='';
+      toast('✓ Signed in to Google');
+      syncAll();
+    }
+  });
+}
+
+function handleAuthClick(){
+  if(!SHEET_CONFIG.clientId||!SHEET_CONFIG.sheetId){
+    $('setup-modal').style.display='flex'; return;
+  }
+  if(!tokenClient){initOAuth();}
+  if(accessToken){syncAll();return;}
+  setSyncStatus('syncing','Authenticating…');
+  tokenClient.requestAccessToken({prompt:'consent'});
+}
+
+function signOut(){
+  if(accessToken) google.accounts.oauth2.revoke(accessToken,()=>{});
+  accessToken=null; tokenClient=null;
+  setSyncStatus('','Not connected');
+  $('auth-btn').textContent='Connect Sheets';
+  $('signout-btn').style.display='none';
+  $('sync-btn').style.display='none';
+  $('pull-btn').style.display='none';
+  toast('Signed out');
+}
+
+function saveSheetConfig(){
+  const cid=($('input-client-id')||$('settings-client-id')).value.trim();
+  const sid=($('input-sheet-id')||$('settings-sheet-id')).value.trim();
+  if(!cid||!sid){toast('Please fill in both fields.',true);return;}
+  SHEET_CONFIG={clientId:cid,sheetId:sid};
+  localStorage.setItem('cogs_sheet_config',JSON.stringify(SHEET_CONFIG));
+  $('settings-client-id').value=cid;
+  $('settings-sheet-id').value=sid;
+  closeSetup();
+  initOAuth();
+  handleAuthClick();
+}
+function closeSetup(){$('setup-modal').style.display='none';}
+
+async function sheetsGet(range){
+  const url=`${API}/${SHEET_CONFIG.sheetId}/values/${encodeURIComponent(range)}`;
+  const r=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!r.ok) throw new Error(`Sheets GET ${range}: ${r.status}`);
+  return r.json();
+}
+
+async function sheetsBatchUpdate(data){
+  const url=`${API}/${SHEET_CONFIG.sheetId}/values:batchUpdate`;
+  const r=await fetch(url,{
+    method:'POST',
+    headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+    body:JSON.stringify({valueInputOption:'USER_ENTERED',data})
+  });
+  if(!r.ok){const t=await r.text();throw new Error('Sheets write error: '+t);}
+  return r.json();
+}
+
+// ── Pull from Sheets ──────────────────────────────────────────────────────────
+async function pullFromSheets(){
+  if(!accessToken||!SHEET_CONFIG.sheetId) return;
+  setSyncStatus('syncing','Loading…');
+  try{
+    // Ingredients
+    const ingData=await sheetsGet("'Ingredient Library'!A4:H103");
+    if(ingData.values){
+      ingredients=ingData.values.filter(r=>r[0]).map(r=>({
+        name:r[0]||'',cat:r[1]||'Other',packSz:parseFloat(r[2])||0,packUnit:r[3]||'',
+        packCost:parseFloat(r[4])||0,useUnit:r[5]||'',unitsPerPack:parseFloat(r[6])||0
+      }));
+    }
+
+    // Menu
+    const menuData=await sheetsGet("'Menu Dashboard'!B8:J207");
+    if(menuData.values){
+      menuItems=menuData.values.filter(r=>r[0]).map(r=>({
+        name:r[0]||'',cat:r[1]||'Other',price:parseFloat(r[2])||0,
+        cogs:parseFloat(r[3])||0,notes:r[8]||''
+      }));
+    }
+
+    // P&L
+    const plRows=[
+      ['foodBev',4],['otherRev',5],['coffee',8],['food',9],['supplies',10],
+      ['rent',16],['labor',17],['utilities',18],['marketing',19]
+    ];
+    const plBatch=await sheetsGet("'Monthly P&L'!B5:M23");
+    if(plBatch.values){
+      const mapping=[[0,'foodBev'],[1,'otherRev'],[4,'coffee'],[5,'food'],[6,'supplies'],[12,'rent'],[13,'labor'],[14,'utilities'],[15,'marketing']];
+      mapping.forEach(([rowIdx,key])=>{
+        const row=plBatch.values[rowIdx];
+        if(row) plData[key]=MONTHS.map((_,i)=>parseFloat(row[i])||0);
+      });
+    }
+
+    // Config: categories
+    const cfgData=await sheetsGet("Config!D2:D20");
+    if(cfgData.values) ingCats=cfgData.values.flat().filter(Boolean);
+    const cfgMenu=await sheetsGet("Config!F2:F20");
+    if(cfgMenu.values) menuCats=cfgMenu.values.flat().filter(Boolean);
+
+    lastSynced=new Date();
+    setSyncStatus('connected','Synced '+lastSynced.toLocaleTimeString());
+    $('settings-sync-info').textContent='Last synced: '+lastSynced.toLocaleTimeString();
+    toast('✓ Pulled from Google Sheets');
+    renderCurrentPage();
+  }catch(e){
+    setSyncStatus('error','Pull failed');
+    toast('Pull error: '+e.message,true);
+  }
+}
+
+// ── Push to Sheets ────────────────────────────────────────────────────────────
+async function pushIngredients(){
+  const rows=ingredients.map(ing=>[ing.name,ing.cat,ing.packSz,ing.packUnit,ing.packCost,ing.useUnit,ing.unitsPerPack]);
+  // Pad to 100 rows
+  while(rows.length<100) rows.push(Array(7).fill(''));
+  await sheetsBatchUpdate([{range:"'Ingredient Library'!A4:G103",values:rows}]);
+}
+
+async function pushMenu(){
+  const rows=menuItems.map(m=>[m.name,m.cat,m.price,m.cogs,'','','','',m.notes]);
+  while(rows.length<200) rows.push(Array(9).fill(''));
+  await sheetsBatchUpdate([{range:"'Menu Dashboard'!B8:J207",values:rows}]);
+}
+
+async function pushPL(){
+  const mapping=[
+    {key:'foodBev',row:5},{key:'otherRev',row:6},
+    {key:'coffee',row:9},{key:'food',row:10},{key:'supplies',row:11},
+    {key:'rent',row:17},{key:'labor',row:18},{key:'utilities',row:19},{key:'marketing',row:20}
+  ];
+  const data=mapping.map(({key,row})=>({
+    range:`'Monthly P&L'!B${row}:M${row}`,
+    values:[plData[key]]
+  }));
+  await sheetsBatchUpdate(data);
+}
+
+async function pushCategories(){
+  const ingRows=ingCats.map(c=>[c]);
+  const menuRows=menuCats.map(c=>[c]);
+  while(ingRows.length<20) ingRows.push(['']);
+  while(menuRows.length<20) menuRows.push(['']);
+  await sheetsBatchUpdate([
+    {range:"Config!D2:D21",values:ingRows},
+    {range:"Config!F2:F21",values:menuRows}
+  ]);
+}
+
+async function syncAll(){
+  if(!accessToken){toast('Sign in first.');return;}
+  if(isSyncing) return;
+  isSyncing=true; setSyncStatus('syncing','Syncing…');
+  try{
+    await pushIngredients();
+    await pushMenu();
+    await pushPL();
+    await pushCategories();
+    lastSynced=new Date();
+    setSyncStatus('connected','Synced '+lastSynced.toLocaleTimeString());
+    $('settings-sync-info').textContent='Last synced: '+lastSynced.toLocaleTimeString();
+    toast('✓ All sheets synced');
+  }catch(e){
+    setSyncStatus('error','Sync failed');
+    toast('Sync error: '+e.message,true);
+  }finally{isSyncing=false;}
+}
+
+// Auto-push helper: pushes relevant sheet after local edit
+function autoSave(pushFn, statusId, label){
+  if(!accessToken) return;
+  const el=$(statusId);
+  if(el) el.textContent='Saving…';
+  pushFn().then(()=>{if(el) el.textContent='Saved ✓';}).catch(e=>{if(el) el.textContent='Save failed';toast('Save error: '+e.message,true);});
+}
+
+function renderCurrentPage(){
+  const active=document.querySelector('.page.active');
+  if(!active) return;
+  const id=active.id.replace('page-','');
+  const renders={dashboard:renderDashboard,ingredients:renderIngredients,recipes:renderRecipes,menu:renderMenu,pl:renderPL,settings:renderSettings};
+  if(renders[id]) renders[id]();
+}
+
+// ════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════
+function renderDashboard(){
+  setGreeting();
+  const avgPrice=menuItems.reduce((s,m)=>s+m.price,0)/menuItems.length;
+  const avgCogsPct=menuItems.reduce((s,m)=>s+m.cogs/m.price,0)/menuItems.length;
+  const totalRevYTD=plData.foodBev.reduce((a,b)=>a+b,0)+plData.otherRev.reduce((a,b)=>a+b,0);
+  const totalCogsYTD=plData.coffee.reduce((a,b)=>a+b,0)+plData.food.reduce((a,b)=>a+b,0)+plData.supplies.reduce((a,b)=>a+b,0);
+
+  $('kpi-row').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Menu Items</div><div class="kpi-value">${menuItems.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Selling Price</div><div class="kpi-value">${fmt(avgPrice)}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg COGS %</div><div class="kpi-value ${avgCogsPct>0.3?'amber':''}">${pct(avgCogsPct)}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Gross Margin</div><div class="kpi-value">${pct(1-avgCogsPct)}</div></div>
+    <div class="kpi"><div class="kpi-label">YTD Revenue</div><div class="kpi-value">${fmt(totalRevYTD,0)}</div></div>
+    <div class="kpi"><div class="kpi-label">YTD COGS</div><div class="kpi-value">${fmt(totalCogsYTD,0)}</div></div>
+  `;
+  $('dash-menu-table').querySelector('tbody').innerHTML=menuItems.slice(0,8).map(m=>{
+    const margin=(m.price-m.cogs)/m.price;
+    return`<tr><td>${m.name}</td><td><span class="badge badge-gray">${m.cat}</span></td><td class="num">${fmt(m.price)}</td><td class="num">${barHTML(m.cogs/m.price,0.5)}${pct(margin)}</td></tr>`;
+  }).join('');
+  const netProfits=MONTHS.map((_,i)=>{
+    const rev=plData.foodBev[i]+plData.otherRev[i];
+    const cogs=plData.coffee[i]+plData.food[i]+plData.supplies[i];
+    const opex=plData.rent[i]+plData.labor[i]+plData.utilities[i]+plData.marketing[i];
+    return rev-cogs-opex;
+  });
+  const maxP=Math.max(...netProfits);
+  $('dash-pl-chart').innerHTML=`
+    <div style="display:flex;align-items:flex-end;gap:6px;height:120px;padding-bottom:1.5rem;position:relative;">
+      ${netProfits.map((v,i)=>{
+        const h=Math.max(4,(v/maxP)*100);
+        return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+          <div style="width:100%;height:${h}%;background:var(--forest-light);border-radius:4px 4px 0 0;" title="${MONTHS[i]}: ${fmt(v)}"></div>
+          <span style="font-size:0.6rem;color:var(--warm-gray);position:absolute;bottom:0;">${MONTHS[i].charAt(0)}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="text-align:center;font-size:0.75rem;color:var(--warm-gray);margin-top:4px;">Monthly Net Profit · avg ${fmt(netProfits.reduce((a,b)=>a+b,0)/12)}</div>`;
+  const sorted=[...ingredients].sort((a,b)=>costPerUnit(b)-costPerUnit(a)).slice(0,10);
+  $('dash-ing-table').querySelector('tbody').innerHTML=sorted.map(ing=>`
+    <tr><td>${ing.name}</td><td><span class="badge badge-gray">${ing.cat}</span></td>
+    <td class="num">${fmt(ing.packCost)}</td><td class="num" style="font-weight:600;">${fmt(costPerUnit(ing),4)}</td>
+    <td class="center" style="font-size:0.8rem;color:var(--warm-gray);">per ${ing.useUnit}</td></tr>`).join('');
+}
+
+// ════════════════════════════════════════════════
+// INGREDIENTS
+// ════════════════════════════════════════════════
+function renderIngredients(){
+  const cf=$('ing-cat-filter'), cur=cf.value;
+  cf.innerHTML='<option value="">All</option>'+ingCats.sort().map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+  const search=($('ing-search').value||'').toLowerCase();
+  const filtered=ingredients.filter(ing=>(!cur||ing.cat===cur)&&(!search||ing.name.toLowerCase().includes(search)||ing.cat.toLowerCase().includes(search)));
+  $('ing-tbody').innerHTML=filtered.map(ing=>{
+    const i=ingredients.indexOf(ing);
+    return`<tr>
+      <td><input type="text" value="${ing.name}" onchange="updateIng(${i},'name',this.value)" style="width:170px;"></td>
+      <td><select onchange="updateIng(${i},'cat',this.value)">${catOptions(ingCats,ing.cat)}</select></td>
+      <td><input type="number" value="${ing.packSz}" step="0.01" onchange="updateIng(${i},'packSz',+this.value)" style="width:70px;color:var(--blue);"></td>
+      <td><input type="text" value="${ing.packUnit}" onchange="updateIng(${i},'packUnit',this.value)" style="width:60px;"></td>
+      <td><input type="number" value="${ing.packCost}" step="0.01" onchange="updateIng(${i},'packCost',+this.value)" style="width:80px;font-weight:600;color:var(--blue);"></td>
+      <td><input type="text" value="${ing.useUnit}" onchange="updateIng(${i},'useUnit',this.value)" style="width:60px;"></td>
+      <td><input type="number" value="${ing.unitsPerPack}" step="0.01" onchange="updateIng(${i},'unitsPerPack',+this.value)" style="width:80px;color:var(--blue);"></td>
+      <td class="num" style="font-weight:600;color:var(--forest);">${fmt(costPerUnit(ing),4)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteIng(${i})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateIng(i,k,v){ingredients[i][k]=v;renderIngredients();autoSave(pushIngredients,'ing-sync-status');}
+function addIngredient(){
+  ingredients.push({name:"New Ingredient",cat:ingCats[0]||"Other",packSz:1,packUnit:"each",packCost:0,useUnit:"each",unitsPerPack:1});
+  renderIngredients(); autoSave(pushIngredients,'ing-sync-status'); toast('Ingredient added');
+}
+function deleteIng(i){
+  if(!confirm(`Delete "${ingredients[i].name}"?`)) return;
+  ingredients.splice(i,1); renderIngredients(); autoSave(pushIngredients,'ing-sync-status'); toast('Deleted');
+}
+
+// ════════════════════════════════════════════════
+// RECIPES
+// ════════════════════════════════════════════════
+function recipeTotal(r){return r.ingredients.reduce((s,ri)=>{const ing=ingByName(ri.name);return s+(ing?costPerUnit(ing)*ri.qty:0);},0);}
+
+function renderRecipes(){
+  $('recipe-list').innerHTML=recipes.map((r,i)=>{
+    const total=recipeTotal(r); const margin=r.price>0?(r.price-total)/r.price:0;
+    return`<div class="recipe-list-item${selectedRecipe===i?' selected':''}" onclick="selectRecipe(${i})">
+      <h3>${r.name}</h3><p>${r.cat} · ${fmt(r.price)} · ${pct(margin)} margin</p></div>`;
+  }).join('')||'<div style="padding:1rem;color:var(--warm-gray);font-size:0.85rem;">No recipes yet.</div>';
+  if(selectedRecipe!==null&&recipes[selectedRecipe]) renderRecipeDetail(selectedRecipe);
+}
+function selectRecipe(i){selectedRecipe=i;renderRecipes();}
+
+function renderRecipeDetail(i){
+  const r=recipes[i]; const total=recipeTotal(r); const gp=r.price-total;
+  const margin=r.price>0?gp/r.price:0;
+  const rows=r.ingredients.map((ri,ridx)=>{
+    const ing=ingByName(ri.name); const cpu=ing?costPerUnit(ing):0;
+    return`<tr>
+      <td><select onchange="updateRecipeIng(${i},${ridx},'name',this.value)">${ingredients.map(g=>`<option${g.name===ri.name?' selected':''}>${g.name}</option>`).join('')}</select></td>
+      <td><input type="number" value="${ri.qty}" step="0.01" style="width:70px;" onchange="updateRecipeIng(${i},${ridx},'qty',+this.value)"></td>
+      <td class="center" style="font-size:0.8rem;color:var(--warm-gray);">${ing?ing.useUnit:'—'}</td>
+      <td class="num" style="color:var(--green);">${fmt(cpu,4)}</td>
+      <td class="num" style="font-weight:600;">${fmt(cpu*ri.qty)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteRecipeIng(${i},${ridx})">✕</button></td>
+    </tr>`;
+  }).join('');
+  $('recipe-detail-panel').innerHTML=`<div class="recipe-detail">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <div>
+        <input type="text" value="${r.name}" style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:600;border:none;border-bottom:2px solid var(--border);border-radius:0;width:220px;padding:2px 4px;" onchange="updateRecipe(${i},'name',this.value)">
+        <select style="margin-left:8px;" onchange="updateRecipe(${i},'cat',this.value)">${catOptions(menuCats,r.cat)}</select>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="deleteRecipe(${i})">Delete</button>
+    </div>
+    <div class="recipe-summary">
+      <div class="r-stat"><label>Selling Price</label><div style="display:flex;align-items:center;gap:4px;"><span style="color:var(--warm-gray);">$</span><input type="number" value="${r.price}" step="0.25" style="font-family:'Playfair Display',serif;font-size:1.1rem;width:80px;border:none;border-bottom:2px solid var(--border);border-radius:0;color:var(--blue);" onchange="updateRecipe(${i},'price',+this.value)"></div></div>
+      <div class="r-stat"><label>Total COGS</label><span>${fmt(total)}</span></div>
+      <div class="r-stat"><label>Gross Profit</label><span style="color:${gp>=0?'var(--green)':'var(--red)'};">${fmt(gp)}</span></div>
+      <div class="r-stat"><label>Margin</label><span>${marginRing(margin)}</span></div>
+    </div>
+    <table><thead><tr><th>Ingredient</th><th>Qty</th><th>Unit</th><th>Cost/Unit</th><th>Line Cost</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+    <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="addRecipeIng(${i})">+ Add Ingredient</button>
+  </div>`;
+}
+function updateRecipe(i,k,v){recipes[i][k]=v;renderRecipes();}
+function updateRecipeIng(ri,ii,k,v){recipes[ri].ingredients[ii][k]=v;renderRecipeDetail(ri);renderRecipes();}
+function deleteRecipeIng(ri,ii){recipes[ri].ingredients.splice(ii,1);renderRecipeDetail(ri);renderRecipes();}
+function addRecipeIng(ri){recipes[ri].ingredients.push({name:ingredients[0]?.name||'',qty:1});renderRecipeDetail(ri);}
+function addRecipe(){recipes.push({name:"New Recipe",cat:menuCats[0]||"Other",price:0,ingredients:[]});selectedRecipe=recipes.length-1;renderRecipes();}
+function deleteRecipe(i){
+  if(!confirm(`Delete "${recipes[i].name}"?`)) return;
+  recipes.splice(i,1); selectedRecipe=recipes.length>0?Math.min(i,recipes.length-1):null; renderRecipes();
+  if(selectedRecipe===null) $('recipe-detail-panel').innerHTML='<div class="recipe-detail" style="height:200px;display:flex;align-items:center;justify-content:center;color:var(--warm-gray);"><p>No recipes</p></div>';
+}
+
+// ════════════════════════════════════════════════
+// MENU
+// ════════════════════════════════════════════════
+function renderMenu(){
+  const cf=$('menu-cat-filter'), cur=cf.value;
+  cf.innerHTML='<option value="">All</option>'+menuCats.sort().map(c=>`<option${c===cur?' selected':''}>${c}</option>`).join('');
+  const target=(+($('target-cogs').value)||30)/100;
+  const filtered=menuItems.filter(m=>!cur||m.cat===cur);
+  if(!filtered.length){$('menu-kpi-row').innerHTML='';$('menu-tbody').innerHTML='<tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--warm-gray);">No items</td></tr>';return;}
+  const avgCogs=filtered.reduce((s,m)=>s+m.cogs/m.price,0)/filtered.length;
+  const avgPrice=filtered.reduce((s,m)=>s+m.price,0)/filtered.length;
+  $('menu-kpi-row').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Items Shown</div><div class="kpi-value">${filtered.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Price</div><div class="kpi-value">${fmt(avgPrice)}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg COGS %</div><div class="kpi-value ${avgCogs>target?'red':avgCogs>target*0.9?'amber':''}">${pct(avgCogs)}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Margin</div><div class="kpi-value">${pct(1-avgCogs)}</div></div>
+    <div class="kpi"><div class="kpi-label">Target COGS %</div><div class="kpi-value">${pct(target)}</div></div>`;
+  $('menu-tbody').innerHTML=filtered.map((m,fi)=>{
+    const idx=menuItems.indexOf(m); const gp=m.price-m.cogs;
+    const cogsPct=m.price>0?m.cogs/m.price:0; const margin=m.price>0?gp/m.price:0;
+    const over=cogsPct>target;
+    return`<tr style="${over?'background:#fff9f9 !important;':''}">
+      <td class="center" style="color:var(--warm-gray);font-size:0.8rem;">${fi+1}</td>
+      <td><input type="text" value="${m.name}" onchange="updateMenuItem(${idx},'name',this.value)" style="width:160px;"></td>
+      <td><select onchange="updateMenuItem(${idx},'cat',this.value)">${catOptions(menuCats,m.cat)}</select></td>
+      <td><input type="number" value="${m.price}" step="0.25" onchange="updateMenuItem(${idx},'price',+this.value)" style="width:80px;color:var(--blue);font-weight:600;"></td>
+      <td><input type="number" value="${m.cogs}" step="0.01" onchange="updateMenuItem(${idx},'cogs',+this.value)" style="width:80px;color:var(--blue);"></td>
+      <td class="num" style="color:var(--green);font-weight:600;">${fmt(gp)}</td>
+      <td class="num ${over?'':''}"><span style="font-weight:${over?700:400};color:${over?'var(--red)':'inherit'}">${pct(cogsPct)}</span></td>
+      <td class="num">${barHTML(margin)}${pct(margin)}</td>
+      <td class="center">${marginBadge(margin)}</td>
+      <td><input type="text" value="${m.notes}" placeholder="notes…" onchange="updateMenuItem(${idx},'notes',this.value)" style="width:110px;"></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteMenuItem(${idx})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+function updateMenuItem(i,k,v){menuItems[i][k]=v;renderMenu();autoSave(pushMenu,'menu-sync-status');}
+function addMenuItem(){menuItems.push({name:"New Item",cat:menuCats[0]||"Other",price:0,cogs:0,notes:""});renderMenu();autoSave(pushMenu,'menu-sync-status');toast('Item added');}
+function deleteMenuItem(i){if(!confirm(`Delete "${menuItems[i].name}"?`))return;menuItems.splice(i,1);renderMenu();autoSave(pushMenu,'menu-sync-status');toast('Deleted');}
+
+// ════════════════════════════════════════════════
+// P&L
+// ════════════════════════════════════════════════
+function plCalc(i){
+  const rev=plData.foodBev[i]+plData.otherRev[i];
+  const cogs=plData.coffee[i]+plData.food[i]+plData.supplies[i];
+  const gp=rev-cogs; const opex=plData.rent[i]+plData.labor[i]+plData.utilities[i]+plData.marketing[i];
+  const net=gp-opex;
+  return{rev,cogs,gp,opex,net,cogsPct:rev>0?cogs/rev:0,gpPct:rev>0?gp/rev:0,netPct:rev>0?net/rev:0};
+}
+function plTotal(k){return plData[k].reduce((a,b)=>a+b,0);}
+function plInput(k,i){return`<input type="number" value="${plData[k][i]}" step="100" style="width:76px;font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--blue);text-align:right;font-weight:600;" onchange="updatePL('${k}',${i},+this.value)">`;}
+
+function renderPL(){
+  const totals=Array.from({length:12},(_,i)=>plCalc(i));
+  const mHdr=MONTHS.map(m=>`<th style="text-align:right;">${m}</th>`).join('')+'<th style="text-align:right;background:var(--parchment);">Total</th>';
+  function row(lbl,vals,bold=false,fmt2=true){
+    const cells=vals.map(v=>`<td class="num" style="${bold?'font-weight:600;':''}">${fmt2?fmt(v,0):pct(v)}</td>`).join('');
+    const tot=fmt2?fmt(vals.reduce((a,b)=>a+b,0),0):pct(vals.reduce((a,b)=>a+b,0)/vals.length);
+    return`<tr class="${bold?'pl-total':''}"><td style="${bold?'font-weight:600;':''}">${lbl}</td>${cells}<td class="num total-col">${tot}</td></tr>`;
+  }
+  function irow(lbl,k){
+    const cells=MONTHS.map((_,i)=>`<td class="num">${plInput(k,i)}</td>`).join('');
+    return`<tr><td>${lbl}</td>${cells}<td class="num total-col" style="font-family:'DM Mono',monospace;font-size:0.82rem;">${fmt(plTotal(k),0)}</td></tr>`;
+  }
+  function sec(lbl){return`<tr class="pl-section"><td colspan="14">${lbl}</td></tr>`;}
+  $('pl-table-wrap').innerHTML=`<table>
+    <thead><tr><th style="min-width:180px;">Line Item</th>${mHdr}</tr></thead>
+    <tbody>
+      ${sec('REVENUE')}${irow('Food & Beverage Sales','foodBev')}${irow('Other Revenue','otherRev')}
+      ${row('Total Revenue',totals.map(t=>t.rev),true)}
+      ${sec('COST OF GOODS SOLD')}${irow('Coffee & Beverages','coffee')}${irow('Food','food')}${irow('Packaging & Supplies','supplies')}
+      ${row('Total COGS',totals.map(t=>t.cogs),true)}
+      ${row('COGS %',totals.map(t=>t.cogsPct),false,false)}
+      ${row('Gross Profit',totals.map(t=>t.gp),true)}
+      ${row('Gross Margin %',totals.map(t=>t.gpPct),false,false)}
+      ${sec('OPERATING EXPENSES')}${irow('Rent','rent')}${irow('Labor','labor')}${irow('Utilities','utilities')}${irow('Marketing','marketing')}
+      ${row('Total OpEx',totals.map(t=>t.opex),true)}
+      ${row('Net Profit',totals.map(t=>t.net),true)}
+      ${row('Net Margin %',totals.map(t=>t.netPct),false,false)}
+    </tbody></table>`;
+}
+function updatePL(k,i,v){plData[k][i]=v;renderPL();autoSave(pushPL,'pl-sync-status');}
+
+// ════════════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════════════
+function clearConfig(){
+  if(!confirm('Remove saved Client ID and Spreadsheet ID? You can re-enter them at any time.')) return;
+  signOut();
+  SHEET_CONFIG={};
+  localStorage.removeItem('cogs_sheet_config');
+  $('settings-client-id').value='';
+  $('settings-sheet-id').value='';
+  $('settings-conn-badge').textContent='';
+  toast('Credentials cleared');
+}
+
+function renderSettings(){
+  if(SHEET_CONFIG.clientId) $('settings-client-id').value=SHEET_CONFIG.clientId;
+  if(SHEET_CONFIG.sheetId)  $('settings-sheet-id').value=SHEET_CONFIG.sheetId;
+  if(lastSynced) $('settings-sync-info').textContent='Last synced: '+lastSynced.toLocaleTimeString();
+  const badge=$('settings-conn-badge');
+  if(accessToken){
+    badge.innerHTML='<span style="color:#52b788;">● Connected</span>';
+  } else if(SHEET_CONFIG.clientId&&SHEET_CONFIG.sheetId){
+    badge.innerHTML='<span style="color:#fbbf24;">● Credentials saved — not signed in</span>';
+  } else {
+    badge.innerHTML='<span style="color:#9ca3af;">● Not configured</span>';
+  }
+  renderCatTags();
+}
+
+function renderCatTags(){
+  $('ing-cat-tags').innerHTML=ingCats.map((c,i)=>`
+    <span class="cat-tag">${c}<button onclick="removeIngCat(${i})" title="Remove">×</button></span>`).join('');
+  $('menu-cat-tags').innerHTML=menuCats.map((c,i)=>`
+    <span class="cat-tag">${c}<button onclick="removeMenuCat(${i})" title="Remove">×</button></span>`).join('');
+}
+
+function addIngCat(){
+  const v=$('new-ing-cat').value.trim();
+  if(!v||ingCats.includes(v)){toast(v?'Already exists':'Enter a name',true);return;}
+  ingCats.push(v); $('new-ing-cat').value='';
+  renderCatTags(); autoSave(pushCategories,'settings-sync-info'); toast('Category added');
+}
+function removeIngCat(i){
+  const cat=ingCats[i];
+  if(ingredients.some(g=>g.cat===cat)&&!confirm(`"${cat}" is used by some ingredients. Remove anyway?`)) return;
+  ingCats.splice(i,1); renderCatTags(); autoSave(pushCategories,'settings-sync-info'); toast('Removed');
+}
+function addMenuCat(){
+  const v=$('new-menu-cat').value.trim();
+  if(!v||menuCats.includes(v)){toast(v?'Already exists':'Enter a name',true);return;}
+  menuCats.push(v); $('new-menu-cat').value='';
+  renderCatTags(); autoSave(pushCategories,'settings-sync-info'); toast('Category added');
+}
+function removeMenuCat(i){
+  const cat=menuCats[i];
+  if(menuItems.some(m=>m.cat===cat)&&!confirm(`"${cat}" is used by some menu items. Remove anyway?`)) return;
+  menuCats.splice(i,1); renderCatTags(); autoSave(pushCategories,'settings-sync-info'); toast('Removed');
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+function init(){
+  renderDashboard();
+  if(SHEET_CONFIG.clientId&&SHEET_CONFIG.sheetId){
+    $('auth-btn').textContent='Sign in to Sheets';
+    window.addEventListener('load',()=>{
+      try{initOAuth();}catch(e){}
+    });
+  } else {
+    setTimeout(()=>{$('setup-modal').style.display='flex';},800);
+  }
+}
+init();
+</script>
+</body>
+</html>
