@@ -575,6 +575,19 @@ function barHTML(v,max=1){
 function catOptions(cats, selected){
   return cats.map(c=>`<option${c===selected?' selected':''}>${c}</option>`).join('');
 }
+// Grouped, alphabetized ingredient <select> for recipe builder
+function ingSelectOptions(selectedName){
+  // Group by category, sort categories and ingredients within each
+  const groups={};
+  [...ingredients].sort((a,b)=>a.name.localeCompare(b.name)).forEach(ing=>{
+    if(!groups[ing.cat]) groups[ing.cat]=[];
+    groups[ing.cat].push(ing);
+  });
+  return Object.keys(groups).sort().map(cat=>{
+    const opts=groups[cat].map(ing=>`<option value="${ing.name}"${ing.name===selectedName?' selected':''}>${ing.name}</option>`).join('');
+    return `<optgroup label="${cat}">${opts}</optgroup>`;
+  }).join('');
+}
 
 // ════════════════════════════════════════════════
 // NAVIGATION
@@ -836,7 +849,7 @@ function renderDashboard(){
   const sorted=[...ingredients].sort((a,b)=>costPerUnit(b)-costPerUnit(a)).slice(0,10);
   $('dash-ing-table').querySelector('tbody').innerHTML=sorted.map(ing=>`
     <tr><td>${ing.name}</td><td><span class="badge badge-gray">${ing.cat}</span></td>
-    <td class="num">${fmt(ing.packCost)}</td><td class="num" style="font-weight:600;">${fmt(costPerUnit(ing),4)}</td>
+    <td class="num">${fmt(ing.packCost)}</td><td class="num" style="font-weight:600;">$${costPerUnit(ing).toFixed(4)}</td>
     <td class="center" style="font-size:0.8rem;color:var(--warm-gray);">per ${ing.useUnit}</td></tr>`).join('');
 }
 
@@ -858,13 +871,24 @@ function renderIngredients(){
       <td><input type="number" value="${ing.packCost}" step="0.01" onchange="updateIng(${i},'packCost',+this.value)" style="width:80px;font-weight:600;color:var(--blue);"></td>
       <td><input type="text" value="${ing.useUnit}" onchange="updateIng(${i},'useUnit',this.value)" style="width:60px;"></td>
       <td><input type="number" value="${ing.unitsPerPack}" step="0.01" onchange="updateIng(${i},'unitsPerPack',+this.value)" style="width:80px;color:var(--blue);"></td>
-      <td class="num" style="font-weight:600;color:var(--forest);">${fmt(costPerUnit(ing),4)}</td>
+      <td class="num" style="font-weight:600;color:var(--forest);">$${costPerUnit(ing).toFixed(4)}</td>
       <td><button class="btn btn-danger btn-sm" onclick="deleteIng(${i})">✕</button></td>
     </tr>`;
   }).join('');
 }
 
-function updateIng(i,k,v){ingredients[i][k]=v;renderIngredients();autoSave(pushIngredients,'ing-sync-status');}
+function updateIng(i,k,v){
+  if(k==='name'){
+    const oldName=ingredients[i].name;
+    // Propagate rename to all recipes
+    recipes.forEach(r=>r.ingredients.forEach(ri=>{if(ri.name===oldName) ri.name=v;}));
+    // Propagate to menu items that reference the old name
+    menuItems.forEach(m=>{if(m.name===oldName) m.name=v;});
+  }
+  ingredients[i][k]=v;
+  renderIngredients();
+  autoSave(pushIngredients,'ing-sync-status');
+}
 function addIngredient(){
   ingredients.push({name:"New Ingredient",cat:ingCats[0]||"Other",packSz:1,packUnit:"each",packCost:0,useUnit:"each",unitsPerPack:1});
   renderIngredients(); autoSave(pushIngredients,'ing-sync-status'); toast('Ingredient added');
@@ -904,10 +928,10 @@ function renderRecipeDetail(i){
   const rows=r.ingredients.map((ri,ridx)=>{
     const ing=ingByName(ri.name); const cpu=ing?costPerUnit(ing):0;
     return`<tr>
-      <td><select onchange="updateRecipeIng(${i},${ridx},'name',this.value)">${ingredients.map(g=>`<option${g.name===ri.name?' selected':''}>${g.name}</option>`).join('')}</select></td>
+      <td><select onchange="updateRecipeIng(${i},${ridx},'name',this.value)" style="max-width:200px;">${ingSelectOptions(ri.name)}</select></td>
       <td><input type="number" value="${ri.qty}" step="0.01" style="width:70px;" onchange="updateRecipeIng(${i},${ridx},'qty',+this.value)"></td>
       <td class="center" style="font-size:0.8rem;color:var(--warm-gray);">${ing?ing.useUnit:'—'}</td>
-      <td class="num" style="color:var(--green);">${fmt(cpu,4)}</td>
+      <td class="num" style="color:var(--green);">$${cpu.toFixed(4)}</td>
       <td class="num" style="font-weight:600;">${fmt(cpu*ri.qty)}</td>
       <td><button class="btn btn-danger btn-sm" onclick="deleteRecipeIng(${i},${ridx})">✕</button></td>
     </tr>`;
@@ -981,7 +1005,25 @@ function renderRecipeDetail(i){
     <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="addRecipeIng(${i})">+ Add Ingredient</button>
   </div>`;
 }
-function updateRecipe(i,k,v){recipes[i][k]=v;renderRecipes();}
+function updateRecipe(i,k,v){
+  recipes[i][k]=v;
+  // Keep menuItems in sync when recipe name or price changes
+  syncMenuFromRecipes();
+  renderRecipes();
+}
+function syncMenuFromRecipes(){
+  recipes.forEach(r=>{
+    const total=recipeTotal(r);
+    const labor=laborCostFromHours(r.laborHours||0);
+    const existing=menuItems.find(m=>m.name===r.name);
+    if(existing){
+      // Update cogs from recipe total; keep price if already set, else use recipe price
+      existing.cogs=parseFloat(total.toFixed(4));
+      if(!existing.price||existing.price===0) existing.price=r.price;
+    }
+    // Note: we don't auto-add new recipes to menu — user controls that
+  });
+}
 function updateRecipeIng(ri,ii,k,v){recipes[ri].ingredients[ii][k]=v;renderRecipeDetail(ri);renderRecipes();}
 function deleteRecipeIng(ri,ii){recipes[ri].ingredients.splice(ii,1);renderRecipeDetail(ri);renderRecipes();}
 function addRecipeIng(ri){recipes[ri].ingredients.push({name:ingredients[0]?.name||'',qty:1});renderRecipeDetail(ri);}
@@ -1155,6 +1197,7 @@ function removeMenuCat(i){
 // INIT
 // ════════════════════════════════════════════════
 function init(){
+  syncMenuFromRecipes();
   renderDashboard();
   if(SHEET_CONFIG.clientId&&SHEET_CONFIG.sheetId){
     $('auth-btn').textContent='Sign in to Sheets';
