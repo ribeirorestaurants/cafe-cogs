@@ -989,11 +989,10 @@ function renderRecipeDetail(i){
 
     <!-- Row 1: core inputs -->
     <div class="recipe-summary" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
-      <div class="r-stat"><label>Selling Price</label>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <span style="color:var(--warm-gray);">$</span>
-          <input type="number" value="${r.price}" step="0.25" style="font-family:'Playfair Display',serif;font-size:1.1rem;width:80px;border:none;border-bottom:2px solid var(--border);border-radius:0;color:var(--blue);" onchange="updateRecipe(${i},'price',+this.value)">
-        </div>
+      <div class="r-stat" style="position:relative;">
+        <label>Selling Price</label>
+        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:600;color:var(--forest);">${fmt(r.price)}</div>
+        <div style="font-size:0.68rem;color:var(--warm-gray);margin-top:3px;">Edit on the <span style="color:var(--blue);cursor:pointer;text-decoration:underline;" onclick="showPage('menu',document.querySelector('nav button:nth-child(4)'))">Menu tab</span></div>
       </div>
       <div class="r-stat"><label>Ingredient COGS</label><span>${fmt(total)}</span></div>
       <div class="r-stat">
@@ -1104,9 +1103,9 @@ const MENU_COLS_DEFAULT = [
   {id:'num',    label:'#',             visible:true,  fixed:true},
   {id:'name',   label:'Menu Item',     visible:true,  fixed:true},
   {id:'cat',    label:'Category',      visible:true},
-  {id:'price',  label:'Sell Price',    visible:true},
-  {id:'cogs',   label:'Ingr. COGS',   visible:true,  tip:'Ingredient costs only — from your recipe'},
-  {id:'labor',  label:'Labor Cost',    visible:true,  tip:'Labor hours × hourly rate set in Settings'},
+  {id:'price',  label:'Sell Price',    visible:true,  tip:'Edit sell price here. Ingredient costs and labor are locked — edit those in Recipe Costing.'},
+  {id:'cogs',   label:'Ingr. COGS 🔒', visible:true,  tip:'Auto-calculated from recipe ingredients. Edit in Recipe Costing tab.'},
+  {id:'labor',  label:'Labor Cost 🔒',  visible:true,  tip:'Auto-calculated from recipe labor hours × rate. Edit in Recipe Costing tab.'},
   {id:'total',  label:'Total Cost',    visible:true,  tip:'Ingredient COGS + Labor Cost'},
   {id:'gp',     label:'Gross Profit',  visible:true,  tip:'Sell Price minus Total Cost'},
   {id:'costpct',label:'Total Cost %',  visible:true,  tip:'Total Cost (ingredients + labor) as % of Sell Price'},
@@ -1119,9 +1118,9 @@ const MENU_COLS_DEFAULT = [
 ];
 
 // v2 key forces a reset if user has stale column config from earlier session
-let menuCols = JSON.parse(localStorage.getItem('cogs_menu_cols_v2') || 'null') || MENU_COLS_DEFAULT.map(c=>({...c}));
+let menuCols = JSON.parse(localStorage.getItem('cogs_menu_cols_v3') || 'null') || MENU_COLS_DEFAULT.map(c=>({...c}));
 
-function saveMenuCols(){ localStorage.setItem('cogs_menu_cols_v2', JSON.stringify(menuCols)); }
+function saveMenuCols(){ localStorage.setItem('cogs_menu_cols_v3', JSON.stringify(menuCols)); }
 function resetColOrder(){ menuCols = MENU_COLS_DEFAULT.map(c=>({...c})); saveMenuCols(); renderColManager(); renderMenu(); toast('Columns reset to default'); }
 
 function toggleColManager(){
