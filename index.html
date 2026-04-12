@@ -308,8 +308,7 @@
 <!-- ══ MENU ══ -->
 <div class="page" id="page-menu">
   <div class="page-header">
-    <div><h1>Menu COGS Dashboard</h1><p>Edit prices and COGS inline. Margins and status update instantly.</p></div>
-    <button class="btn btn-primary" onclick="addMenuItem()">+ Add Item</button>
+    <div><h1>Menu COGS Dashboard</h1><p>Prices and margins update automatically from Recipe Costing. Add or remove items there.</p></div>
   </div>
   <div class="kpi-row" id="menu-kpi-row"></div>
   <div class="card">
@@ -981,7 +980,7 @@ function renderRecipeDetail(i){
       <button class="btn btn-danger btn-sm" onclick="deleteRecipe(${i})">Delete</button>
     </div>
 
-    <div class="recipe-summary" style="grid-template-columns:repeat(2,1fr);margin-bottom:1.25rem;">
+    <div class="recipe-summary" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.25rem;">
       <div class="r-stat"><label>Ingredient COGS</label><span>${fmt(total)}</span></div>
       <div class="r-stat">
         <label>Labor Hours</label>
@@ -991,6 +990,7 @@ function renderRecipeDetail(i){
         </div>
         <span style="font-size:0.68rem;color:var(--warm-gray);">@ ${fmt(ccFees.laborRate||15)}/hr = <strong>${fmt(labor)}</strong></span>
       </div>
+      <div class="r-stat" style="background:#f0f7f3;"><label>Total Cost</label><span style="color:var(--forest);">${fmt(total+labor)}</span></div>
     </div>
 
     <table><thead><tr><th>Ingredient</th><th>Qty</th><th>Unit</th><th>Cost/Unit</th><th>Line Cost</th><th></th></tr></thead><tbody>${rows}</tbody></table>
@@ -1066,13 +1066,13 @@ const MENU_COLS_DEFAULT = [
   {id:'health', label:'Margin Health', visible:true,  tip:'Strong ≥70% | OK 50-70% | Low <50%'},
   {id:'updated',label:'Date Modified', visible:true},
   {id:'notes',  label:'Notes',         visible:true},
-  {id:'del',    label:'',              visible:true,  fixed:true},
+
 ];
 
 // v2 key forces a reset if user has stale column config from earlier session
-let menuCols = JSON.parse(localStorage.getItem('cogs_menu_cols_v3') || 'null') || MENU_COLS_DEFAULT.map(c=>({...c}));
+let menuCols = JSON.parse(localStorage.getItem('cogs_menu_cols_v4') || 'null') || MENU_COLS_DEFAULT.map(c=>({...c}));
 
-function saveMenuCols(){ localStorage.setItem('cogs_menu_cols_v3', JSON.stringify(menuCols)); }
+function saveMenuCols(){ localStorage.setItem('cogs_menu_cols_v4', JSON.stringify(menuCols)); }
 function resetColOrder(){ menuCols = MENU_COLS_DEFAULT.map(c=>({...c})); saveMenuCols(); renderColManager(); renderMenu(); toast('Columns reset to default'); }
 
 function toggleColManager(){
@@ -1162,7 +1162,6 @@ function renderMenu(){
       health:  `<td class="center" title="Strong ≥70% | OK 50–70% | Low <50%">${marginBadge(margin)}</td>`,
       updated: `<td class="date-cell">${updStr}</td>`,
       notes:   `<td><input type="text" value="${m.notes||''}" placeholder="notes…" onchange="updateMenuItem(${idx},'notes',this.value)" style="width:90px;"></td>`,
-      del:     `<td><button class="btn btn-danger btn-sm" onclick="deleteMenuItem(${idx})">✕</button></td>`,
     };
     return`<tr style="${over?'background:#fff9f9 !important;':''}">${visCols.map(c=>cellMap[c.id]||'').join('')}</tr>`;
   }).join('');
