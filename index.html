@@ -288,7 +288,7 @@
 
 <!-- ══ RECIPES ══ -->
 <div class="page" id="page-recipes">
-  <div class="page-header"><div><h1>Recipe Costing</h1><p>Ingredient costs pull automatically from the library by name.</p></div></div>
+  <div class="page-header"><div><h1>Recipe Costing</h1><p>Ingredient costs pull automatically from the library by name.</p></div><div id="recipe-sync-status" style="font-size:0.78rem;color:var(--warm-gray);"></div></div>
   <div class="recipe-grid">
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -658,6 +658,15 @@ async function pullFromSheets(){
   if(!accessToken||!SHEET_CONFIG.sheetId) return;
   setSyncStatus('syncing','Loading…');
   try{
+    // Recipes (stored as JSON in Config!H2:H11)
+    const recipeChunks=await sheetsGet('Config!H2:H11');
+    if(recipeChunks.values){
+      const json=recipeChunks.values.flat().filter(Boolean).join('');
+      if(json){
+        try{ recipes=JSON.parse(json); }catch(e){ console.warn('Recipe parse error',e); }
+      }
+    }
+
     // Ingredients
     const ingData=await sheetsGet("'Ingredient Library'!A4:H103");
     if(ingData.values){
@@ -793,12 +802,25 @@ async function clearRecipeCosting(){
   await sheetsBatchUpdate([{range:"'Recipe Costing'!A3:I200", values:Array(198).fill(Array(9).fill(''))}]);
 }
 
+async function pushRecipes(){
+  // Store recipes as JSON in Config!H2 — compact and lossless
+  const json = JSON.stringify(recipes);
+  // Sheets cells have a 50,000 character limit; split across rows if needed
+  const CHUNK = 45000;
+  const chunks = [];
+  for(let i=0;i<json.length;i+=CHUNK) chunks.push([json.slice(i,i+CHUNK)]);
+  // Pad to 10 rows to clear any previous data
+  while(chunks.length<10) chunks.push(['']);
+  await sheetsBatchUpdate([{range:'Config!H2:H11', values:chunks}]);
+}
+
 async function syncAll(){
   if(!accessToken){toast('Sign in first.');return;}
   if(isSyncing) return;
   isSyncing=true; setSyncStatus('syncing','Syncing…');
   try{
     await pushIngredients();
+    await pushRecipes();
     await pushMenu();
     await pushPL();
     await pushCategories();
@@ -1001,6 +1023,7 @@ function updateRecipe(i,k,v){
   recipes[i][k]=v;
   syncMenuFromRecipes();
   renderRecipes();
+  autoSave(pushRecipes,'recipe-sync-status');
   autoSave(pushMenu,'menu-sync-status');
 }
 function syncMenuFromRecipes(){
@@ -1028,14 +1051,15 @@ function syncMenuFromRecipes(){
     };
   });
 }
-function updateRecipeIng(ri,ii,k,v){recipes[ri].ingredients[ii][k]=v;syncMenuFromRecipes();renderRecipeDetail(ri);renderRecipes();autoSave(pushMenu,'menu-sync-status');}
-function deleteRecipeIng(ri,ii){recipes[ri].ingredients.splice(ii,1);renderRecipeDetail(ri);renderRecipes();}
+function updateRecipeIng(ri,ii,k,v){recipes[ri].ingredients[ii][k]=v;syncMenuFromRecipes();renderRecipeDetail(ri);renderRecipes();autoSave(pushRecipes,'recipe-sync-status');autoSave(pushMenu,'menu-sync-status');}
+function deleteRecipeIng(ri,ii){recipes[ri].ingredients.splice(ii,1);syncMenuFromRecipes();renderRecipeDetail(ri);renderRecipes();autoSave(pushRecipes,'recipe-sync-status');autoSave(pushMenu,'menu-sync-status');}
 function addRecipeIng(ri){recipes[ri].ingredients.push({name:ingredients[0]?.name||'',qty:1});renderRecipeDetail(ri);}
 function addRecipe(){
   recipes.push({name:"New Recipe",cat:menuCats[0]||"Other",price:0,laborHours:0,ingredients:[]});
   selectedRecipe=recipes.length-1;
   syncMenuFromRecipes();
   renderRecipes();
+  autoSave(pushRecipes,'recipe-sync-status');
   autoSave(pushMenu,'menu-sync-status');
 }
 function deleteRecipe(i){
@@ -1044,6 +1068,7 @@ function deleteRecipe(i){
   selectedRecipe=recipes.length>0?Math.min(i,recipes.length-1):null;
   syncMenuFromRecipes();
   renderRecipes();
+  autoSave(pushRecipes,'recipe-sync-status');
   autoSave(pushMenu,'menu-sync-status');
   if(selectedRecipe===null) $('recipe-detail-panel').innerHTML='<div class="recipe-detail" style="height:200px;display:flex;align-items:center;justify-content:center;color:var(--warm-gray);"><p>No recipes</p></div>';
 }
