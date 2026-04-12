@@ -386,6 +386,7 @@
         <button class="btn btn-ghost btn-sm" onclick="pullFromSheets()" id="settings-pull-btn">↓ Pull from Sheets</button>
         <div style="width:1px;height:24px;background:var(--border);margin:0 2px;"></div>
         <button class="btn btn-danger btn-sm" onclick="clearConfig()">✕ Clear credentials</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmClearRecipes()">✕ Clear recipe sheet</button>
         <span id="settings-sync-info" style="font-size:0.8rem;color:var(--warm-gray);margin-left:auto;"></span>
       </div>
       <div style="margin-top:1rem;padding:0.75rem;background:var(--parchment);border-radius:8px;font-size:0.8rem;color:var(--warm-gray);line-height:1.6;">
@@ -668,15 +669,32 @@ async function pullFromSheets(){
       }));
     }
 
-    // Menu
+    // Menu — pull price overrides and notes; COGS is always derived from recipes
     const menuData=await sheetsGet("'Menu Dashboard'!B8:K207");
+    const menuOverrides={};
     if(menuData.values){
-      menuItems=menuData.values.filter(r=>r[0]).map(r=>({
-        name:r[0]||'',cat:r[1]||'Other',price:parseFloat(r[2])||0,
-        cogs:parseFloat(r[3])||0,laborCost:parseFloat(r[4])||0,notes:r[8]||'',
-        updatedAt:r[9]?new Date(r[9]).getTime()||null:null
-      }));
+      menuData.values.filter(r=>r[0]).forEach(r=>{
+        menuOverrides[r[0]]={
+          price:parseFloat(r[2])||0,
+          notes:r[8]||'',
+          updatedAt:r[9]?new Date(r[9]).getTime()||null:null
+        };
+      });
     }
+    // Rebuild menuItems from recipes, applying any saved price/notes overrides
+    menuItems=recipes.map(r=>{
+      const ov=menuOverrides[r.name]||{};
+      const total=recipeTotal(r);
+      const labor=laborCostFromHours(r.laborHours||0);
+      return{
+        name:r.name, cat:r.cat,
+        price:ov.price||r.price||0,
+        cogs:parseFloat((total+labor).toFixed(4)),
+        laborCost:parseFloat(labor.toFixed(4)),
+        notes:ov.notes||'',
+        updatedAt:ov.updatedAt||null
+      };
+    });
 
     // P&L
     const plRows=[
@@ -758,6 +776,8 @@ async function connectAndSync(){
     if(hasData){
       toast('Sheet has data — pulling from Google Sheets…');
       await pullFromSheets();
+      // Clear legacy sample recipe data on first connect
+      await clearRecipeCosting();
     } else {
       toast('Sheet is empty — pushing local data to Google Sheets…');
       await syncAll();
@@ -766,6 +786,12 @@ async function connectAndSync(){
     setSyncStatus('error','Connect failed');
     toast('Connect error: '+e.message, true);
   }
+}
+
+// Clear the Recipe Costing sheet tab (run once to wipe sample data)
+async function clearRecipeCosting(){
+  // Wipe rows 3 through 200 of Recipe Costing — preserves only row 1-2 header
+  await sheetsBatchUpdate([{range:"'Recipe Costing'!A3:I200", values:Array(198).fill(Array(9).fill(''))}]);
 }
 
 async function syncAll(){
@@ -1022,31 +1048,49 @@ function renderRecipeDetail(i){
 }
 function updateRecipe(i,k,v){
   recipes[i][k]=v;
-  // Keep menuItems in sync when recipe name or price changes
   syncMenuFromRecipes();
   renderRecipes();
+  autoSave(pushMenu,'menu-sync-status');
 }
 function syncMenuFromRecipes(){
-  recipes.forEach(r=>{
+  // Menu Dashboard is the full authoritative list of recipes.
+  // Preserve any existing menu-only fields (price override, notes, updatedAt)
+  // then rebuild the list to exactly match the recipes array.
+  const prev={};
+  menuItems.forEach(m=>{ prev[m.name]=m; });
+
+  menuItems=recipes.map(r=>{
     const total=recipeTotal(r);
     const labor=laborCostFromHours(r.laborHours||0);
-    const existing=menuItems.find(m=>m.name===r.name);
-    if(existing){
-      // Update cogs from recipe total; keep price if already set, else use recipe price
-      existing.cogs=parseFloat(total.toFixed(4));
-      if(!existing.price||existing.price===0) existing.price=r.price;
-      existing.updatedAt=Date.now();
-    }
-    // Note: we don't auto-add new recipes to menu — user controls that
+    const old=prev[r.name];
+    return {
+      name:r.name,
+      cat:r.cat,
+      price:old?.price||r.price||0,
+      cogs:parseFloat((total+labor).toFixed(4)),
+      laborCost:parseFloat(labor.toFixed(4)),
+      notes:old?.notes||'',
+      updatedAt:old?.updatedAt||null,
+    };
   });
 }
-function updateRecipeIng(ri,ii,k,v){recipes[ri].ingredients[ii][k]=v;renderRecipeDetail(ri);renderRecipes();}
+function updateRecipeIng(ri,ii,k,v){recipes[ri].ingredients[ii][k]=v;syncMenuFromRecipes();renderRecipeDetail(ri);renderRecipes();autoSave(pushMenu,'menu-sync-status');}
 function deleteRecipeIng(ri,ii){recipes[ri].ingredients.splice(ii,1);renderRecipeDetail(ri);renderRecipes();}
 function addRecipeIng(ri){recipes[ri].ingredients.push({name:ingredients[0]?.name||'',qty:1});renderRecipeDetail(ri);}
-function addRecipe(){recipes.push({name:"New Recipe",cat:menuCats[0]||"Other",price:0,laborHours:0,ingredients:[]});selectedRecipe=recipes.length-1;renderRecipes();}
+function addRecipe(){
+  recipes.push({name:"New Recipe",cat:menuCats[0]||"Other",price:0,laborHours:0,ingredients:[]});
+  selectedRecipe=recipes.length-1;
+  syncMenuFromRecipes();
+  renderRecipes();
+  autoSave(pushMenu,'menu-sync-status');
+}
 function deleteRecipe(i){
   if(!confirm(`Delete "${recipes[i].name}"?`)) return;
-  recipes.splice(i,1); selectedRecipe=recipes.length>0?Math.min(i,recipes.length-1):null; renderRecipes();
+  recipes.splice(i,1);
+  selectedRecipe=recipes.length>0?Math.min(i,recipes.length-1):null;
+  syncMenuFromRecipes();
+  renderRecipes();
+  autoSave(pushMenu,'menu-sync-status');
   if(selectedRecipe===null) $('recipe-detail-panel').innerHTML='<div class="recipe-detail" style="height:200px;display:flex;align-items:center;justify-content:center;color:var(--warm-gray);"><p>No recipes</p></div>';
 }
 
@@ -1219,6 +1263,15 @@ function updatePL(k,i,v){plData[k][i]=v;renderPL();autoSave(pushPL,'pl-sync-stat
 // ════════════════════════════════════════════════
 // SETTINGS
 // ════════════════════════════════════════════════
+async function confirmClearRecipes(){
+  if(!accessToken){toast('Sign in first.',true);return;}
+  if(!confirm('This will wipe all data from the Recipe Costing tab in your Google Sheet. Continue?')) return;
+  try{
+    await clearRecipeCosting();
+    toast('✓ Recipe Costing sheet cleared');
+  }catch(e){toast('Error: '+e.message,true);}
+}
+
 function clearConfig(){
   if(!confirm('Remove saved Client ID and Spreadsheet ID? You can re-enter them at any time.')) return;
   signOut();
