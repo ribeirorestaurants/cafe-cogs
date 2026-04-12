@@ -681,15 +681,17 @@ async function pullFromSheets(){
         };
       });
     }
-    // Rebuild menuItems from recipes, applying any saved price/notes overrides
+    // Rebuild menuItems from recipes; apply saved price overrides and notes from sheet
     menuItems=recipes.map(r=>{
       const ov=menuOverrides[r.name]||{};
-      const total=recipeTotal(r);
+      const ingrCost=recipeTotal(r);
       const labor=laborCostFromHours(r.laborHours||0);
+      const hasOverride=ov.price>0&&ov.price!==r.price;
       return{
         name:r.name, cat:r.cat,
-        price:ov.price||r.price||0,
-        cogs:parseFloat((total+labor).toFixed(4)),
+        price:hasOverride?ov.price:r.price||0,
+        _priceOverride:hasOverride,
+        cogs:parseFloat(ingrCost.toFixed(4)),
         laborCost:parseFloat(labor.toFixed(4)),
         notes:ov.notes||'',
         updatedAt:ov.updatedAt||null
@@ -776,8 +778,6 @@ async function connectAndSync(){
     if(hasData){
       toast('Sheet has data — pulling from Google Sheets…');
       await pullFromSheets();
-      // Clear legacy sample recipe data on first connect
-      await clearRecipeCosting();
     } else {
       toast('Sheet is empty — pushing local data to Google Sheets…');
       await syncAll();
@@ -1053,22 +1053,25 @@ function updateRecipe(i,k,v){
   autoSave(pushMenu,'menu-sync-status');
 }
 function syncMenuFromRecipes(){
-  // Menu Dashboard is the full authoritative list of recipes.
-  // Preserve any existing menu-only fields (price override, notes, updatedAt)
-  // then rebuild the list to exactly match the recipes array.
+  // Menu is driven by recipes. Preserve user-edited price overrides and notes.
+  // cogs = ingredient cost only; laborCost = separate labor field.
   const prev={};
   menuItems.forEach(m=>{ prev[m.name]=m; });
 
   menuItems=recipes.map(r=>{
-    const total=recipeTotal(r);
+    const ingrCost=recipeTotal(r);           // ingredient cost only
     const labor=laborCostFromHours(r.laborHours||0);
     const old=prev[r.name];
+    // Price: always follow the recipe price. If the user has set a menu price
+    // AND it differs from the recipe price, keep the menu override.
+    const price=(old && old._priceOverride) ? old.price : r.price||0;
     return {
       name:r.name,
       cat:r.cat,
-      price:old?.price||r.price||0,
-      cogs:parseFloat((total+labor).toFixed(4)),
-      laborCost:parseFloat(labor.toFixed(4)),
+      price:price,
+      _priceOverride: old?._priceOverride||false,  // tracks if user set price on menu tab
+      cogs:parseFloat(ingrCost.toFixed(4)),         // ingredients only
+      laborCost:parseFloat(labor.toFixed(4)),        // labor separately
       notes:old?.notes||'',
       updatedAt:old?.updatedAt||null,
     };
@@ -1115,10 +1118,11 @@ const MENU_COLS_DEFAULT = [
   {id:'del',    label:'',              visible:true,  fixed:true},
 ];
 
-let menuCols = JSON.parse(localStorage.getItem('cogs_menu_cols') || 'null') || MENU_COLS_DEFAULT.map(c=>({...c}));
+// v2 key forces a reset if user has stale column config from earlier session
+let menuCols = JSON.parse(localStorage.getItem('cogs_menu_cols_v2') || 'null') || MENU_COLS_DEFAULT.map(c=>({...c}));
 
-function saveMenuCols(){ localStorage.setItem('cogs_menu_cols', JSON.stringify(menuCols)); }
-function resetColOrder(){ menuCols = MENU_COLS_DEFAULT.map(c=>({...c})); saveMenuCols(); renderColManager(); renderMenu(); }
+function saveMenuCols(){ localStorage.setItem('cogs_menu_cols_v2', JSON.stringify(menuCols)); }
+function resetColOrder(){ menuCols = MENU_COLS_DEFAULT.map(c=>({...c})); saveMenuCols(); renderColManager(); renderMenu(); toast('Columns reset to default'); }
 
 function toggleColManager(){
   const panel = $('col-manager-panel');
@@ -1167,7 +1171,7 @@ function renderMenu(){
   const target=(+($('target-cogs').value)||30)/100;
   const filtered=menuItems.filter(m=>!cur||m.cat===cur);
   if(!filtered.length){$('menu-kpi-row').innerHTML='';$('menu-tbody').innerHTML='<tr><td colspan="14" style="text-align:center;padding:2rem;color:var(--warm-gray);">No items</td></tr>';return;}
-  const avgCogs=filtered.reduce((s,m)=>s+m.cogs/m.price,0)/filtered.length;
+  const avgCogs=filtered.reduce((s,m)=>s+(m.price>0?(m.cogs+(m.laborCost||0))/m.price:0),0)/filtered.length;
   const avgPrice=filtered.reduce((s,m)=>s+m.price,0)/filtered.length;
   const avgNetAfterFee=filtered.reduce((s,m)=>s+(m.price-ccFee(m.price)-(m.cogs||0)-(m.laborCost||0)),0)/filtered.length;
   $('menu-kpi-row').innerHTML=`
@@ -1197,8 +1201,8 @@ function renderMenu(){
       name:    `<td><input type="text" value="${m.name}" onchange="updateMenuItem(${idx},'name',this.value)" style="width:140px;"></td>`,
       cat:     `<td><select onchange="updateMenuItem(${idx},'cat',this.value)">${catOptions(menuCats,m.cat)}</select></td>`,
       price:   `<td><input type="number" value="${m.price}" step="0.25" onchange="updateMenuItem(${idx},'price',+this.value)" style="width:72px;color:var(--blue);font-weight:600;"></td>`,
-      cogs:    `<td><input type="number" value="${m.cogs}" step="0.01" onchange="updateMenuItem(${idx},'cogs',+this.value)" style="width:72px;color:var(--blue);"></td>`,
-      labor:   `<td><input type="number" value="${labor.toFixed(2)}" step="0.01" min="0" onchange="updateMenuItem(${idx},'laborCost',+this.value)" style="width:72px;color:var(--blue);"></td>`,
+      cogs:    `<td class="num" style="color:var(--warm-gray);font-size:0.82rem;" title="Auto-calculated from recipe ingredients">${fmt(m.cogs)}</td>`,
+      labor:   `<td class="num" style="color:var(--warm-gray);font-size:0.82rem;" title="Auto-calculated from recipe labor hours × rate">${fmt(labor)}</td>`,
       total:   `<td class="num" style="font-weight:600;">${fmt(totalCost)}</td>`,
       gp:      `<td class="num" style="color:var(--green);font-weight:600;">${fmt(gp)}</td>`,
       costpct: `<td class="num"><span style="font-weight:${over?700:400};color:${over?'var(--red)':'inherit'}">${pct(cogsPct)}</span></td>`,
@@ -1212,7 +1216,13 @@ function renderMenu(){
     return`<tr style="${over?'background:#fff9f9 !important;':''}">${visCols.map(c=>cellMap[c.id]||'').join('')}</tr>`;
   }).join('');
 }
-function updateMenuItem(i,k,v){menuItems[i][k]=v;menuItems[i].updatedAt=Date.now();renderMenu();autoSave(pushMenu,'menu-sync-status');}
+function updateMenuItem(i,k,v){
+  menuItems[i][k]=v;
+  if(k==='price') menuItems[i]._priceOverride=true;  // user explicitly set price on menu tab
+  menuItems[i].updatedAt=Date.now();
+  renderMenu();
+  autoSave(pushMenu,'menu-sync-status');
+}
 function addMenuItem(){menuItems.push({name:"New Item",cat:menuCats[0]||"Other",price:0,cogs:0,laborCost:0,notes:"",updatedAt:Date.now()});renderMenu();autoSave(pushMenu,'menu-sync-status');toast('Item added');}
 function deleteMenuItem(i){if(!confirm(`Delete "${menuItems[i].name}"?`))return;menuItems.splice(i,1);renderMenu();autoSave(pushMenu,'menu-sync-status');toast('Deleted');}
 
