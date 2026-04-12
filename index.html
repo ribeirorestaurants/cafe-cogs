@@ -714,8 +714,8 @@ async function pushIngredients(){
   const fmtDate=ts=>ts?new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''
   const rows=ingredients.map(ing=>[ing.name,ing.cat,ing.packSz,ing.packUnit,ing.packCost,ing.useUnit,ing.unitsPerPack,fmtDate(ing.updatedAt)]);
   // Pad to 100 rows
-  while(rows.length<100) rows.push(Array(7).fill(''));
-  await sheetsBatchUpdate([{range:"'Ingredient Library'!A4:G103",values:rows}]);
+  while(rows.length<100) rows.push(Array(8).fill(''));
+  await sheetsBatchUpdate([{range:"'Ingredient Library'!A4:H103",values:rows}]);
 }
 
 async function pushMenu(){
