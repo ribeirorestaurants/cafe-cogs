@@ -956,15 +956,9 @@ function renderRecipes(){
 function selectRecipe(i){selectedRecipe=i;renderRecipes();}
 
 function renderRecipeDetail(i){
-  const r=recipes[i]; const total=recipeTotal(r);
+  const r=recipes[i];
+  const total=recipeTotal(r);
   const labor=laborCostFromHours(r.laborHours||0);
-  const totalWithLabor=total+labor;
-  const fee=ccFee(r.price);
-  const netRevenue=r.price-fee;
-  const gp=r.price-totalWithLabor;
-  const netAfterFee=netRevenue-totalWithLabor;
-  const margin=r.price>0?gp/r.price:0;
-  const netMargin=r.price>0?netAfterFee/r.price:0;
 
   const rows=r.ingredients.map((ri,ridx)=>{
     const ing=ingByName(ri.name); const cpu=ing?costPerUnit(ing):0;
@@ -979,7 +973,7 @@ function renderRecipeDetail(i){
   }).join('');
 
   $('recipe-detail-panel').innerHTML=`<div class="recipe-detail">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
       <div>
         <input type="text" value="${r.name}" style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:600;border:none;border-bottom:2px solid var(--border);border-radius:0;width:220px;padding:2px 4px;" onchange="updateRecipe(${i},'name',this.value)">
         <select style="margin-left:8px;" onchange="updateRecipe(${i},'cat',this.value)">${catOptions(menuCats,r.cat)}</select>
@@ -987,13 +981,7 @@ function renderRecipeDetail(i){
       <button class="btn btn-danger btn-sm" onclick="deleteRecipe(${i})">Delete</button>
     </div>
 
-    <!-- Row 1: core inputs -->
-    <div class="recipe-summary" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
-      <div class="r-stat" style="position:relative;">
-        <label>Selling Price</label>
-        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:600;color:var(--forest);">${fmt(r.price)}</div>
-        <div style="font-size:0.68rem;color:var(--warm-gray);margin-top:3px;">Edit on the <span style="color:var(--blue);cursor:pointer;text-decoration:underline;" onclick="showPage('menu',document.querySelector('nav button:nth-child(4)'))">Menu tab</span></div>
-      </div>
+    <div class="recipe-summary" style="grid-template-columns:repeat(2,1fr);margin-bottom:1.25rem;">
       <div class="r-stat"><label>Ingredient COGS</label><span>${fmt(total)}</span></div>
       <div class="r-stat">
         <label>Labor Hours</label>
@@ -1002,42 +990,6 @@ function renderRecipeDetail(i){
           <span style="color:var(--warm-gray);font-size:0.85rem;">hrs</span>
         </div>
         <span style="font-size:0.68rem;color:var(--warm-gray);">@ ${fmt(ccFees.laborRate||15)}/hr = <strong>${fmt(labor)}</strong></span>
-      </div>
-    </div>
-
-    <!-- Row 2: calculated outputs -->
-    <div class="recipe-summary" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.25rem;">
-      <div class="r-stat" style="background:#f0f7f3;">
-        <label>Total Cost (COGS+Labor)</label>
-        <span style="color:var(--forest);">${fmt(totalWithLabor)}</span>
-      </div>
-      <div class="r-stat" style="background:#f0f7f3;">
-        <label>Gross Profit</label>
-        <span style="color:${gp>=0?'var(--green)':'var(--red)'};">${fmt(gp)}</span>
-      </div>
-      <div class="r-stat" style="background:#fff8f0;">
-        <label>CC Fee (${ccFees.pct}% + $${ccFees.fixed.toFixed(2)})</label>
-        <span style="color:var(--amber);">−${fmt(fee)}</span>
-      </div>
-      <div class="r-stat" style="background:#fff8f0;">
-        <label>Net After CC Fee</label>
-        <span style="color:${netAfterFee>=0?'var(--green)':'var(--red)'};">${fmt(netAfterFee)}</span>
-      </div>
-    </div>
-
-    <!-- Margin pills -->
-    <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;">
-      <div style="background:var(--parchment);border-radius:8px;padding:8px 14px;font-size:0.8rem;">
-        <span style="color:var(--warm-gray);">Gross margin</span>
-        <strong style="margin-left:8px;color:${margin>=0.6?'var(--green)':margin>=0.4?'var(--amber)':'var(--red)'};">${pct(margin)}</strong>
-      </div>
-      <div style="background:var(--parchment);border-radius:8px;padding:8px 14px;font-size:0.8rem;">
-        <span style="color:var(--warm-gray);">Net margin (after CC fee)</span>
-        <strong style="margin-left:8px;color:${netMargin>=0.6?'var(--green)':netMargin>=0.4?'var(--amber)':'var(--red)'};">${pct(netMargin)}</strong>
-      </div>
-      <div style="background:var(--parchment);border-radius:8px;padding:8px 14px;font-size:0.8rem;">
-        <span style="color:var(--warm-gray);">Net revenue (after CC)</span>
-        <strong style="margin-left:8px;">${fmt(netRevenue)}</strong>
       </div>
     </div>
 
