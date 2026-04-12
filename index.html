@@ -669,7 +669,7 @@ async function pullFromSheets(){
     }
 
     // Menu
-    const menuData=await sheetsGet("'Menu Dashboard'!B8:J207");
+    const menuData=await sheetsGet("'Menu Dashboard'!B8:K207");
     if(menuData.values){
       menuItems=menuData.values.filter(r=>r[0]).map(r=>({
         name:r[0]||'',cat:r[1]||'Other',price:parseFloat(r[2])||0,
@@ -721,8 +721,8 @@ async function pushIngredients(){
 async function pushMenu(){
   const fmtDateM=ts=>ts?new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''
   const rows=menuItems.map(m=>[m.name,m.cat,m.price,m.cogs,m.laborCost||0,'','','',m.notes,fmtDateM(m.updatedAt)]);
-  while(rows.length<200) rows.push(Array(9).fill(''));
-  await sheetsBatchUpdate([{range:"'Menu Dashboard'!B8:J207",values:rows}]);
+  while(rows.length<200) rows.push(Array(10).fill(''));
+  await sheetsBatchUpdate([{range:"'Menu Dashboard'!B8:K207",values:rows}]);
 }
 
 async function pushPL(){
