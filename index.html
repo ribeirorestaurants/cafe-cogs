@@ -6,645 +6,137 @@
 <title>COGS Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #F7F4EF;
-    --surface: #FFFFFF;
-    --surface2: #F0EDE7;
-    --border: #E2DDD6;
-    --border2: #CEC9BF;
-    --text: #1A1714;
-    --text2: #6B6560;
-    --text3: #9C9590;
-    --accent: #2C5F2E;
-    --accent-light: #EBF2EB;
-    --amber: #92400E;
-    --amber-light: #FEF3C7;
-    --red: #991B1B;
-    --red-light: #FEE2E2;
-    --blue: #1E3A5F;
-    --blue-light: #EFF6FF;
-    --gold: #B45309;
-    --gold-light: #FFFBEB;
-    --radius: 10px;
-    --radius-sm: 6px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.5;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-  }
-
-  /* ── SIDEBAR ── */
-  .sidebar {
-    width: 220px;
-    min-width: 220px;
-    background: var(--text);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    height: 100vh;
-  }
-
-  .sidebar-brand {
-    padding: 24px 20px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
-
-  .brand-name {
-    font-family: 'DM Serif Display', serif;
-    font-size: 20px;
-    color: #fff;
-    letter-spacing: -0.3px;
-    line-height: 1.2;
-  }
-
-  .brand-sub {
-    font-size: 11px;
-    color: rgba(255,255,255,0.4);
-    margin-top: 3px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.04em;
-  }
-
-  .nav {
-    padding: 12px 10px;
-    flex: 1;
-  }
-
-  .nav-section {
-    font-size: 10px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.1em;
-    color: rgba(255,255,255,0.3);
-    padding: 12px 10px 4px;
-    text-transform: uppercase;
-  }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    color: rgba(255,255,255,0.55);
-    font-size: 13.5px;
-    transition: all 0.15s;
-    margin-bottom: 1px;
-  }
-
-  .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
-  .nav-item.active { background: rgba(255,255,255,0.12); color: #fff; font-weight: 500; }
-
-  .nav-icon { width: 16px; height: 16px; opacity: 0.7; flex-shrink: 0; }
-  .nav-item.active .nav-icon { opacity: 1; }
-
-  .sidebar-footer {
-    padding: 14px 20px;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    font-size: 11px;
-    color: rgba(255,255,255,0.3);
-    font-family: 'DM Mono', monospace;
-  }
-
-  .sync-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #4ADE80;
-    margin-right: 5px;
-    vertical-align: middle;
-  }
-
-  /* ── MAIN ── */
-  .main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    height: 100vh;
-  }
-
-  .topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
-
-  .page-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px;
-    letter-spacing: -0.3px;
-    color: var(--text);
-  }
-
-  .page-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
-
-  .btn {
-    padding: 7px 14px;
-    font-size: 13px;
-    font-family: 'DM Sans', sans-serif;
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.15s;
-    font-weight: 500;
-  }
-
-  .btn:hover { background: var(--surface2); border-color: var(--border2); }
-
-  .btn-dark {
-    background: var(--text);
-    color: #fff;
-    border-color: var(--text);
-  }
-
-  .btn-dark:hover { background: #333; }
-
-  .btn-green {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
-
-  .btn-green:hover { background: #234D25; }
-
-  .content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px 28px;
-  }
-
-  /* ── PAGES ── */
-  .page { display: none; }
-  .page.active { display: block; }
-
-  /* ── METRIC CARDS ── */
-  .metric-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0,1fr));
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-
-  .metric-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    box-shadow: var(--shadow);
-  }
-
-  .metric-label {
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.05em;
-    color: var(--text3);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .metric-value {
-    font-family: 'DM Serif Display', serif;
-    font-size: 28px;
-    line-height: 1;
-    color: var(--text);
-  }
-
-  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 5px; }
-  .good { color: var(--accent); }
-  .warn { color: var(--amber); }
-  .bad { color: var(--red); }
-
-  /* ── CARDS ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-
-  .card-header {
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text2);
-    letter-spacing: 0.01em;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .card-body { padding: 16px 18px; }
-
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-
-  /* ── BAR CHART ── */
-  .bar-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    font-size: 12.5px;
-  }
-
-  .bar-label { width: 100px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
-  .bar-track { flex: 1; height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
-  .bar-val { width: 42px; text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; }
-
-  /* ── ALERT ── */
-  .alert {
-    background: var(--amber-light);
-    border: 1px solid #F59E0B;
-    border-radius: var(--radius-sm);
-    padding: 10px 14px;
-    font-size: 12.5px;
-    color: var(--amber);
-    margin-bottom: 18px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* ── TABLE ── */
-  .tbl-wrap { overflow-x: auto; }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  thead th {
-    padding: 9px 12px;
-    text-align: left;
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.04em;
-    color: var(--text3);
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  thead th:hover { color: var(--text); }
-
-  tbody td {
-    padding: 9px 12px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-  }
-
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover { background: var(--surface2); }
-
-  .mono { font-family: 'DM Mono', monospace; font-size: 12px; }
-
-  /* ── PILLS ── */
-  .pill {
-    display: inline-block;
-    font-size: 11px;
-    padding: 2px 9px;
-    border-radius: 999px;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .pill-green { background: var(--accent-light); color: var(--accent); }
-  .pill-amber { background: var(--amber-light); color: var(--amber); }
-  .pill-red { background: var(--red-light); color: var(--red); }
-  .pill-blue { background: var(--blue-light); color: var(--blue); }
-  .pill-gray { background: var(--surface2); color: var(--text2); }
-
-  /* ── SEARCH / FILTER ROW ── */
-  .filter-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .filter-row input,
-  .filter-row select {
-    padding: 7px 12px;
-    font-size: 13px;
-    font-family: 'DM Sans', sans-serif;
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--text);
-    outline: none;
-  }
-
-  .filter-row input { flex: 1; min-width: 200px; }
-  .filter-row input:focus,
-  .filter-row select:focus { border-color: var(--text2); }
-
-  /* ── FORM ── */
-  .form-label {
-    display: block;
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.05em;
-    color: var(--text3);
-    text-transform: uppercase;
-    margin-bottom: 5px;
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 8px 11px;
-    font-size: 13px;
-    font-family: 'DM Sans', sans-serif;
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--text);
-    outline: none;
-    margin-bottom: 14px;
-    transition: border 0.15s;
-  }
-
-  .form-input:focus { border-color: var(--text2); }
-
-  .form-grid { display: grid; gap: 14px; }
-  .form-grid-2 { grid-template-columns: 1fr 1fr; }
-  .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
-
-  /* ── RECIPE EDITOR INGREDIENTS ── */
-  .ing-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    margin-bottom: 6px;
-    font-size: 12.5px;
-  }
-
-  .ing-name { flex: 2; font-weight: 500; min-width: 0; }
-  .ing-qty { width: 60px; padding: 4px 7px; font-size: 12px; border: 1px solid var(--border2); border-radius: 4px; background: var(--surface); color: var(--text); font-family: 'DM Mono', monospace; }
-  .ing-unit { color: var(--text3); width: 30px; font-size: 11px; }
-  .ing-cost { width: 60px; text-align: right; font-family: 'DM Mono', monospace; color: var(--text2); font-size: 12px; }
-  .ing-remove { color: var(--text3); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
-  .ing-remove:hover { color: var(--red); }
-
-  /* ── COST SUMMARY PANEL ── */
-  .cost-summary {
-    background: var(--text);
-    color: #fff;
-    border-radius: var(--radius);
-    padding: 18px;
-  }
-
-  .cs-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12.5px;
-    padding: 5px 0;
-    color: rgba(255,255,255,0.6);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
-
-  .cs-row:last-child { border-bottom: none; }
-  .cs-row.total { font-size: 15px; font-weight: 600; color: #fff; padding-top: 10px; }
-  .cs-row .val { color: #fff; font-family: 'DM Mono', monospace; font-size: 12px; }
-  .cs-row.total .val { font-size: 15px; }
-  .cs-margin { color: #4ADE80 !important; }
-
-  /* ── SETTINGS ── */
-  .settings-section { margin-bottom: 24px; }
-  .settings-section-title {
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.08em;
-    color: var(--text3);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .settings-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-  }
-
-  .settings-row:last-child { border-bottom: none; }
-  .settings-row .key { font-weight: 500; }
-  .settings-row .desc { font-size: 11px; color: var(--text3); margin-top: 1px; }
-
-  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
-  .tag {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 999px;
-    padding: 4px 11px;
-    font-size: 12px;
-    font-weight: 500;
-  }
-
-  .tag-x { cursor: pointer; color: var(--text3); font-size: 12px; line-height: 1; }
-  .tag-x:hover { color: var(--red); }
-  .tag-add {
-    border-style: dashed;
-    cursor: pointer;
-    color: var(--text3);
-    font-style: italic;
-  }
-
-  .tag-add:hover { color: var(--text); background: var(--border); }
-
-  /* ── GOOGLE SHEETS SYNC BOX ── */
-  .sync-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px 20px;
-    margin-bottom: 16px;
-    box-shadow: var(--shadow);
-  }
-
-  .sync-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
-
-  .gs-icon {
-    width: 36px;
-    height: 36px;
-    background: #E8F5E9;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .sync-url {
-    flex: 1;
-    padding: 7px 12px;
-    font-size: 12px;
-    font-family: 'DM Mono', monospace;
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-sm);
-    background: var(--surface2);
-    color: var(--text2);
-    outline: none;
-  }
-
-  .col-toggle-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-
-  .col-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 5px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.15s;
-  }
-
-  .col-toggle.active { background: var(--text); color: #fff; border-color: var(--text); }
-  .col-toggle input { display: none; }
-
-  /* ── SEPARATOR ── */
-  .sep {
-    height: 1px;
-    background: var(--border);
-    margin: 16px 0;
-  }
-
-  /* ── TOGGLE ── */
-  .toggle-wrap { display: flex; align-items: center; gap: 10px; }
-  .toggle {
-    position: relative;
-    width: 36px;
-    height: 20px;
-    background: var(--border2);
-    border-radius: 999px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .toggle.on { background: var(--accent); }
-  .toggle::after {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 14px;
-    height: 14px;
-    background: #fff;
-    border-radius: 50%;
-    transition: transform 0.2s;
-  }
-
-  .toggle.on::after { transform: translateX(16px); }
-
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-
-  /* ── MODAL ── */
-  .modal-backdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .modal-backdrop.open { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border-radius: var(--radius);
-    padding: 24px;
-    width: 480px;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-md);
-  }
-
-  .modal-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 18px;
-    margin-bottom: 16px;
-  }
-
-  .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 20px;
-  }
-
-  /* ── EMPTY STATE ── */
-  .empty {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--text3);
-  }
-
-  .empty-title { font-size: 16px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
-
-  .sort-arrow { font-size: 10px; margin-left: 3px; }
+:root{--bg:#F7F4EF;--surface:#fff;--surface2:#F0EDE7;--border:#E2DDD6;--border2:#CEC9BF;--text:#1A1714;--text2:#6B6560;--text3:#9C9590;--accent:#2C5F2E;--accent-light:#EBF2EB;--amber:#92400E;--amber-light:#FEF3C7;--red:#991B1B;--red-light:#FEE2E2;--blue:#1E3A5F;--blue-light:#EFF6FF;--gold:#B45309;--gold-light:#FFFBEB;--radius:10px;--radius-sm:6px;--shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.10)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;height:100vh;overflow:hidden;display:flex}
+.sidebar{width:220px;min-width:220px;background:var(--text);color:#fff;display:flex;flex-direction:column;height:100vh}
+.sidebar-brand{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand-name{font-family:'DM Serif Display',serif;font-size:20px;color:#fff;letter-spacing:-.3px;line-height:1.2}
+.brand-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;font-family:'DM Mono',monospace;letter-spacing:.04em}
+.nav{padding:12px 10px;flex:1}
+.nav-section{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.1em;color:rgba(255,255,255,.3);padding:12px 10px 4px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;color:rgba(255,255,255,.55);font-size:13.5px;transition:all .15s;margin-bottom:1px;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;font-weight:500}
+.nav-icon{width:16px;height:16px;opacity:.7;flex-shrink:0}
+.nav-item.active .nav-icon{opacity:1}
+.sidebar-footer{padding:14px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.35);font-family:'DM Mono',monospace;line-height:1.6}
+.sync-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#6B6560;margin-right:5px;vertical-align:middle;transition:background .3s}
+.sync-dot.connected{background:#4ADE80}
+.sync-dot.loading{background:#F59E0B;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.page-title{font-family:'DM Serif Display',serif;font-size:22px;letter-spacing:-.3px}
+.page-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.btn{padding:7px 14px;font-size:13px;font-family:'DM Sans',sans-serif;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);cursor:pointer;transition:all .15s;font-weight:500}
+.btn:hover{background:var(--surface2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-dark{background:var(--text);color:#fff;border-color:var(--text)}
+.btn-dark:hover{background:#333}
+.btn-green{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-green:hover{background:#234D25}
+.content{flex:1;overflow-y:auto;padding:24px 28px}
+.page{display:none}
+.page.active{display:block}
+.spinner{width:32px;height:32px;border:2.5px solid var(--border);border-top-color:var(--text2);border-radius:50%;animation:spin .8s linear infinite}
+.loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 24px;gap:14px}
+.loading-label{font-size:13px;color:var(--text3);font-family:'DM Mono',monospace}
+.empty-state{text-align:center;padding:64px 24px}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.5}
+.empty-title{font-size:16px;font-weight:500;color:var(--text2);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--text3);line-height:1.6}
+.metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:24px}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.metric-label{font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.05em;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+.metric-value{font-family:'DM Serif Display',serif;font-size:28px;line-height:1}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:5px}
+.good{color:var(--accent)}.warn{color:var(--amber)}.bad{color:var(--red)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text2);display:flex;align-items:center;justify-content:space-between}
+.card-body{padding:16px 18px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12.5px}
+.bar-label{width:110px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.bar-track{flex:1;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.bar-val{width:44px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;font-weight:500}
+.alert{background:var(--amber-light);border:1px solid #F59E0B;border-radius:var(--radius-sm);padding:10px 14px;font-size:12.5px;color:var(--amber);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:9px 12px;text-align:left;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.04em;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--text)}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+.mono{font-family:'DM Mono',monospace;font-size:12px}
+.pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;font-weight:500;white-space:nowrap}
+.pill-green{background:var(--accent-light);color:var(--accent)}
+.pill-amber{background:var(--amber-light);color:var(--amber)}
+.pill-red{background:var(--red-light);color:var(--red)}
+.pill-gray{background:var(--surface2);color:var(--text2)}
+.pill-tbd{background:var(--gold-light);color:var(--gold)}
+.filter-row{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.filter-row input,.filter-row select{padding:7px 12px;font-size:13px;font-family:'DM Sans',sans-serif;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none}
+.filter-row input{flex:1;min-width:200px}
+.filter-row input:focus,.filter-row select:focus{border-color:var(--text2)}
+.form-label{display:block;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.05em;color:var(--text3);text-transform:uppercase;margin-bottom:5px}
+.form-input{width:100%;padding:8px 11px;font-size:13px;font-family:'DM Sans',sans-serif;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;margin-bottom:14px;transition:border .15s}
+.form-input:focus{border-color:var(--text2)}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ing-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:6px;font-size:12.5px}
+.ing-name{flex:2;font-weight:500;min-width:0}
+.ing-qty{width:60px;padding:4px 7px;font-size:12px;border:1px solid var(--border2);border-radius:4px;background:var(--surface);color:var(--text);font-family:'DM Mono',monospace}
+.ing-unit{color:var(--text3);width:32px;font-size:11px}
+.ing-cost{width:62px;text-align:right;font-family:'DM Mono',monospace;color:var(--text2);font-size:12px}
+.ing-remove{color:var(--text3);cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
+.ing-remove:hover{color:var(--red)}
+.cost-summary{background:var(--text);color:#fff;border-radius:var(--radius);padding:18px}
+.cs-row{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;color:rgba(255,255,255,.6);border-bottom:1px solid rgba(255,255,255,.08)}
+.cs-row:last-child{border-bottom:none}
+.cs-row.total{font-size:15px;font-weight:600;color:#fff;padding-top:10px}
+.cs-row .val{color:#fff;font-family:'DM Mono',monospace;font-size:12px}
+.cs-row.total .val{font-size:15px}
+.cs-margin{color:#4ADE80!important}
+.sep{height:1px;background:var(--border);margin:16px 0}
+.settings-section{margin-bottom:24px}
+.settings-title{font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:12px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.settings-row:last-child{border-bottom:none}
+.settings-row .key{font-weight:500}
+.settings-row .desc{font-size:11px;color:var(--text3);margin-top:1px}
+.settings-input{width:90px;padding:6px 10px;font-size:13px;font-family:'DM Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text)}
+.tag-list{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:500}
+.tag-x{cursor:pointer;color:var(--text3);font-size:12px}
+.tag-x:hover{color:var(--red)}
+.col-toggle-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.col-toggle{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;font-size:12px;cursor:pointer;user-select:none;transition:all .15s}
+.col-toggle.active{background:var(--text);color:#fff;border-color:var(--text)}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius);padding:24px;width:480px;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-md)}
+.modal-title{font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:16px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.connect-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow);margin-bottom:14px}
+.connect-input{flex:1;padding:9px 13px;font-size:13px;font-family:'DM Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;min-width:0}
+.connect-input:focus{border-color:var(--text2)}
+.connect-input-wrap{display:flex;gap:8px}
+.status-msg{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;margin-top:12px}
+.status-msg.error{background:var(--red-light);color:var(--red);border:1px solid #FECACA}
+.status-msg.success{background:var(--accent-light);color:var(--accent);border:1px solid #BBF7D0}
+.status-msg.info{background:var(--blue-light);color:var(--blue);border:1px solid #BFDBFE}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 </style>
 </head>
 <body>
-
-<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-brand">
     <div class="brand-name">COGS<br>Tracker</div>
-    <div class="brand-sub">DRINKS · 2026</div>
+    <div class="brand-sub" id="brand-sub">NOT CONNECTED</div>
   </div>
   <nav class="nav">
     <div class="nav-section">Overview</div>
@@ -654,7 +146,7 @@
     </div>
     <div class="nav-section">Data</div>
     <div class="nav-item" onclick="showPage('menu')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="3" width="14" height="1.5" rx="0.75"/><rect x="1" y="7.25" width="14" height="1.5" rx="0.75"/><rect x="1" y="11.5" width="9" height="1.5" rx="0.75"/></svg>
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="3" width="14" height="1.5" rx=".75"/><rect x="1" y="7.25" width="14" height="1.5" rx=".75"/><rect x="1" y="11.5" width="9" height="1.5" rx=".75"/></svg>
       Menu COGS
     </div>
     <div class="nav-item" onclick="showPage('recipe')">
@@ -662,162 +154,108 @@
       Recipe editor
     </div>
     <div class="nav-item" onclick="showPage('ingredients')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="8" r="2.5"/><path d="M8 8a3 3 0 1 1 6 0 3 3 0 0 1-6 0z" opacity=".5"/><path d="M1.5 8a3.5 3.5 0 1 0 7 0 3.5 3.5 0 0 0-7 0z" opacity=".3"/></svg>
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="8" r="2.5"/><path d="M8 8a3 3 0 1 1 6 0 3 3 0 0 1-6 0z" opacity=".5"/></svg>
       Ingredients
     </div>
     <div class="nav-section">System</div>
     <div class="nav-item" onclick="showPage('settings')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/></svg>
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/><circle cx="8" cy="8" r="2"/></svg>
       Settings
     </div>
   </nav>
-  <div class="sidebar-footer">
-    <span class="sync-dot"></span>Live data · Apr 2026
-  </div>
+  <div class="sidebar-footer"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Not connected</span></div>
 </aside>
 
-<!-- MAIN -->
 <main class="main">
 
-  <!-- ═══════════════════════════════ DASHBOARD ═══ -->
+  <!-- DASHBOARD -->
   <div id="page-dashboard" class="page active">
     <div class="topbar">
-      <div>
-        <div class="page-title">Dashboard</div>
-        <div class="page-sub">40 drink items · Drinks menu 2026</div>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn" onclick="exportCSV()">Export CSV</button>
-        <button class="btn btn-dark" onclick="showPage('settings')">Sync Settings</button>
+      <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-sub">Connect your Google Sheet to get started</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="btn-refresh" onclick="loadAllData()" disabled>↻ Refresh</button>
+        <button class="btn btn-dark" onclick="showPage('settings')">Settings</button>
       </div>
     </div>
-    <div class="content">
-      <div class="metric-grid" id="dash-metrics"></div>
-      <div id="dash-alert"></div>
-      <div class="two-col">
-        <div class="card">
-          <div class="card-header">Avg COGS % by category</div>
-          <div class="card-body" id="dash-cat-chart"></div>
-        </div>
-        <div class="card">
-          <div class="card-header">Highest COGS % items</div>
-          <div class="card-body" id="dash-worst-chart"></div>
-        </div>
-      </div>
-      <div class="card" style="margin-top:16px;">
-        <div class="card-header">All items at a glance</div>
-        <div class="card-body" style="padding:0;">
-          <div class="tbl-wrap"><table id="dash-table">
-            <thead><tr>
-              <th>Item</th><th>Category</th><th>COGS</th><th>Price</th><th>Act. Margin</th><th>COGS %</th><th>Status</th>
-            </tr></thead>
-            <tbody id="dash-table-body"></tbody>
-          </table></div>
-        </div>
+    <div class="content" id="dash-content">
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">No data loaded</div>
+        <div class="empty-sub">Go to Settings, enter your Google Sheet ID and tab GIDs.<br>Data will load automatically once connected.</div>
+        <br><button class="btn btn-green" onclick="showPage('settings')" style="margin-top:8px">Go to Settings →</button>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════ MENU COGS ═══ -->
+  <!-- MENU COGS -->
   <div id="page-menu" class="page">
     <div class="topbar">
-      <div>
-        <div class="page-title">Menu COGS</div>
-        <div class="page-sub" id="menu-count">40 items</div>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn" onclick="document.getElementById('col-panel').style.display = document.getElementById('col-panel').style.display==='none'?'flex':'none'">Columns ▾</button>
+      <div><div class="page-title">Menu COGS</div><div class="page-sub" id="menu-sub">—</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="document.getElementById('col-panel').style.display=document.getElementById('col-panel').style.display==='none'?'flex':'none'">Columns ▾</button>
         <button class="btn" onclick="exportCSV()">Export CSV</button>
       </div>
     </div>
     <div class="content">
       <div class="filter-row">
         <input type="text" id="menu-search" placeholder="Search items…" oninput="renderMenu()">
-        <select id="menu-cat" onchange="renderMenu()">
-          <option value="">All categories</option>
-        </select>
+        <select id="menu-cat" onchange="renderMenu()"><option value="">All categories</option></select>
         <select id="menu-status" onchange="renderMenu()">
-          <option value="">All statuses</option>
-          <option value="good">On target</option>
-          <option value="warn">Elevated</option>
-          <option value="bad">Review needed</option>
+          <option value="">All statuses</option><option value="good">On target</option>
+          <option value="warn">Elevated</option><option value="bad">Review needed</option><option value="tbd">Price TBD</option>
         </select>
       </div>
-      <div id="col-panel" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:14px;" class="col-toggle-row">
-        <label class="col-toggle active" data-col="cogs"><input type="checkbox" checked>COGS</label>
-        <label class="col-toggle active" data-col="price"><input type="checkbox" checked>Sell Price</label>
-        <label class="col-toggle active" data-col="margin"><input type="checkbox" checked>Act. Margin</label>
-        <label class="col-toggle active" data-col="cogs_pct"><input type="checkbox" checked>COGS %</label>
-        <label class="col-toggle active" data-col="taxes"><input type="checkbox" checked>Taxes</label>
-        <label class="col-toggle active" data-col="fees"><input type="checkbox" checked>Fees</label>
-        <label class="col-toggle active" data-col="total_margin"><input type="checkbox" checked>Total Margin %</label>
-        <label class="col-toggle active" data-col="cogs30"><input type="checkbox" checked>30% Price</label>
-        <label class="col-toggle active" data-col="status"><input type="checkbox" checked>Status</label>
+      <div id="col-panel" class="col-toggle-row" style="display:none">
+        <label class="col-toggle active" data-col="cogs">COGS</label>
+        <label class="col-toggle active" data-col="price">Sell Price</label>
+        <label class="col-toggle active" data-col="margin">Act. Margin</label>
+        <label class="col-toggle active" data-col="cogs_pct">COGS %</label>
+        <label class="col-toggle active" data-col="taxes">Taxes</label>
+        <label class="col-toggle active" data-col="fees">Fees</label>
+        <label class="col-toggle active" data-col="total_margin">Total Margin %</label>
+        <label class="col-toggle active" data-col="price30">30% Price</label>
+        <label class="col-toggle active" data-col="status">Status</label>
       </div>
-      <div class="card">
-        <div class="tbl-wrap"><table id="menu-table">
-          <thead><tr id="menu-thead"></tr></thead>
-          <tbody id="menu-tbody"></tbody>
-        </table></div>
+      <div class="card" id="menu-table-wrap">
+        <div class="loading-state"><div class="spinner"></div><div class="loading-label">Waiting for data…</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════ RECIPE EDITOR ═══ -->
+  <!-- RECIPE EDITOR -->
   <div id="page-recipe" class="page">
     <div class="topbar">
-      <div>
-        <div class="page-title">Recipe editor</div>
-        <div class="page-sub">Edit sell price, ingredients and labor</div>
-      </div>
-      <div style="display:flex;gap:8px;">
+      <div><div class="page-title">Recipe editor</div><div class="page-sub">Edits save to sheet via Web App</div></div>
+      <div style="display:flex;gap:8px">
         <button class="btn" onclick="newRecipe()">+ New item</button>
-        <button class="btn btn-green" onclick="saveRecipe()">Save recipe</button>
+        <button class="btn btn-green" onclick="saveRecipe()">Save to sheet</button>
       </div>
     </div>
     <div class="content">
-      <div class="filter-row" style="margin-bottom:20px;">
+      <div class="filter-row" style="margin-bottom:20px">
         <input type="text" id="recipe-search" placeholder="Search for an item to edit…" oninput="filterRecipeSearch()">
         <button class="btn btn-dark" onclick="loadSelectedRecipe()">Load ↵</button>
       </div>
-      <div id="recipe-search-results" style="display:none;margin-bottom:16px;"></div>
-
-      <div class="two-col" id="recipe-editor-area">
-        <!-- Left: details -->
-        <div style="display:flex;flex-direction:column;gap:16px;">
+      <div id="recipe-search-results" style="display:none;margin-bottom:16px"></div>
+      <div class="two-col">
+        <div style="display:flex;flex-direction:column;gap:16px">
           <div class="card">
             <div class="card-header">Item details</div>
             <div class="card-body">
-              <div class="form-grid form-grid-2">
-                <div>
-                  <label class="form-label">Item name</label>
-                  <input class="form-input" id="re-name" placeholder="e.g. Oat Milk Latte">
-                </div>
-                <div>
-                  <label class="form-label">Category</label>
-                  <select class="form-input" id="re-cat"></select>
-                </div>
+              <div class="form-grid-2" style="margin-bottom:0">
+                <div><label class="form-label">Item name</label><input class="form-input" id="re-name" placeholder="e.g. Oat Milk Latte"></div>
+                <div><label class="form-label">Category</label><select class="form-input" id="re-cat"></select></div>
               </div>
-              <div class="form-grid form-grid-2">
-                <div>
-                  <label class="form-label">Sell price ($)</label>
-                  <input class="form-input" id="re-price" type="number" step="0.01" placeholder="0.00" oninput="updateCostSummary()">
-                </div>
-                <div>
-                  <label class="form-label">Labor time (min)</label>
-                  <input class="form-input" id="re-labor" type="number" step="0.5" value="2" oninput="updateCostSummary()">
-                </div>
+              <div class="form-grid-2" style="margin-bottom:0">
+                <div><label class="form-label">Sell price ($)</label><input class="form-input" id="re-price" type="number" step="0.01" oninput="updateCostSummary()"></div>
+                <div><label class="form-label">Labor time (min)</label><input class="form-input" id="re-labor" type="number" step="0.5" value="2" oninput="updateCostSummary()"></div>
               </div>
               <label class="form-label">Notes</label>
-              <input class="form-input" id="re-notes" placeholder="Optional notes…" style="margin-bottom:0">
+              <input class="form-input" id="re-notes" placeholder="Optional…" style="margin-bottom:0">
             </div>
           </div>
-
           <div class="card">
-            <div class="card-header">
-              Ingredients
-              <button class="btn" style="padding:4px 10px;font-size:12px;" onclick="openAddIngModal()">+ Add</button>
-            </div>
+            <div class="card-header">Ingredients <button class="btn" style="padding:4px 10px;font-size:12px" onclick="openAddIngModal()">+ Add</button></div>
             <div class="card-body">
               <div id="re-ingredients"></div>
               <div class="sep"></div>
@@ -825,26 +263,19 @@
             </div>
           </div>
         </div>
-
-        <!-- Right: JSON preview -->
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          <div class="card" style="flex:1;">
-            <div class="card-header">
-              Recipe JSON (Google Sheets format)
-              <button class="btn" style="padding:4px 10px;font-size:12px;" onclick="copyJSON()">Copy</button>
-            </div>
-            <div class="card-body">
-              <pre id="re-json" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);white-space:pre-wrap;word-break:break-all;line-height:1.6;"></pre>
-            </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card" style="flex:1">
+            <div class="card-header">Recipe JSON <button class="btn" style="padding:4px 10px;font-size:12px" onclick="copyJSON()">Copy</button></div>
+            <div class="card-body"><pre id="re-json" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);white-space:pre-wrap;word-break:break-all;line-height:1.6"></pre></div>
           </div>
           <div class="card">
             <div class="card-header">All items</div>
-            <div class="card-body" style="padding:0;max-height:240px;overflow-y:auto;">
-              <table style="width:100%;font-size:12px;">
+            <div class="card-body" style="padding:0;max-height:240px;overflow-y:auto">
+              <table style="width:100%;font-size:12px">
                 <thead><tr>
-                  <th style="padding:7px 12px;font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.04em;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);">Item</th>
-                  <th style="padding:7px 12px;font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.04em;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);">COGS</th>
-                  <th style="padding:7px 12px;font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.04em;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);">Price</th>
+                  <th style="padding:7px 12px;font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.04em;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border)">Item</th>
+                  <th style="padding:7px 12px;font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.04em;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border)">COGS</th>
+                  <th style="padding:7px 12px;font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.04em;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border)">Price</th>
                 </tr></thead>
                 <tbody id="recipe-list-mini"></tbody>
               </table>
@@ -855,121 +286,91 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════ INGREDIENTS ═══ -->
+  <!-- INGREDIENTS -->
   <div id="page-ingredients" class="page">
     <div class="topbar">
-      <div>
-        <div class="page-title">Ingredient master</div>
-        <div class="page-sub">Price changes propagate to all linked recipes</div>
-      </div>
+      <div><div class="page-title">Ingredient master</div><div class="page-sub">Price changes propagate to all linked recipes</div></div>
       <button class="btn btn-green" onclick="openNewIngModal()">+ Add ingredient</button>
     </div>
     <div class="content">
       <div class="filter-row">
         <input type="text" id="ing-search" placeholder="Search ingredients…" oninput="renderIngredients()">
-        <select id="ing-cat" onchange="renderIngredients()">
-          <option value="">All categories</option>
-        </select>
+        <select id="ing-cat-filter" onchange="renderIngredients()"><option value="">All categories</option></select>
       </div>
-      <div class="card">
-        <div class="tbl-wrap"><table>
-          <thead><tr>
-            <th>Ingredient</th><th>Category</th><th>Unit</th><th>Pack size</th><th>Pack cost ($)</th><th>Cost/unit</th><th>Used in</th><th></th>
-          </tr></thead>
-          <tbody id="ing-tbody"></tbody>
-        </table></div>
+      <div class="card" id="ing-table-wrap">
+        <div class="loading-state"><div class="spinner"></div><div class="loading-label">Waiting for data…</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════ SETTINGS ═══ -->
+  <!-- SETTINGS -->
   <div id="page-settings" class="page">
     <div class="topbar">
-      <div>
-        <div class="page-title">Settings</div>
-        <div class="page-sub">Google Sheets sync, categories, and cost targets</div>
-      </div>
+      <div><div class="page-title">Settings</div><div class="page-sub">Google Sheet connection, cost targets, categories</div></div>
       <button class="btn btn-green" onclick="saveSettings()">Save settings</button>
     </div>
     <div class="content">
 
-      <!-- GOOGLE SHEETS -->
       <div class="settings-section">
-        <div class="settings-section-title">Google Sheets connection</div>
-        <div class="sync-card">
-          <div class="sync-header">
-            <div class="gs-icon">📊</div>
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Linked spreadsheet</div>
-              <input class="sync-url" id="sheet-url" placeholder="Paste Google Sheets URL or ID…" value="">
+        <div class="settings-title">Google Sheets connection (read — pull data)</div>
+        <div class="connect-card">
+          <div style="margin-bottom:14px">
+            <label class="form-label">Google Sheet ID</label>
+            <div class="connect-input-wrap">
+              <input class="connect-input" id="sheet-id-input" placeholder="Paste your Sheet ID here">
+              <button class="btn btn-green" onclick="connectSheet()">Connect</button>
             </div>
-            <span class="pill pill-gray" id="sync-status">Not connected</span>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;font-family:'DM Mono',monospace">The ID is the long string between /d/ and /edit in your sheet URL</div>
           </div>
-          <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">
-            For read-only access, make your sheet public and paste the URL. For push/pull, connect via OAuth below.
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn" onclick="pullFromSheet()">↓ Pull from sheet</button>
-            <button class="btn" onclick="pushToSheet()">↑ Push to sheet</button>
-            <button class="btn btn-green" onclick="openSheetTemplate()">Open sheet template ↗</button>
-          </div>
-        </div>
-
-        <div class="sync-card">
-          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">How your Google Sheet is structured</div>
-          <div style="font-size:12px;color:var(--text2);line-height:1.7;">
-            The linked sheet has two tabs: <strong>recipes</strong> and <strong>ingredients</strong>.<br>
-            Each row in <em>recipes</em> stores: <span style="font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:3px;">id, name, category, sell_price, labor_min, notes, recipe_json</span><br>
-            The <span style="font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:3px;">recipe_json</span> column stores ingredient quantities as JSON. Ingredient costs are resolved live from the ingredients tab.
+          <div id="connect-status"></div>
+          <div id="gid-form-area"></div>
+          <div class="sep"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn" onclick="loadAllData()">↓ Pull from sheet</button>
           </div>
         </div>
       </div>
 
-      <!-- COST TARGETS -->
       <div class="settings-section">
-        <div class="settings-section-title">Cost targets</div>
+        <div class="settings-title">Web App URL (write — push / save recipes)</div>
+        <div class="connect-card">
+          <p style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">Deploy your Apps Script as a Web App to enable saving recipe edits back to the sheet. Paste the deployed URL here.</p>
+          <div class="connect-input-wrap">
+            <input class="connect-input" id="webapp-url-input" placeholder="https://script.google.com/macros/s/…/exec">
+            <button class="btn btn-green" onclick="saveWebAppUrl()">Save</button>
+          </div>
+          <div id="webapp-status"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Cost targets</div>
         <div class="card">
-          <div class="settings-row">
-            <div><div class="key">Food / COGS % target</div><div class="desc">Items above this are flagged for review</div></div>
-            <input style="width:80px;padding:6px 10px;font-size:13px;font-family:'DM Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);" id="target-cogs" value="30">
-          </div>
-          <div class="settings-row">
-            <div><div class="key">Labor hourly rate ($)</div><div class="desc">Used to calculate labor cost per item</div></div>
-            <input style="width:80px;padding:6px 10px;font-size:13px;font-family:'DM Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);" id="target-labor" value="18.00">
-          </div>
-          <div class="settings-row">
-            <div><div class="key">Tax rate (%)</div><div class="desc">Applied to all sell prices</div></div>
-            <input style="width:80px;padding:6px 10px;font-size:13px;font-family:'DM Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);" id="target-tax" value="6.50">
-          </div>
-          <div class="settings-row">
-            <div><div class="key">POS flat fee ($)</div><div class="desc">Per-transaction POS fee</div></div>
-            <input style="width:80px;padding:6px 10px;font-size:13px;font-family:'DM Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);" id="target-pos-flat" value="0.15">
-          </div>
-          <div class="settings-row">
-            <div><div class="key">POS % fee</div><div class="desc">Per-transaction POS percentage</div></div>
-            <input style="width:80px;padding:6px 10px;font-size:13px;font-family:'DM Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);" id="target-pos-pct" value="2.60">
-          </div>
+          <div class="settings-row"><div><div class="key">Food / COGS % target</div><div class="desc">Items above this are flagged for review</div></div><input class="settings-input" id="target-cogs" value="30"></div>
+          <div class="settings-row"><div><div class="key">Labor hourly rate ($)</div><div class="desc">Used to calculate labor cost per item</div></div><input class="settings-input" id="target-labor" value="18.00"></div>
+          <div class="settings-row"><div><div class="key">Tax rate (%)</div><div class="desc">Applied to all sell prices</div></div><input class="settings-input" id="target-tax" value="6.50"></div>
+          <div class="settings-row"><div><div class="key">POS flat fee ($)</div><div class="desc">Per-transaction POS fee</div></div><input class="settings-input" id="target-pos-flat" value="0.15"></div>
+          <div class="settings-row"><div><div class="key">POS % fee</div><div class="desc">Per-transaction POS percentage</div></div><input class="settings-input" id="target-pos-pct" value="2.60"></div>
         </div>
       </div>
 
-      <!-- CATEGORIES -->
       <div class="settings-section">
-        <div class="settings-section-title">Menu categories</div>
-        <div class="card" style="padding:16px 18px;">
+        <div class="settings-title">Menu categories</div>
+        <div class="card" style="padding:16px 18px">
           <div class="tag-list" id="menu-cats-tags"></div>
-          <div style="margin-top:12px;display:flex;gap:8px;">
-            <input style="flex:1;padding:7px 11px;font-size:13px;font-family:'DM Sans',sans-serif;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;" id="new-menu-cat" placeholder="Add category…">
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <input style="flex:1;padding:7px 11px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none" id="new-menu-cat" placeholder="Add category…">
             <button class="btn" onclick="addMenuCat()">Add</button>
           </div>
         </div>
       </div>
 
       <div class="settings-section">
-        <div class="settings-section-title">Ingredient categories</div>
-        <div class="card" style="padding:16px 18px;">
+        <div class="settings-title">Ingredient categories</div>
+        <div class="card" style="padding:16px 18px">
           <div class="tag-list" id="ing-cats-tags"></div>
-          <div style="margin-top:12px;display:flex;gap:8px;">
-            <input style="flex:1;padding:7px 11px;font-size:13px;font-family:'DM Sans',sans-serif;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;" id="new-ing-cat" placeholder="Add category…">
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <input style="flex:1;padding:7px 11px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none" id="new-ing-cat" placeholder="Add category…">
             <button class="btn" onclick="addIngCat()">Add</button>
           </div>
         </div>
@@ -980,815 +381,358 @@
 
 </main>
 
-<!-- ADD INGREDIENT TO RECIPE MODAL -->
+<!-- MODALS -->
 <div class="modal-backdrop" id="add-ing-modal">
   <div class="modal">
     <div class="modal-title">Add ingredient</div>
-    <label class="form-label">Ingredient</label>
-    <select class="form-input" id="modal-ing-select"></select>
-    <label class="form-label">Quantity</label>
-    <input class="form-input" id="modal-ing-qty" type="number" step="0.1" placeholder="e.g. 30">
-    <label class="form-label">Unit</label>
-    <input class="form-input" id="modal-ing-unit" placeholder="e.g. ml, g, oz, each">
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('add-ing-modal')">Cancel</button>
-      <button class="btn btn-green" onclick="confirmAddIng()">Add ingredient</button>
-    </div>
+    <label class="form-label">Ingredient</label><select class="form-input" id="modal-ing-select"></select>
+    <label class="form-label">Quantity</label><input class="form-input" id="modal-ing-qty" type="number" step="0.01">
+    <label class="form-label">Unit</label><input class="form-input" id="modal-ing-unit" placeholder="ml, g, oz, ea…">
+    <div class="modal-footer"><button class="btn" onclick="closeModal('add-ing-modal')">Cancel</button><button class="btn btn-green" onclick="confirmAddIng()">Add</button></div>
   </div>
 </div>
-
-<!-- NEW INGREDIENT MODAL -->
 <div class="modal-backdrop" id="new-ing-modal">
   <div class="modal">
     <div class="modal-title">New ingredient</div>
-    <label class="form-label">Name</label>
-    <input class="form-input" id="ni-name" placeholder="e.g. Oat milk">
-    <div class="form-grid form-grid-2">
-      <div>
-        <label class="form-label">Category</label>
-        <select class="form-input" id="ni-cat"></select>
-      </div>
-      <div>
-        <label class="form-label">Unit</label>
-        <input class="form-input" id="ni-unit" placeholder="ml, g, oz, each">
-      </div>
-    </div>
-    <div class="form-grid form-grid-2">
-      <div>
-        <label class="form-label">Pack size</label>
-        <input class="form-input" id="ni-pack-size" type="number" placeholder="e.g. 1000">
-      </div>
-      <div>
-        <label class="form-label">Pack cost ($)</label>
-        <input class="form-input" id="ni-pack-cost" type="number" step="0.01" placeholder="e.g. 4.50">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('new-ing-modal')">Cancel</button>
-      <button class="btn btn-green" onclick="confirmNewIng()">Save ingredient</button>
-    </div>
+    <label class="form-label">Name</label><input class="form-input" id="ni-name">
+    <div class="form-grid-2"><div><label class="form-label">Category</label><select class="form-input" id="ni-cat"></select></div><div><label class="form-label">Unit</label><input class="form-input" id="ni-unit"></div></div>
+    <div class="form-grid-2"><div><label class="form-label">Pack size</label><input class="form-input" id="ni-pack-size" type="number"></div><div><label class="form-label">Pack cost ($)</label><input class="form-input" id="ni-pack-cost" type="number" step="0.01"></div></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('new-ing-modal')">Cancel</button><button class="btn btn-green" onclick="confirmNewIng()">Save</button></div>
   </div>
 </div>
-
-<!-- EDIT INGREDIENT MODAL -->
 <div class="modal-backdrop" id="edit-ing-modal">
   <div class="modal">
     <div class="modal-title">Edit ingredient</div>
     <input type="hidden" id="ei-id">
-    <label class="form-label">Name</label>
-    <input class="form-input" id="ei-name">
-    <div class="form-grid form-grid-2">
-      <div>
-        <label class="form-label">Category</label>
-        <select class="form-input" id="ei-cat"></select>
-      </div>
-      <div>
-        <label class="form-label">Unit</label>
-        <input class="form-input" id="ei-unit">
-      </div>
-    </div>
-    <div class="form-grid form-grid-2">
-      <div>
-        <label class="form-label">Pack size</label>
-        <input class="form-input" id="ei-pack-size" type="number">
-      </div>
-      <div>
-        <label class="form-label">Pack cost ($)</label>
-        <input class="form-input" id="ei-pack-cost" type="number" step="0.01">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('edit-ing-modal')">Cancel</button>
-      <button class="btn btn-green" onclick="confirmEditIng()">Save changes</button>
-    </div>
+    <label class="form-label">Name</label><input class="form-input" id="ei-name">
+    <div class="form-grid-2"><div><label class="form-label">Category</label><select class="form-input" id="ei-cat"></select></div><div><label class="form-label">Unit</label><input class="form-input" id="ei-unit"></div></div>
+    <div class="form-grid-2"><div><label class="form-label">Pack size</label><input class="form-input" id="ei-pack-size" type="number"></div><div><label class="form-label">Pack cost ($)</label><input class="form-input" id="ei-pack-cost" type="number" step="0.01"></div></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('edit-ing-modal')">Cancel</button><button class="btn btn-green" onclick="confirmEditIng()">Save changes</button></div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════
-// DATA — migrated from CSV
-// ═══════════════════════════════════════════════════════════════
+// ── STATE (no hardcoded data) ──────────────────────────────────
+let recipes=[], ingredients=[], menuCategories=[], ingCategories=[];
+let currentRecipeId=null, currentIngredients=[];
+let sortCol=null, sortDir=1;
+let isConnected=false;
+let visibleCols={cogs:true,price:true,margin:true,cogs_pct:true,taxes:true,fees:true,total_margin:true,price30:true,status:true};
+const SETTINGS={cogsPctTarget:30,laborRate:18,taxPct:6.5,posFlatFee:0.15,posPct:2.6};
+let SHEET_ID=localStorage.getItem('cogs_sheet_id')||'';
 
-const SETTINGS = {
-  cogsPctTarget: 30,
-  laborRate: 18.00,
-  taxPct: 6.50,
-  posFlatFee: 0.15,
-  posPct: 2.60,
-};
+// ── GOOGLE SHEETS CSV FETCH ────────────────────────────────────
+// Reads published CSV tabs — sheet must be published to web (File → Share → Publish to web)
+function pubCsvUrl(id,gid){return`https://docs.google.com/spreadsheets/d/${id}/pub?gid=${gid}&single=true&output=csv`;}
+function expCsvUrl(id,gid){return`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;}
 
-// Ingredient master — reverse-engineered from COGS data
-let ingredients = [
-  { id: 'ing001', name: 'Espresso shot (single)', category: 'Coffee', unit: 'shot', packSize: 1, packCost: 0.36 },
-  { id: 'ing002', name: 'Whole milk', category: 'Dairy', unit: 'oz', packSize: 128, packCost: 4.50 },
-  { id: 'ing003', name: 'Oat milk', category: 'Dairy', unit: 'oz', packSize: 32, packCost: 3.80 },
-  { id: 'ing004', name: 'Drip coffee', category: 'Coffee', unit: 'oz', packSize: 128, packCost: 1.20 },
-  { id: 'ing005', name: 'Cold brew concentrate', category: 'Coffee', unit: 'oz', packSize: 32, packCost: 4.00 },
-  { id: 'ing006', name: 'Green tea bag', category: 'Tea', unit: 'each', packSize: 100, packCost: 8.00 },
-  { id: 'ing007', name: 'Black tea bag', category: 'Tea', unit: 'each', packSize: 100, packCost: 5.00 },
-  { id: 'ing008', name: 'Chai concentrate', category: 'Tea', unit: 'oz', packSize: 32, packCost: 7.50 },
-  { id: 'ing009', name: 'Matcha powder', category: 'Tea', unit: 'g', packSize: 100, packCost: 22.00 },
-  { id: 'ing010', name: 'Vanilla syrup', category: 'Syrups', unit: 'oz', packSize: 25, packCost: 5.00 },
-  { id: 'ing011', name: 'Chocolate syrup', category: 'Syrups', unit: 'oz', packSize: 25, packCost: 4.50 },
-  { id: 'ing012', name: 'Honey syrup', category: 'Syrups', unit: 'oz', packSize: 16, packCost: 6.00 },
-  { id: 'ing013', name: 'Hibiscus syrup', category: 'Syrups', unit: 'oz', packSize: 16, packCost: 5.50 },
-  { id: 'ing014', name: 'Butterfly pea syrup', category: 'Syrups', unit: 'oz', packSize: 16, packCost: 7.00 },
-  { id: 'ing015', name: 'Lemonade', category: 'Mixers', unit: 'oz', packSize: 64, packCost: 3.50 },
-  { id: 'ing016', name: 'Ice', category: 'Other', unit: 'cup', packSize: 1, packCost: 0.05 },
-  { id: 'ing017', name: 'Raspberry syrup', category: 'Syrups', unit: 'oz', packSize: 16, packCost: 5.00 },
-  { id: 'ing018', name: 'Danish pastry syrup', category: 'Syrups', unit: 'oz', packSize: 16, packCost: 6.50 },
-  { id: 'ing019', name: 'Cup & lid (12oz)', category: 'Packaging', unit: 'each', packSize: 50, packCost: 6.00 },
-  { id: 'ing020', name: 'Cup & lid (16oz)', category: 'Packaging', unit: 'each', packSize: 50, packCost: 7.00 },
-  { id: 'ing021', name: 'Cup & lid (20oz)', category: 'Packaging', unit: 'each', packSize: 50, packCost: 8.00 },
-];
-
-// Recipes with JSON stored as it would appear in Google Sheets
-let recipes = [
-  { id: 'r001', name: 'Cappuccino (8oz)', category: 'Espresso', sellPrice: 4.25, laborMin: 3, notes: '8oz. Equal parts espresso, steamed milk, foam.', cogs: 1.06, cogsPct: 24.90, actMargin: 2.92, taxes: 0.28, fees: 0.27, totalMarginPct: 31.20, price30: 4.42,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 4, unit: 'oz' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r002', name: 'Cappuccino (12oz)', category: 'Espresso', sellPrice: 5.00, laborMin: 3, notes: '12oz cappuccino.', cogs: 1.19, cogsPct: 23.70, actMargin: 3.53, taxes: 0.33, fees: 0.29, totalMarginPct: 29.47, price30: 3.95,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 6, unit: 'oz' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r003', name: 'Espresso Single', category: 'Espresso', sellPrice: 2.00, laborMin: 1.5, notes: 'Single shot pulled to 1oz.', cogs: 0.36, cogsPct: 17.87, actMargin: 1.44, taxes: 0.13, fees: 0.21, totalMarginPct: 28.13, price30: 1.19,
-    recipeJson: [{ ing: 'ing001', qty: 1, unit: 'shot' }] },
-  { id: 'r004', name: 'Espresso Double', category: 'Espresso', sellPrice: 2.75, laborMin: 1.5, notes: 'Double shot pulled to 2oz.', cogs: 0.62, cogsPct: 22.61, actMargin: 1.90, taxes: 0.18, fees: 0.23, totalMarginPct: 30.83, price30: 2.07,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }] },
-  { id: 'r005', name: 'Iced Latte (12oz)', category: 'Espresso', sellPrice: 4.50, laborMin: 2, notes: '', cogs: 1.16, cogsPct: 25.68, actMargin: 3.07, taxes: 0.29, fees: 0.27, totalMarginPct: 31.78, price30: 3.85,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 6, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r006', name: 'Iced Latte (16oz)', category: 'Espresso', sellPrice: 5.50, laborMin: 2, notes: '', cogs: 1.64, cogsPct: 29.86, actMargin: 3.56, taxes: 0.36, fees: 0.30, totalMarginPct: 35.36, price30: 5.47,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 9, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r007', name: 'Iced Latte (20oz)', category: 'Espresso', sellPrice: 6.25, laborMin: 2, notes: '', cogs: 2.24, cogsPct: 35.88, actMargin: 3.68, taxes: 0.41, fees: 0.32, totalMarginPct: 41.05, price30: 7.48,
-    recipeJson: [{ ing: 'ing001', qty: 3, unit: 'shot' }, { ing: 'ing002', qty: 12, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r008', name: 'Hot Latte (12oz)', category: 'Espresso', sellPrice: 4.50, laborMin: 3, notes: '', cogs: 1.20, cogsPct: 26.60, actMargin: 3.03, taxes: 0.29, fees: 0.27, totalMarginPct: 32.70, price30: 3.99,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 6, unit: 'oz' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r009', name: 'Hot Latte (16oz)', category: 'Espresso', sellPrice: 5.50, laborMin: 3, notes: '', cogs: 1.79, cogsPct: 32.48, actMargin: 3.41, taxes: 0.36, fees: 0.30, totalMarginPct: 37.98, price30: 5.96,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 9, unit: 'oz' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r010', name: 'Drip Coffee (12oz)', category: 'Drip Coffee', sellPrice: 3.00, laborMin: 1, notes: '', cogs: 0.46, cogsPct: 15.22, actMargin: 2.31, taxes: 0.20, fees: 0.23, totalMarginPct: 22.99, price30: 1.52,
-    recipeJson: [{ ing: 'ing004', qty: 10, unit: 'oz' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r011', name: 'Drip Coffee (16oz)', category: 'Drip Coffee', sellPrice: 3.30, laborMin: 1, notes: '', cogs: 0.53, cogsPct: 16.03, actMargin: 2.53, taxes: 0.21, fees: 0.24, totalMarginPct: 23.35, price30: 1.76,
-    recipeJson: [{ ing: 'ing004', qty: 14, unit: 'oz' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r012', name: 'Cold Brew (12oz)', category: 'Cold Brew', sellPrice: 4.25, laborMin: 1, notes: '', cogs: 0.64, cogsPct: 15.14, actMargin: 3.34, taxes: 0.28, fees: 0.27, totalMarginPct: 21.44, price30: 2.15,
-    recipeJson: [{ ing: 'ing005', qty: 6, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r013', name: 'Cold Brew (16oz)', category: 'Cold Brew', sellPrice: 5.00, laborMin: 1, notes: '', cogs: 0.78, cogsPct: 15.67, actMargin: 3.93, taxes: 0.33, fees: 0.29, totalMarginPct: 21.44, price30: 2.61,
-    recipeJson: [{ ing: 'ing005', qty: 8, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r014', name: 'Cold Brew (20oz)', category: 'Cold Brew', sellPrice: 5.75, laborMin: 1, notes: '', cogs: 0.92, cogsPct: 16.06, actMargin: 4.52, taxes: 0.37, fees: 0.31, totalMarginPct: 21.43, price30: 3.08,
-    recipeJson: [{ ing: 'ing005', qty: 10, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r015', name: 'Green Tea (12oz)', category: 'Tea', sellPrice: 3.00, laborMin: 2, notes: '', cogs: 0.67, cogsPct: 22.30, actMargin: 2.10, taxes: 0.20, fees: 0.23, totalMarginPct: 30.06, price30: 2.23,
-    recipeJson: [{ ing: 'ing006', qty: 1, unit: 'each' }, { ing: 'ing010', qty: 0.5, unit: 'oz' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r016', name: 'Green Tea (16oz)', category: 'Tea', sellPrice: 3.40, laborMin: 2, notes: '', cogs: 0.82, cogsPct: 24.03, actMargin: 2.34, taxes: 0.22, fees: 0.24, totalMarginPct: 31.21, price30: 2.72,
-    recipeJson: [{ ing: 'ing006', qty: 1, unit: 'each' }, { ing: 'ing010', qty: 0.75, unit: 'oz' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r017', name: 'Green Tea (20oz)', category: 'Tea', sellPrice: 4.00, laborMin: 2, notes: '', cogs: 0.97, cogsPct: 24.13, actMargin: 2.77, taxes: 0.26, fees: 0.26, totalMarginPct: 30.65, price30: 3.22,
-    recipeJson: [{ ing: 'ing006', qty: 2, unit: 'each' }, { ing: 'ing010', qty: 0.75, unit: 'oz' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r018', name: 'Black Tea (12oz)', category: 'Tea', sellPrice: 3.00, laborMin: 2, notes: '', cogs: 0.66, cogsPct: 21.87, actMargin: 2.11, taxes: 0.20, fees: 0.23, totalMarginPct: 29.64, price30: 2.19,
-    recipeJson: [{ ing: 'ing007', qty: 1, unit: 'each' }, { ing: 'ing010', qty: 0.5, unit: 'oz' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r019', name: 'Black Tea (16oz)', category: 'Tea', sellPrice: 3.50, laborMin: 2, notes: '', cogs: 0.66, cogsPct: 18.85, actMargin: 2.59, taxes: 0.23, fees: 0.25, totalMarginPct: 25.90, price30: 2.20,
-    recipeJson: [{ ing: 'ing007', qty: 1, unit: 'each' }, { ing: 'ing010', qty: 0.5, unit: 'oz' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r020', name: 'Black Tea (20oz)', category: 'Tea', sellPrice: 4.00, laborMin: 2, notes: '', cogs: 0.94, cogsPct: 23.61, actMargin: 2.79, taxes: 0.26, fees: 0.26, totalMarginPct: 30.13, price30: 3.15,
-    recipeJson: [{ ing: 'ing007', qty: 2, unit: 'each' }, { ing: 'ing010', qty: 0.5, unit: 'oz' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r021', name: 'Chai Tea (12oz)', category: 'Tea', sellPrice: 5.00, laborMin: 2, notes: '', cogs: 1.32, cogsPct: 26.46, actMargin: 3.39, taxes: 0.33, fees: 0.29, totalMarginPct: 32.23, price30: 4.41,
-    recipeJson: [{ ing: 'ing008', qty: 4, unit: 'oz' }, { ing: 'ing002', qty: 4, unit: 'oz' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r022', name: 'Chai Tea (16oz)', category: 'Tea', sellPrice: 6.00, laborMin: 2, notes: '', cogs: 1.69, cogsPct: 28.16, actMargin: 3.99, taxes: 0.39, fees: 0.32, totalMarginPct: 33.42, price30: 5.63,
-    recipeJson: [{ ing: 'ing008', qty: 5, unit: 'oz' }, { ing: 'ing002', qty: 5, unit: 'oz' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r023', name: 'Chai Tea (20oz)', category: 'Tea', sellPrice: 7.00, laborMin: 2, notes: '', cogs: 2.06, cogsPct: 29.37, actMargin: 4.60, taxes: 0.46, fees: 0.34, totalMarginPct: 34.28, price30: 6.85,
-    recipeJson: [{ ing: 'ing008', qty: 6, unit: 'oz' }, { ing: 'ing002', qty: 7, unit: 'oz' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r024', name: 'Matcha (12oz)', category: 'Matcha', sellPrice: 7.00, laborMin: 3, notes: '', cogs: 2.14, cogsPct: 30.64, actMargin: 4.51, taxes: 0.46, fees: 0.34, totalMarginPct: 35.55, price30: 7.15,
-    recipeJson: [{ ing: 'ing009', qty: 6, unit: 'g' }, { ing: 'ing002', qty: 8, unit: 'oz' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r025', name: 'Matcha (16oz)', category: 'Matcha', sellPrice: 8.00, laborMin: 3, notes: '', cogs: 2.75, cogsPct: 34.34, actMargin: 4.88, taxes: 0.52, fees: 0.37, totalMarginPct: 38.98, price30: 9.16,
-    recipeJson: [{ ing: 'ing009', qty: 8, unit: 'g' }, { ing: 'ing002', qty: 10, unit: 'oz' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r026', name: 'Matcha (20oz)', category: 'Matcha', sellPrice: 9.00, laborMin: 3, notes: '', cogs: 3.35, cogsPct: 37.21, actMargin: 5.25, taxes: 0.59, fees: 0.40, totalMarginPct: 41.65, price30: 11.16,
-    recipeJson: [{ ing: 'ing009', qty: 10, unit: 'g' }, { ing: 'ing002', qty: 12, unit: 'oz' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r027', name: 'Frozen Coffee (12oz)', category: 'Frozen', sellPrice: 5.00, laborMin: 3, notes: '', cogs: 1.09, cogsPct: 21.78, actMargin: 3.62, taxes: 0.33, fees: 0.29, totalMarginPct: 27.55, price30: 3.63,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 4, unit: 'oz' }, { ing: 'ing016', qty: 2, unit: 'cup' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r028', name: 'Frozen Coffee (16oz)', category: 'Frozen', sellPrice: 5.50, laborMin: 3, notes: '', cogs: 1.38, cogsPct: 25.04, actMargin: 3.82, taxes: 0.36, fees: 0.30, totalMarginPct: 30.54, price30: 4.59,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 6, unit: 'oz' }, { ing: 'ing016', qty: 2, unit: 'cup' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r029', name: 'Frozen Coffee (20oz)', category: 'Frozen', sellPrice: 6.00, laborMin: 3, notes: '', cogs: 1.67, cogsPct: 27.76, actMargin: 4.02, taxes: 0.39, fees: 0.32, totalMarginPct: 33.03, price30: 5.55,
-    recipeJson: [{ ing: 'ing001', qty: 3, unit: 'shot' }, { ing: 'ing002', qty: 8, unit: 'oz' }, { ing: 'ing016', qty: 2, unit: 'cup' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r030', name: 'Iced Honey Latte (12oz)', category: 'Espresso', sellPrice: 5.00, laborMin: 2, notes: '', cogs: 1.02, cogsPct: 20.32, actMargin: 3.70, taxes: 0.33, fees: 0.29, totalMarginPct: 26.09, price30: 3.39,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 5, unit: 'oz' }, { ing: 'ing012', qty: 0.5, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r031', name: 'Iced Honey Latte (16oz)', category: 'Espresso', sellPrice: 6.00, laborMin: 2, notes: '', cogs: 1.49, cogsPct: 24.80, actMargin: 4.20, taxes: 0.39, fees: 0.32, totalMarginPct: 30.07, price30: 4.96,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 7, unit: 'oz' }, { ing: 'ing012', qty: 0.75, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r032', name: 'Iced Honey Latte (20oz)', category: 'Espresso', sellPrice: 7.00, laborMin: 2, notes: '', cogs: 2.07, cogsPct: 30.71, actMargin: 4.34, taxes: 0.44, fees: 0.34, totalMarginPct: 35.70, price30: 6.91,
-    recipeJson: [{ ing: 'ing001', qty: 3, unit: 'shot' }, { ing: 'ing002', qty: 9, unit: 'oz' }, { ing: 'ing012', qty: 1, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r033', name: 'Mazagran Espresso Lemonade', category: 'Specialty', sellPrice: 7.00, laborMin: 2, notes: 'Espresso over lemonade on ice.', cogs: 1.50, cogsPct: 22.29, actMargin: 4.91, taxes: 0.44, fees: 0.34, totalMarginPct: 27.28, price30: 5.01,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing015', qty: 8, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r034', name: 'Hibiscus Green Tea (20oz)', category: 'Specialty', sellPrice: 8.00, laborMin: 2, notes: '', cogs: 1.81, cogsPct: 23.15, actMargin: 5.63, taxes: 0.51, fees: 0.37, totalMarginPct: 27.84, price30: 6.02,
-    recipeJson: [{ ing: 'ing006', qty: 2, unit: 'each' }, { ing: 'ing013', qty: 1, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r035', name: 'Butterfly Lemonade (20oz)', category: 'Specialty', sellPrice: 8.00, laborMin: 2, notes: '', cogs: 1.83, cogsPct: 23.45, actMargin: 5.60, taxes: 0.51, fees: 0.37, totalMarginPct: 28.14, price30: 6.10,
-    recipeJson: [{ ing: 'ing014', qty: 1, unit: 'oz' }, { ing: 'ing015', qty: 10, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r036', name: 'Hot Americano', category: 'Espresso', sellPrice: 4.30, laborMin: 2, notes: 'Espresso + hot water.', cogs: 1.09, cogsPct: 25.46, actMargin: 2.94, taxes: 0.28, fees: 0.27, totalMarginPct: 31.72, price30: 3.65,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r037', name: 'Iced Mocha (12oz)', category: 'Espresso', sellPrice: 5.00, laborMin: 3, notes: '', cogs: 1.57, cogsPct: 31.48, actMargin: 3.14, taxes: 0.33, fees: 0.29, totalMarginPct: 37.25, price30: 5.25,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 5, unit: 'oz' }, { ing: 'ing011', qty: 1, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing019', qty: 1, unit: 'each' }] },
-  { id: 'r038', name: 'Iced Mocha (16oz)', category: 'Espresso', sellPrice: 6.00, laborMin: 3, notes: '', cogs: 1.87, cogsPct: 31.18, actMargin: 3.81, taxes: 0.39, fees: 0.32, totalMarginPct: 36.45, price30: 6.24,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 7, unit: 'oz' }, { ing: 'ing011', qty: 1.5, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-  { id: 'r039', name: 'Iced Mocha (20oz)', category: 'Espresso', sellPrice: 7.00, laborMin: 3, notes: '', cogs: 2.28, cogsPct: 32.59, actMargin: 4.37, taxes: 0.46, fees: 0.34, totalMarginPct: 37.50, price30: 7.60,
-    recipeJson: [{ ing: 'ing001', qty: 3, unit: 'shot' }, { ing: 'ing002', qty: 9, unit: 'oz' }, { ing: 'ing011', qty: 2, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing021', qty: 1, unit: 'each' }] },
-  { id: 'r040', name: 'Raspberry Danish Iced Latte', category: 'Specialty', sellPrice: 8.00, laborMin: 3, notes: 'Seasonal special.', cogs: 2.33, cogsPct: 29.18, actMargin: 5.29, taxes: 0.52, fees: 0.37, totalMarginPct: 33.83, price30: 7.78,
-    recipeJson: [{ ing: 'ing001', qty: 2, unit: 'shot' }, { ing: 'ing002', qty: 6, unit: 'oz' }, { ing: 'ing017', qty: 0.5, unit: 'oz' }, { ing: 'ing018', qty: 0.5, unit: 'oz' }, { ing: 'ing016', qty: 1, unit: 'cup' }, { ing: 'ing020', qty: 1, unit: 'each' }] },
-];
-
-let menuCategories = ['Espresso', 'Drip Coffee', 'Cold Brew', 'Tea', 'Matcha', 'Frozen', 'Specialty'];
-let ingCategories = ['Coffee', 'Dairy', 'Tea', 'Syrups', 'Mixers', 'Packaging', 'Other'];
-
-// State for currently editing recipe
-let currentRecipeId = null;
-let currentIngredients = []; // [{ingId, qty, unit}]
-let sortCol = null, sortDir = 1;
-let visibleCols = { cogs:true, price:true, margin:true, cogs_pct:true, taxes:true, fees:true, total_margin:true, cogs30:true, status:true };
-
-// ═══════════════════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════════════════
-
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  document.querySelector(`.nav-item[onclick="showPage('${name}')"]`).classList.add('active');
-  if (name === 'dashboard') renderDashboard();
-  if (name === 'menu') { populateMenuFilters(); renderMenu(); }
-  if (name === 'recipe') { populateRecipeCats(); renderRecipeMini(); renderRecipeEditor(); }
-  if (name === 'ingredients') { populateIngFilters(); renderIngredients(); }
-  if (name === 'settings') renderSettings();
+function parseCSV(text){
+  const lines=text.trim().split('\n');
+  if(lines.length<2)return[];
+  const hdrs=splitLine(lines[0]);
+  return lines.slice(1).map(l=>{
+    const v=splitLine(l),o={};
+    hdrs.forEach((h,i)=>o[h.trim()]=(v[i]||'').trim());
+    return o;
+  }).filter(r=>Object.values(r).some(v=>v!==''));
+}
+function splitLine(line){
+  const r=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){const c=line[i];if(c==='"')inQ=!inQ;else if(c===','&&!inQ){r.push(cur);cur='';}else cur+=c;}
+  r.push(cur);return r;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════════════
-
-function $ (cogs, price) { return price > 0 ? ((cogs / price) * 100) : 0; }
-function fmt(n) { return '$' + parseFloat(n).toFixed(2); }
-function pct(n) { return parseFloat(n).toFixed(1) + '%'; }
-
-function statusInfo(cogsPct) {
-  const t = SETTINGS.cogsPctTarget;
-  if (cogsPct <= t) return { cls: 'pill-green good', label: 'On target', barColor: '#2C5F2E' };
-  if (cogsPct <= t + 5) return { cls: 'pill-amber warn', label: 'Elevated', barColor: '#92400E' };
-  return { cls: 'pill-red bad', label: 'Review', barColor: '#991B1B' };
-}
-
-function getIngById(id) { return ingredients.find(i => i.id === id); }
-
-function costPerUnit(ing) {
-  if (!ing || !ing.packSize || !ing.packCost) return 0;
-  return ing.packCost / ing.packSize;
-}
-
-function recipeIngCost(rj) {
-  let total = 0;
-  for (const item of rj) {
-    const ing = getIngById(item.ing);
-    if (ing) total += costPerUnit(ing) * item.qty;
+async function fetchTab(id,gid){
+  for(const url of[pubCsvUrl(id,gid),expCsvUrl(id,gid)]){
+    try{const r=await fetch(url);if(r.ok){const t=await r.text();if(t.includes(','))return parseCSV(t);}}catch(e){}
   }
-  return total;
+  throw new Error('Could not fetch tab gid='+gid);
 }
 
-function usedInCount(ingId) {
-  return recipes.filter(r => r.recipeJson && r.recipeJson.some(x => x.ing === ingId)).length;
-}
+function getGIDs(){try{return JSON.parse(localStorage.getItem('cogs_gids')||'null');}catch(e){return null;}}
+function setGIDs(g){localStorage.setItem('cogs_gids',JSON.stringify(g));}
 
-// ═══════════════════════════════════════════════════════════════
-// DASHBOARD
-// ═══════════════════════════════════════════════════════════════
-
-function renderDashboard() {
-  const t = SETTINGS.cogsPctTarget;
-  const avgCogs = recipes.reduce((a,r) => a + r.cogsPct, 0) / recipes.length;
-  const aboveTarget = recipes.filter(r => r.cogsPct > t).length;
-  const bestMargin = recipes.slice().sort((a,b) => b.actMargin - a.actMargin)[0];
-  const worstItem = recipes.slice().sort((a,b) => b.cogsPct - a.cogsPct)[0];
-
-  document.getElementById('dash-metrics').innerHTML = `
-    <div class="metric-card">
-      <div class="metric-label">Avg COGS %</div>
-      <div class="metric-value ${avgCogs <= t ? 'good' : 'bad'}">${pct(avgCogs)}</div>
-      <div class="metric-sub">Target: &lt;${t}%</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Items tracked</div>
-      <div class="metric-value">${recipes.length}</div>
-      <div class="metric-sub">${aboveTarget} above target</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Best margin</div>
-      <div class="metric-value good">${fmt(bestMargin.actMargin)}</div>
-      <div class="metric-sub">${bestMargin.name}</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Highest COGS %</div>
-      <div class="metric-value bad">${pct(worstItem.cogsPct)}</div>
-      <div class="metric-sub">${worstItem.name}</div>
-    </div>
-  `;
-
-  if (aboveTarget > 0) {
-    document.getElementById('dash-alert').innerHTML = `<div class="alert">⚠ ${aboveTarget} item${aboveTarget>1?'s':''} above COGS target of ${t}%. Consider adjusting pricing or reducing portion costs.</div>`;
-  } else {
-    document.getElementById('dash-alert').innerHTML = '';
+async function loadAllData(){
+  if(!SHEET_ID){showPage('settings');return;}
+  setSyncState('loading','Loading…');
+  document.getElementById('btn-refresh').disabled=true;
+  const gids=getGIDs();
+  if(!gids){setSyncState('','Not connected');document.getElementById('btn-refresh').disabled=false;showPage('settings');return;}
+  try{
+    const [recRows,ingRows]=await Promise.all([
+      fetchTab(SHEET_ID,gids.recipes),
+      fetchTab(SHEET_ID,gids.ingredients),
+    ]);
+    ingredients=parseIngredients(ingRows);
+    recipes=parseRecipes(recRows);
+    menuCategories=[...new Set(recipes.map(r=>r.category).filter(Boolean))].sort();
+    ingCategories=[...new Set(ingredients.map(i=>i.category).filter(Boolean))].sort();
+    isConnected=true;
+    const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    setSyncState('connected','Synced '+t);
+    document.getElementById('btn-refresh').disabled=false;
+    refreshCurrentPage(document.querySelector('.page.active').id.replace('page-',''));
+  }catch(err){
+    setSyncState('','Load failed');
+    document.getElementById('btn-refresh').disabled=false;
+    showStatusMsg('connect-status','error','Could not load data. Check that the sheet is published and GIDs are correct.<br><small>'+err.message+'</small>');
+    console.error(err);
   }
-
-  // Category chart
-  const cats = {};
-  recipes.forEach(r => {
-    if (!cats[r.category]) cats[r.category] = [];
-    cats[r.category].push(r.cogsPct);
-  });
-  const catAvgs = Object.entries(cats).map(([cat, vals]) => ({ cat, avg: vals.reduce((a,b)=>a+b,0)/vals.length })).sort((a,b)=>b.avg-a.avg);
-  const maxCat = Math.max(...catAvgs.map(c=>c.avg));
-  document.getElementById('dash-cat-chart').innerHTML = catAvgs.map(c => {
-    const si = statusInfo(c.avg);
-    return `<div class="bar-row"><span class="bar-label">${c.cat}</span><div class="bar-track"><div class="bar-fill" style="width:${(c.avg/maxCat*100).toFixed(0)}%;background:${si.barColor}"></div></div><span class="bar-val ${si.cls.split(' ')[1]}">${pct(c.avg)}</span></div>`;
-  }).join('');
-
-  // Worst items chart
-  const worst5 = recipes.slice().sort((a,b)=>b.cogsPct - a.cogsPct).slice(0,5);
-  const maxW = worst5[0].cogsPct;
-  document.getElementById('dash-worst-chart').innerHTML = worst5.map(r => {
-    const si = statusInfo(r.cogsPct);
-    const name = r.name.length > 18 ? r.name.slice(0,18) + '…' : r.name;
-    return `<div class="bar-row"><span class="bar-label" title="${r.name}">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${(r.cogsPct/maxW*100).toFixed(0)}%;background:${si.barColor}"></div></div><span class="bar-val ${si.cls.split(' ')[1]}">${pct(r.cogsPct)}</span></div>`;
-  }).join('');
-
-  // Mini table
-  document.getElementById('dash-table-body').innerHTML = recipes.slice().sort((a,b)=>b.cogsPct-a.cogsPct).map(r => {
-    const si = statusInfo(r.cogsPct);
-    return `<tr>
-      <td>${r.name}</td>
-      <td><span class="pill pill-gray">${r.category}</span></td>
-      <td class="mono">${fmt(r.cogs)}</td>
-      <td class="mono">${fmt(r.sellPrice)}</td>
-      <td class="mono good">${fmt(r.actMargin)}</td>
-      <td class="mono ${si.cls.split(' ')[1]}">${pct(r.cogsPct)}</td>
-      <td><span class="pill ${si.cls.split(' ')[0]}">${si.label}</span></td>
-    </tr>`;
-  }).join('');
 }
 
-// ═══════════════════════════════════════════════════════════════
-// MENU COGS
-// ═══════════════════════════════════════════════════════════════
-
-function populateMenuFilters() {
-  const sel = document.getElementById('menu-cat');
-  sel.innerHTML = '<option value="">All categories</option>' + menuCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+function parseIngredients(rows){
+  return rows.map(r=>({
+    id:r.id||'',name:r.name||'',category:r.category||'',unit:r.unit||'',
+    packSize:parseFloat(r.pack_size||r.bulk_amt||1)||1,
+    packCost:parseFloat(r.pack_cost||r.bulk_price||0)||0,
+  })).filter(i=>i.id&&i.name);
+}
+function parseRecipes(rows){
+  return rows.map(r=>{
+    let rj=[];try{rj=JSON.parse(r.recipe_json||'[]');}catch(e){}
+    return{id:r.id,name:r.name,category:r.category||'',sellPrice:parseFloat(r.sell_price)||0,
+      laborMin:parseFloat(r.labor_min)||0,notes:r.notes||'',
+      cogs:parseFloat(r.cogs)||0,cogsPct:parseFloat(r.cogs_pct)||0,
+      actMargin:parseFloat(r.act_margin)||0,taxes:parseFloat(r.taxes)||0,
+      fees:parseFloat(r.fees)||0,totalMarginPct:parseFloat(r.total_margin_pct)||0,
+      price30:parseFloat(r.price_at_30pct)||0,recipeJson:rj};
+  }).filter(r=>r.id&&r.name);
 }
 
-function renderMenu() {
-  const q = document.getElementById('menu-search').value.toLowerCase();
-  const cat = document.getElementById('menu-cat').value;
-  const status = document.getElementById('menu-status').value;
-
-  let filtered = recipes.filter(r => {
-    if (q && !r.name.toLowerCase().includes(q)) return false;
-    if (cat && r.category !== cat) return false;
-    if (status) {
-      const si = statusInfo(r.cogsPct);
-      if (status === 'good' && !si.label.includes('target')) return false;
-      if (status === 'warn' && si.label !== 'Elevated') return false;
-      if (status === 'bad' && si.label !== 'Review') return false;
-    }
-    return true;
-  });
-
-  if (sortCol) {
-    filtered.sort((a,b) => {
-      let av = a[sortCol], bv = b[sortCol];
-      if (typeof av === 'string') return sortDir * av.localeCompare(bv);
-      return sortDir * (av - bv);
-    });
-  }
-
-  document.getElementById('menu-count').textContent = `${filtered.length} of ${recipes.length} items`;
-
-  const colDefs = [
-    { key: 'name', label: 'Item', always: true },
-    { key: 'category', label: 'Category', always: true },
-    { key: 'cogs', label: 'COGS ($)', col: 'cogs' },
-    { key: 'sellPrice', label: 'Sell Price', col: 'price' },
-    { key: 'actMargin', label: 'Act. Margin', col: 'margin' },
-    { key: 'cogsPct', label: 'COGS %', col: 'cogs_pct' },
-    { key: 'taxes', label: 'Taxes', col: 'taxes' },
-    { key: 'fees', label: 'Fees', col: 'fees' },
-    { key: 'totalMarginPct', label: 'Total Margin %', col: 'total_margin' },
-    { key: 'price30', label: '30% Price', col: 'cogs30' },
-    { key: '_status', label: 'Status', col: 'status' },
-  ];
-
-  const visible = colDefs.filter(c => c.always || visibleCols[c.col]);
-
-  document.getElementById('menu-thead').innerHTML = visible.map(c =>
-    `<th onclick="sortMenu('${c.key}')">${c.label} <span class="sort-arrow">${sortCol===c.key ? (sortDir===1?'▲':'▼') : ''}</span></th>`
-  ).join('');
-
-  document.getElementById('menu-tbody').innerHTML = filtered.map(r => {
-    const si = statusInfo(r.cogsPct);
-    const cells = visible.map(c => {
-      if (c.key === 'name') return `<td><strong>${r.name}</strong></td>`;
-      if (c.key === 'category') return `<td><span class="pill pill-gray">${r.category}</span></td>`;
-      if (c.key === 'cogs') return `<td class="mono">${fmt(r.cogs)}</td>`;
-      if (c.key === 'sellPrice') return `<td class="mono">${fmt(r.sellPrice)}</td>`;
-      if (c.key === 'actMargin') return `<td class="mono good">${fmt(r.actMargin)}</td>`;
-      if (c.key === 'cogsPct') return `<td class="mono ${si.cls.split(' ')[1]}">${pct(r.cogsPct)}</td>`;
-      if (c.key === 'taxes') return `<td class="mono">${fmt(r.taxes)}</td>`;
-      if (c.key === 'fees') return `<td class="mono">${fmt(r.fees)}</td>`;
-      if (c.key === 'totalMarginPct') return `<td class="mono">${pct(r.totalMarginPct)}</td>`;
-      if (c.key === 'price30') return `<td class="mono">${fmt(r.price30)}</td>`;
-      if (c.key === '_status') return `<td><span class="pill ${si.cls.split(' ')[0]}">${si.label}</span></td>`;
-      return `<td>—</td>`;
-    });
-    return `<tr onclick="loadRecipeInEditor('${r.id}')" style="cursor:pointer;">${cells.join('')}</tr>`;
-  }).join('') || `<tr><td colspan="${visible.length}" style="text-align:center;padding:32px;color:var(--text3)">No items found</td></tr>`;
-
-  // Column toggle bindings
-  document.querySelectorAll('.col-toggle').forEach(el => {
-    el.onclick = () => {
-      el.classList.toggle('active');
-      visibleCols[el.dataset.col] = el.classList.contains('active');
-      renderMenu();
-    };
-  });
+// ── CONNECTION UI ──────────────────────────────────────────────
+async function connectSheet(){
+  const raw=document.getElementById('sheet-id-input').value.trim();
+  if(!raw){showStatusMsg('connect-status','error','Please enter a Sheet ID or URL.');return;}
+  const m=raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  SHEET_ID=m?m[1]:raw;
+  localStorage.setItem('cogs_sheet_id',SHEET_ID);
+  document.getElementById('sheet-id-input').value=SHEET_ID;
+  if(!getGIDs()){showStatusMsg('connect-status','info','Sheet ID saved. Enter the tab GIDs below.');renderGIDForm();return;}
+  showStatusMsg('connect-status','info','Connecting…');
+  await loadAllData();
 }
 
-function sortMenu(col) {
-  if (sortCol === col) sortDir *= -1;
-  else { sortCol = col; sortDir = 1; }
-  renderMenu();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RECIPE EDITOR
-// ═══════════════════════════════════════════════════════════════
-
-function populateRecipeCats() {
-  const sel = document.getElementById('re-cat');
-  sel.innerHTML = menuCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-}
-
-function renderRecipeMini() {
-  document.getElementById('recipe-list-mini').innerHTML = recipes.map(r =>
-    `<tr onclick="loadRecipeInEditor('${r.id}')" style="cursor:pointer;">
-      <td style="padding:7px 12px;border-bottom:1px solid var(--border);">${r.name}</td>
-      <td style="padding:7px 12px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;">${fmt(r.cogs)}</td>
-      <td style="padding:7px 12px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;">${fmt(r.sellPrice)}</td>
-    </tr>`
-  ).join('');
-}
-
-function filterRecipeSearch() {
-  const q = document.getElementById('recipe-search').value.toLowerCase();
-  if (!q) { document.getElementById('recipe-search-results').style.display = 'none'; return; }
-  const matches = recipes.filter(r => r.name.toLowerCase().includes(q));
-  const el = document.getElementById('recipe-search-results');
-  el.style.display = 'block';
-  el.innerHTML = `<div class="card" style="padding:0;overflow:hidden;">${matches.map(r =>
-    `<div onclick="loadRecipeInEditor('${r.id}')" style="padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-      <span>${r.name}</span><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${fmt(r.sellPrice)}</span>
-    </div>`
-  ).join('') || '<div style="padding:12px 14px;color:var(--text3);font-size:13px;">No results</div>'}</div>`;
-}
-
-function loadSelectedRecipe() {
-  const q = document.getElementById('recipe-search').value.toLowerCase();
-  const match = recipes.find(r => r.name.toLowerCase().includes(q));
-  if (match) loadRecipeInEditor(match.id);
-}
-
-function loadRecipeInEditor(id) {
-  const r = recipes.find(x => x.id === id);
-  if (!r) return;
-  currentRecipeId = id;
-  document.getElementById('re-name').value = r.name;
-  document.getElementById('re-cat').value = r.category;
-  document.getElementById('re-price').value = r.sellPrice;
-  document.getElementById('re-labor').value = r.laborMin;
-  document.getElementById('re-notes').value = r.notes || '';
-  currentIngredients = r.recipeJson ? JSON.parse(JSON.stringify(r.recipeJson)) : [];
-  document.getElementById('recipe-search').value = r.name;
-  document.getElementById('recipe-search-results').style.display = 'none';
-  renderRecipeIngredients();
-  updateCostSummary();
-  showPage('recipe');
-}
-
-function renderRecipeEditor() {
-  if (!currentRecipeId && recipes.length > 0) loadRecipeInEditor(recipes[0].id);
-}
-
-function renderRecipeIngredients() {
-  document.getElementById('re-ingredients').innerHTML = currentIngredients.map((item, i) => {
-    const ing = getIngById(item.ing);
-    const cost = ing ? (costPerUnit(ing) * item.qty).toFixed(2) : '—';
-    return `<div class="ing-row">
-      <span class="ing-name">${ing ? ing.name : item.ing}</span>
-      <input class="ing-qty" type="number" step="0.1" value="${item.qty}" onchange="updateIngQty(${i}, this.value)">
-      <span class="ing-unit">${item.unit}</span>
-      <span class="ing-cost">${ing ? '$' + cost : '—'}</span>
-      <span class="ing-remove" onclick="removeIng(${i})">✕</span>
+function renderGIDForm(){
+  const g=getGIDs()||{};
+  document.getElementById('gid-form-area').innerHTML=`
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.7">
+        Find each tab's GID in the sheet URL when that tab is active:<br>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:4px">…/edit#gid=<strong style="color:var(--accent)">1234567890</strong></span>
+      </div>
+      <div class="form-grid-2" style="gap:10px;margin-bottom:12px">
+        <div><label class="form-label">Recipes tab GID</label><input class="connect-input" id="gid-rec" placeholder="e.g. 0" value="${g.recipes||''}"></div>
+        <div><label class="form-label">Ingredients tab GID</label><input class="connect-input" id="gid-ing" placeholder="e.g. 123456789" value="${g.ingredients||''}"></div>
+      </div>
+      <button class="btn btn-green" onclick="saveGIDs()">Save GIDs & load data</button>
     </div>`;
-  }).join('') || `<div style="color:var(--text3);font-size:13px;padding:8px 0;">No ingredients yet. Click + Add to begin.</div>`;
-  updateCostSummary();
 }
 
-function updateIngQty(i, val) {
-  currentIngredients[i].qty = parseFloat(val) || 0;
-  updateCostSummary();
+function saveGIDs(){
+  setGIDs({recipes:document.getElementById('gid-rec').value.trim(),ingredients:document.getElementById('gid-ing').value.trim()});
+  document.getElementById('gid-form-area').innerHTML='';
+  showStatusMsg('connect-status','info','GIDs saved. Loading…');
+  loadAllData();
 }
 
-function removeIng(i) {
-  currentIngredients.splice(i, 1);
-  renderRecipeIngredients();
+function saveWebAppUrl(){
+  const url=document.getElementById('webapp-url-input').value.trim();
+  localStorage.setItem('cogs_webapp_url',url);
+  showStatusMsg('webapp-status','success','Web App URL saved.');
 }
 
-function updateCostSummary() {
-  const ingCost = recipeIngCost(currentIngredients);
-  const laborMin = parseFloat(document.getElementById('re-labor').value) || 0;
-  const price = parseFloat(document.getElementById('re-price').value) || 0;
-  const laborCost = (laborMin / 60) * SETTINGS.laborRate;
-  const totalCogs = ingCost + laborCost;
-  const margin = price - totalCogs;
-  const cogsPct = price > 0 ? (totalCogs / price * 100) : 0;
-  const si = statusInfo(cogsPct);
+// ── HELPERS ────────────────────────────────────────────────────
+const fmt=n=>'$'+parseFloat(n).toFixed(2);
+const pct=n=>parseFloat(n).toFixed(1)+'%';
+const getIngById=id=>ingredients.find(i=>i.id===id);
+const costPerUnit=ing=>ing&&ing.packSize?ing.packCost/ing.packSize:0;
+const recipeIngCost=rj=>(rj||[]).reduce((a,x)=>{const i=getIngById(x.ing);return a+(i?costPerUnit(i)*x.qty:0);},0);
+const usedInCount=id=>recipes.filter(r=>(r.recipeJson||[]).some(x=>x.ing===id)).length;
 
-  document.getElementById('cost-summary').innerHTML = `
-    <div class="cs-row"><span>Ingredient cost</span><span class="val">${fmt(ingCost)}</span></div>
-    <div class="cs-row"><span>Labor cost (${laborMin} min @ $${SETTINGS.laborRate}/hr)</span><span class="val">${fmt(laborCost)}</span></div>
-    <div class="cs-row total"><span>Total COGS</span><span class="val">${fmt(totalCogs)}</span></div>
-    <div class="cs-row"><span>Sell price</span><span class="val">${price > 0 ? fmt(price) : '—'}</span></div>
-    <div class="cs-row"><span>COGS %</span><span class="val ${si.cls.split(' ')[1]}">${pct(cogsPct)}</span></div>
-    <div class="cs-row"><span>Margin</span><span class="val cs-margin">${price > 0 ? fmt(margin) : '—'}</span></div>
-  `;
+function statusInfo(cogsPct,sellPrice){
+  if(!sellPrice)return{cls:'pill-tbd',label:'Price TBD',bar:'#B45309'};
+  const t=SETTINGS.cogsPctTarget;
+  if(cogsPct<=t)return{cls:'pill-green good',label:'On target',bar:'#2C5F2E'};
+  if(cogsPct<=t+5)return{cls:'pill-amber warn',label:'Elevated',bar:'#92400E'};
+  return{cls:'pill-red bad',label:'Review',bar:'#991B1B'};
+}
+function setSyncState(cls,label){
+  const d=document.getElementById('sync-dot');
+  d.className='sync-dot'+(cls?' '+cls:'');
+  document.getElementById('sync-label').textContent=label;
+  document.getElementById('brand-sub').textContent=cls==='connected'?'CONNECTED':cls==='loading'?'LOADING…':'NOT CONNECTED';
+}
+function showStatusMsg(elId,type,html){
+  const el=document.getElementById(elId);if(!el)return;
+  const ic={error:'✕',success:'✓',info:'ℹ'};
+  el.innerHTML=`<div class="status-msg ${type}">${ic[type]||''} ${html}</div>`;
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-  // JSON preview
-  const name = document.getElementById('re-name').value;
-  const cat = document.getElementById('re-cat').value;
-  const notes = document.getElementById('re-notes').value;
-  const jsonObj = {
-    id: currentRecipeId || 'new',
-    name, category: cat,
-    sellPrice: price,
-    laborMin: laborMin,
-    notes,
-    cogs: parseFloat(totalCogs.toFixed(2)),
-    cogsPct: parseFloat(cogsPct.toFixed(2)),
-    ingredients: currentIngredients.map(item => {
-      const ing = getIngById(item.ing);
-      return { id: item.ing, name: ing ? ing.name : item.ing, qty: item.qty, unit: item.unit };
-    })
-  };
-  document.getElementById('re-json').textContent = JSON.stringify(jsonObj, null, 2);
+// ── NAVIGATION ─────────────────────────────────────────────────
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const n=document.querySelector(`.nav-item[onclick="showPage('${name}')"]`);if(n)n.classList.add('active');
+  refreshCurrentPage(name);
+}
+function refreshCurrentPage(name){
+  if(name==='settings'){renderSettings();return;}
+  if(!isConnected)return;
+  if(name==='dashboard')renderDashboard();
+  if(name==='menu'){populateMenuFilters();renderMenu();}
+  if(name==='recipe'){populateRecipeCats();renderRecipeMini();if(!currentRecipeId&&recipes.length)loadRecipeInEditor(recipes[0].id);}
+  if(name==='ingredients'){populateIngFilters();renderIngredients();}
 }
 
-function newRecipe() {
-  currentRecipeId = 'r' + Date.now();
-  currentIngredients = [];
-  document.getElementById('re-name').value = '';
-  document.getElementById('re-price').value = '';
-  document.getElementById('re-labor').value = '2';
-  document.getElementById('re-notes').value = '';
-  renderRecipeIngredients();
-  updateCostSummary();
+// ── DASHBOARD ──────────────────────────────────────────────────
+function renderDashboard(){
+  if(!recipes.length)return;
+  const t=SETTINGS.cogsPctTarget,priced=recipes.filter(r=>r.sellPrice>0);
+  const avgCogs=priced.length?priced.reduce((a,r)=>a+r.cogsPct,0)/priced.length:0;
+  const aboveTarget=priced.filter(r=>r.cogsPct>t).length,tbdCount=recipes.filter(r=>!r.sellPrice).length;
+  const best=priced.slice().sort((a,b)=>b.actMargin-a.actMargin)[0];
+  const worst=priced.slice().sort((a,b)=>b.cogsPct-a.cogsPct)[0];
+  document.getElementById('dash-sub').textContent=`${recipes.length} items · ${priced.length} priced · ${tbdCount} TBD`;
+  document.getElementById('dash-content').innerHTML=`
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-label">Avg COGS %</div><div class="metric-value ${avgCogs<=t?'good':'bad'}">${pct(avgCogs)}</div><div class="metric-sub">Target: &lt;${t}% · priced items</div></div>
+      <div class="metric-card"><div class="metric-label">Items tracked</div><div class="metric-value">${recipes.length}</div><div class="metric-sub">${priced.length} priced · ${tbdCount} need pricing</div></div>
+      <div class="metric-card"><div class="metric-label">Best margin</div><div class="metric-value good">${best?fmt(best.actMargin):'—'}</div><div class="metric-sub">${best?best.name:'—'}</div></div>
+      <div class="metric-card"><div class="metric-label">Highest COGS %</div><div class="metric-value bad">${worst?pct(worst.cogsPct):'—'}</div><div class="metric-sub">${worst?worst.name:'—'}</div></div>
+    </div>
+    ${aboveTarget||tbdCount?`<div class="alert">⚠ ${[aboveTarget?`${aboveTarget} item${aboveTarget>1?'s':''} above ${t}% COGS target`:'',tbdCount?`${tbdCount} item${tbdCount>1?'s':''} need a sell price`:''].filter(Boolean).join(' · ')}.</div>`:''}
+    <div class="two-col">
+      <div class="card"><div class="card-header">Avg COGS % by category</div><div class="card-body" id="cat-chart"></div></div>
+      <div class="card"><div class="card-header">Highest COGS % items</div><div class="card-body" id="worst-chart"></div></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-header">All items</div>
+      <div class="tbl-wrap"><table><thead><tr><th>Item</th><th>Category</th><th>COGS</th><th>Price</th><th>Margin</th><th>COGS %</th><th>Status</th></tr></thead><tbody id="dash-body"></tbody></table></div>
+    </div>`;
+  const cats={};priced.forEach(r=>{if(!cats[r.category])cats[r.category]=[];cats[r.category].push(r.cogsPct);});
+  const catA=Object.entries(cats).map(([c,v])=>({c,a:v.reduce((x,y)=>x+y,0)/v.length})).sort((a,b)=>b.a-a.a);
+  const maxC=catA.length?Math.max(...catA.map(c=>c.a)):1;
+  document.getElementById('cat-chart').innerHTML=catA.map(({c,a})=>{const si=statusInfo(a,1);return`<div class="bar-row"><span class="bar-label">${c}</span><div class="bar-track"><div class="bar-fill" style="width:${(a/maxC*100).toFixed(0)}%;background:${si.bar}"></div></div><span class="bar-val ${si.cls.split(' ')[1]||''}">${pct(a)}</span></div>`;}).join('');
+  const w5=priced.slice().sort((a,b)=>b.cogsPct-a.cogsPct).slice(0,5);const maxW=w5.length?w5[0].cogsPct:1;
+  document.getElementById('worst-chart').innerHTML=w5.map(r=>{const si=statusInfo(r.cogsPct,r.sellPrice);const n=r.name.length>20?r.name.slice(0,20)+'…':r.name;return`<div class="bar-row"><span class="bar-label" title="${r.name}">${n}</span><div class="bar-track"><div class="bar-fill" style="width:${(r.cogsPct/maxW*100).toFixed(0)}%;background:${si.bar}"></div></div><span class="bar-val ${si.cls.split(' ')[1]||''}">${pct(r.cogsPct)}</span></div>`;}).join('');
+  const sorted=[...priced.slice().sort((a,b)=>b.cogsPct-a.cogsPct),...recipes.filter(r=>!r.sellPrice)];
+  document.getElementById('dash-body').innerHTML=sorted.map(r=>{const si=statusInfo(r.cogsPct,r.sellPrice);return`<tr style="cursor:pointer" onclick="loadRecipeInEditor('${r.id}');showPage('recipe')"><td><strong>${r.name}</strong></td><td><span class="pill pill-gray">${r.category}</span></td><td class="mono">${r.cogs>0?fmt(r.cogs):'—'}</td><td class="mono">${r.sellPrice>0?fmt(r.sellPrice):'—'}</td><td class="mono good">${r.actMargin>0?fmt(r.actMargin):'—'}</td><td class="mono ${si.cls.split(' ')[1]||''}">${r.sellPrice>0?pct(r.cogsPct):'—'}</td><td><span class="pill ${si.cls.split(' ')[0]}">${si.label}</span></td></tr>`;}).join('');
 }
 
-function saveRecipe() {
-  const name = document.getElementById('re-name').value.trim();
-  if (!name) { alert('Please enter an item name.'); return; }
-  const cat = document.getElementById('re-cat').value;
-  const sellPrice = parseFloat(document.getElementById('re-price').value) || 0;
-  const laborMin = parseFloat(document.getElementById('re-labor').value) || 0;
-  const notes = document.getElementById('re-notes').value;
-  const ingCost = recipeIngCost(currentIngredients);
-  const laborCost = (laborMin / 60) * SETTINGS.laborRate;
-  const totalCogs = ingCost + laborCost;
-  const cogsPct = sellPrice > 0 ? totalCogs / sellPrice * 100 : 0;
-  const taxes = sellPrice * (SETTINGS.taxPct / 100);
-  const fees = sellPrice * (SETTINGS.posPct / 100) + SETTINGS.posFlatFee;
-  const actMargin = sellPrice - totalCogs - taxes - fees;
-  const totalMarginPct = (taxes + fees + totalCogs) / sellPrice * 100;
-  const price30 = totalCogs / 0.30;
-
-  const updated = {
-    id: currentRecipeId, name, category: cat, sellPrice, laborMin, notes,
-    cogs: parseFloat(totalCogs.toFixed(2)),
-    cogsPct: parseFloat(cogsPct.toFixed(2)),
-    actMargin: parseFloat(actMargin.toFixed(2)),
-    taxes: parseFloat(taxes.toFixed(2)),
-    fees: parseFloat(fees.toFixed(2)),
-    totalMarginPct: parseFloat(totalMarginPct.toFixed(2)),
-    price30: parseFloat(price30.toFixed(2)),
-    recipeJson: JSON.parse(JSON.stringify(currentIngredients))
-  };
-
-  const idx = recipes.findIndex(r => r.id === currentRecipeId);
-  if (idx >= 0) recipes[idx] = updated;
-  else recipes.push(updated);
-
-  renderRecipeMini();
-  alert(`"${name}" saved successfully.`);
+// ── MENU COGS ──────────────────────────────────────────────────
+function populateMenuFilters(){
+  document.getElementById('menu-cat').innerHTML='<option value="">All categories</option>'+menuCategories.map(c=>`<option value="${c}">${c}</option>`).join('');
 }
-
-function copyJSON() {
-  const text = document.getElementById('re-json').textContent;
-  navigator.clipboard.writeText(text).then(() => alert('JSON copied to clipboard!'));
-}
-
-// ═══════════════════════════════════════════════════════════════
-// INGREDIENT MASTER
-// ═══════════════════════════════════════════════════════════════
-
-function populateIngFilters() {
-  const sel = document.getElementById('ing-cat');
-  sel.innerHTML = '<option value="">All categories</option>' + ingCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-}
-
-function renderIngredients() {
-  const q = document.getElementById('ing-search').value.toLowerCase();
-  const cat = document.getElementById('ing-cat').value;
-  const filtered = ingredients.filter(i => {
-    if (q && !i.name.toLowerCase().includes(q)) return false;
-    if (cat && i.category !== cat) return false;
+function renderMenu(){
+  const q=document.getElementById('menu-search').value.toLowerCase(),cat=document.getElementById('menu-cat').value,st=document.getElementById('menu-status').value;
+  let f=recipes.filter(r=>{
+    if(q&&!r.name.toLowerCase().includes(q))return false;
+    if(cat&&r.category!==cat)return false;
+    if(st){const si=statusInfo(r.cogsPct,r.sellPrice);if(st==='good'&&si.label!=='On target')return false;if(st==='warn'&&si.label!=='Elevated')return false;if(st==='bad'&&si.label!=='Review')return false;if(st==='tbd'&&si.label!=='Price TBD')return false;}
     return true;
   });
-
-  document.getElementById('ing-tbody').innerHTML = filtered.map(ing => {
-    const cpu = costPerUnit(ing);
-    const used = usedInCount(ing.id);
-    return `<tr>
-      <td><strong>${ing.name}</strong></td>
-      <td><span class="pill pill-gray">${ing.category}</span></td>
-      <td class="mono">${ing.unit}</td>
-      <td class="mono">${ing.packSize}</td>
-      <td class="mono">${fmt(ing.packCost)}</td>
-      <td class="mono">${'$' + cpu.toFixed(4)}/${ing.unit}</td>
-      <td style="color:var(--text2)">${used} recipe${used !== 1 ? 's' : ''}</td>
-      <td><button class="btn" style="padding:4px 10px;font-size:12px;" onclick="openEditIngModal('${ing.id}')">Edit</button></td>
-    </tr>`;
-  }).join('') || `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No ingredients found</td></tr>`;
+  if(sortCol)f.sort((a,b)=>{const av=a[sortCol],bv=b[sortCol];return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av-bv);});
+  document.getElementById('menu-sub').textContent=`${f.length} of ${recipes.length} items`;
+  const cols=[{k:'name',l:'Item',a:true},{k:'category',l:'Category',a:true},{k:'cogs',l:'COGS ($)',c:'cogs'},{k:'sellPrice',l:'Sell Price',c:'price'},{k:'actMargin',l:'Act. Margin',c:'margin'},{k:'cogsPct',l:'COGS %',c:'cogs_pct'},{k:'taxes',l:'Taxes',c:'taxes'},{k:'fees',l:'Fees',c:'fees'},{k:'totalMarginPct',l:'Total Margin %',c:'total_margin'},{k:'price30',l:'30% Price',c:'price30'},{k:'_st',l:'Status',c:'status'}];
+  const vis=cols.filter(c=>c.a||visibleCols[c.c]);
+  const th=vis.map(c=>`<th onclick="sortMenu('${c.k}')">${c.l}${sortCol===c.k?(sortDir===1?' ▲':' ▼'):''}</th>`).join('');
+  const tb=f.map(r=>{const si=statusInfo(r.cogsPct,r.sellPrice);return`<tr style="cursor:pointer" onclick="loadRecipeInEditor('${r.id}');showPage('recipe')">${vis.map(c=>{if(c.k==='name')return`<td><strong>${r.name}</strong></td>`;if(c.k==='category')return`<td><span class="pill pill-gray">${r.category}</span></td>`;if(c.k==='cogs')return`<td class="mono">${r.cogs>0?fmt(r.cogs):'—'}</td>`;if(c.k==='sellPrice')return`<td class="mono">${r.sellPrice>0?fmt(r.sellPrice):'—'}</td>`;if(c.k==='actMargin')return`<td class="mono good">${r.actMargin>0?fmt(r.actMargin):'—'}</td>`;if(c.k==='cogsPct')return`<td class="mono ${si.cls.split(' ')[1]||''}">${r.sellPrice>0?pct(r.cogsPct):'—'}</td>`;if(c.k==='taxes')return`<td class="mono">${r.taxes>0?fmt(r.taxes):'—'}</td>`;if(c.k==='fees')return`<td class="mono">${r.fees>0?fmt(r.fees):'—'}</td>`;if(c.k==='totalMarginPct')return`<td class="mono">${r.sellPrice>0?pct(r.totalMarginPct):'—'}</td>`;if(c.k==='price30')return`<td class="mono">${r.price30>0?fmt(r.price30):'—'}</td>`;if(c.k==='_st')return`<td><span class="pill ${si.cls.split(' ')[0]}">${si.label}</span></td>`;return'<td>—</td>';}).join('')}</tr>`;}).join('')||`<tr><td colspan="${vis.length}" style="text-align:center;padding:32px;color:var(--text3)">No items found</td></tr>`;
+  document.getElementById('menu-table-wrap').innerHTML=`<div class="tbl-wrap"><table><thead><tr>${th}</tr></thead><tbody>${tb}</tbody></table></div>`;
+  document.querySelectorAll('.col-toggle').forEach(el=>{el.onclick=()=>{el.classList.toggle('active');visibleCols[el.dataset.col]=el.classList.contains('active');renderMenu();};});
 }
+function sortMenu(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}renderMenu();}
 
-function openNewIngModal() {
-  const sel = document.getElementById('ni-cat');
-  sel.innerHTML = ingCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-  document.getElementById('ni-name').value = '';
-  document.getElementById('ni-unit').value = '';
-  document.getElementById('ni-pack-size').value = '';
-  document.getElementById('ni-pack-cost').value = '';
-  document.getElementById('new-ing-modal').classList.add('open');
+// ── RECIPE EDITOR ──────────────────────────────────────────────
+function populateRecipeCats(){document.getElementById('re-cat').innerHTML=menuCategories.map(c=>`<option value="${c}">${c}</option>`).join('');}
+function renderRecipeMini(){document.getElementById('recipe-list-mini').innerHTML=recipes.map(r=>`<tr onclick="loadRecipeInEditor('${r.id}')" style="cursor:pointer"><td style="padding:7px 12px;border-bottom:1px solid var(--border)">${r.name}</td><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px">${r.cogs>0?fmt(r.cogs):'—'}</td><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px">${r.sellPrice>0?fmt(r.sellPrice):'—'}</td></tr>`).join('');}
+function filterRecipeSearch(){
+  const q=document.getElementById('recipe-search').value.toLowerCase();
+  if(!q){document.getElementById('recipe-search-results').style.display='none';return;}
+  const m=recipes.filter(r=>r.name.toLowerCase().includes(q));
+  const el=document.getElementById('recipe-search-results');el.style.display='block';
+  el.innerHTML=`<div class="card" style="padding:0;overflow:hidden">${m.map(r=>`<div onclick="loadRecipeInEditor('${r.id}')" style="padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><span>${r.name}</span><span class="mono">${r.sellPrice>0?fmt(r.sellPrice):'TBD'}</span></div>`).join('')||'<div style="padding:12px 14px;color:var(--text3);font-size:13px">No results</div>'}</div>`;
 }
-
-function confirmNewIng() {
-  const name = document.getElementById('ni-name').value.trim();
-  if (!name) { alert('Name required'); return; }
-  const ing = {
-    id: 'ing' + Date.now(),
-    name,
-    category: document.getElementById('ni-cat').value,
-    unit: document.getElementById('ni-unit').value,
-    packSize: parseFloat(document.getElementById('ni-pack-size').value) || 1,
-    packCost: parseFloat(document.getElementById('ni-pack-cost').value) || 0,
-  };
-  ingredients.push(ing);
-  closeModal('new-ing-modal');
-  renderIngredients();
+function loadSelectedRecipe(){const q=document.getElementById('recipe-search').value.toLowerCase();const m=recipes.find(r=>r.name.toLowerCase().includes(q));if(m)loadRecipeInEditor(m.id);}
+function loadRecipeInEditor(id){
+  const r=recipes.find(x=>x.id===id);if(!r)return;
+  currentRecipeId=id;
+  document.getElementById('re-name').value=r.name;document.getElementById('re-cat').value=r.category;
+  document.getElementById('re-price').value=r.sellPrice||'';document.getElementById('re-labor').value=r.laborMin||2;
+  document.getElementById('re-notes').value=r.notes||'';
+  currentIngredients=r.recipeJson?JSON.parse(JSON.stringify(r.recipeJson)):[];
+  document.getElementById('recipe-search').value=r.name;document.getElementById('recipe-search-results').style.display='none';
+  renderRecipeIngredients();updateCostSummary();
 }
-
-function openEditIngModal(id) {
-  const ing = getIngById(id);
-  if (!ing) return;
-  document.getElementById('ei-id').value = id;
-  document.getElementById('ei-name').value = ing.name;
-  document.getElementById('ei-unit').value = ing.unit;
-  document.getElementById('ei-pack-size').value = ing.packSize;
-  document.getElementById('ei-pack-cost').value = ing.packCost;
-  const sel = document.getElementById('ei-cat');
-  sel.innerHTML = ingCategories.map(c => `<option value="${c}" ${c===ing.category?'selected':''}>${c}</option>`).join('');
-  document.getElementById('edit-ing-modal').classList.add('open');
+function renderRecipeIngredients(){
+  document.getElementById('re-ingredients').innerHTML=currentIngredients.map((item,i)=>{const ing=getIngById(item.ing);const c=ing?(costPerUnit(ing)*item.qty).toFixed(2):'—';return`<div class="ing-row"><span class="ing-name">${ing?ing.name:item.ing}</span><input class="ing-qty" type="number" step="0.01" value="${item.qty}" onchange="updateIngQty(${i},this.value)"><span class="ing-unit">${item.unit}</span><span class="ing-cost">${ing?'$'+c:'—'}</span><span class="ing-remove" onclick="removeIng(${i})">✕</span></div>`;}).join('')||`<div style="color:var(--text3);font-size:13px;padding:8px 0">No ingredients yet. Click + Add to begin.</div>`;
+  updateCostSummary();
 }
-
-function confirmEditIng() {
-  const id = document.getElementById('ei-id').value;
-  const idx = ingredients.findIndex(i => i.id === id);
-  if (idx < 0) return;
-  ingredients[idx] = {
-    ...ingredients[idx],
-    name: document.getElementById('ei-name').value,
-    category: document.getElementById('ei-cat').value,
-    unit: document.getElementById('ei-unit').value,
-    packSize: parseFloat(document.getElementById('ei-pack-size').value) || 1,
-    packCost: parseFloat(document.getElementById('ei-pack-cost').value) || 0,
-  };
-  closeModal('edit-ing-modal');
-  renderIngredients();
-  if (currentRecipeId) updateCostSummary();
+function updateIngQty(i,v){currentIngredients[i].qty=parseFloat(v)||0;updateCostSummary();}
+function removeIng(i){currentIngredients.splice(i,1);renderRecipeIngredients();}
+function updateCostSummary(){
+  const ic=recipeIngCost(currentIngredients),lm=parseFloat(document.getElementById('re-labor').value)||0,p=parseFloat(document.getElementById('re-price').value)||0;
+  const lc=(lm/60)*SETTINGS.laborRate,tc=ic+lc,mg=p-tc,cp=p>0?(tc/p*100):0;
+  const si=statusInfo(cp,p);
+  document.getElementById('cost-summary').innerHTML=`<div class="cs-row"><span>Ingredient cost</span><span class="val">${fmt(ic)}</span></div><div class="cs-row"><span>Labor (${lm} min @ $${SETTINGS.laborRate}/hr)</span><span class="val">${fmt(lc)}</span></div><div class="cs-row total"><span>Total COGS</span><span class="val">${fmt(tc)}</span></div><div class="cs-row"><span>Sell price</span><span class="val">${p>0?fmt(p):'—'}</span></div><div class="cs-row"><span>COGS %</span><span class="val ${si.cls.split(' ')[1]||''}">${p>0?pct(cp):'—'}</span></div><div class="cs-row"><span>Margin</span><span class="val cs-margin">${p>0?fmt(mg):'—'}</span></div>`;
+  const name=document.getElementById('re-name').value,cat=document.getElementById('re-cat').value,notes=document.getElementById('re-notes').value;
+  const obj={id:currentRecipeId||'new',name,category:cat,sell_price:p,labor_min:lm,notes,cogs:+tc.toFixed(2),cogs_pct:+cp.toFixed(2),ingredients:currentIngredients.map(x=>{const i=getIngById(x.ing);return{id:x.ing,name:i?i.name:x.ing,qty:x.qty,unit:x.unit};})};
+  document.getElementById('re-json').textContent=JSON.stringify(obj,null,2);
 }
-
-function openAddIngModal() {
-  const sel = document.getElementById('modal-ing-select');
-  sel.innerHTML = ingredients.map(i => `<option value="${i.id}">${i.name} (${i.unit})</option>`).join('');
-  document.getElementById('modal-ing-qty').value = '';
-  document.getElementById('modal-ing-unit').value = '';
-  document.getElementById('add-ing-modal').classList.add('open');
+function newRecipe(){currentRecipeId='new_'+Date.now();currentIngredients=[];['re-name','re-price','re-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('re-labor').value='2';renderRecipeIngredients();updateCostSummary();}
+async function saveRecipe(){
+  const name=document.getElementById('re-name').value.trim();if(!name){alert('Please enter an item name.');return;}
+  const cat=document.getElementById('re-cat').value,sp=parseFloat(document.getElementById('re-price').value)||0,lm=parseFloat(document.getElementById('re-labor').value)||0,notes=document.getElementById('re-notes').value;
+  const ic=recipeIngCost(currentIngredients),lc=(lm/60)*SETTINGS.laborRate,tc=ic+lc,cp=sp>0?tc/sp*100:0;
+  const tax=sp*(SETTINGS.taxPct/100),fee=sp*(SETTINGS.posPct/100)+SETTINGS.posFlatFee,am=sp-tc-tax-fee,tmp=sp>0?(tax+fee+tc)/sp*100:0,p30=tc>0?tc/0.30:0;
+  const updated={id:currentRecipeId,name,category:cat,sellPrice:sp,laborMin:lm,notes,cogs:+tc.toFixed(2),cogsPct:+cp.toFixed(2),actMargin:+am.toFixed(2),taxes:+tax.toFixed(2),fees:+fee.toFixed(2),totalMarginPct:+tmp.toFixed(2),price30:+p30.toFixed(2),recipeJson:JSON.parse(JSON.stringify(currentIngredients))};
+  const idx=recipes.findIndex(r=>r.id===currentRecipeId);if(idx>=0)recipes[idx]=updated;else recipes.push(updated);
+  renderRecipeMini();
+  const wau=localStorage.getItem('cogs_webapp_url');
+  if(wau){try{await fetch(wau,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'updateRecipe',recipe:updated})});setSyncState('connected','Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));}catch(e){alert('Saved locally but push to sheet failed.');}}
+  else{alert(`"${name}" saved locally.\n\nTo push to the sheet automatically, add your Web App URL in Settings.`);}
 }
+function copyJSON(){navigator.clipboard.writeText(document.getElementById('re-json').textContent).then(()=>alert('Copied!'));}
 
-function confirmAddIng() {
-  const ingId = document.getElementById('modal-ing-select').value;
-  const qty = parseFloat(document.getElementById('modal-ing-qty').value) || 0;
-  const unit = document.getElementById('modal-ing-unit').value.trim();
-  const ing = getIngById(ingId);
-  currentIngredients.push({ ing: ingId, qty, unit: unit || (ing ? ing.unit : '') });
-  closeModal('add-ing-modal');
-  renderRecipeIngredients();
+// ── INGREDIENTS ────────────────────────────────────────────────
+function populateIngFilters(){document.getElementById('ing-cat-filter').innerHTML='<option value="">All categories</option>'+ingCategories.map(c=>`<option value="${c}">${c}</option>`).join('');}
+function renderIngredients(){
+  const q=document.getElementById('ing-search').value.toLowerCase(),cat=document.getElementById('ing-cat-filter').value;
+  const f=ingredients.filter(i=>{if(q&&!i.name.toLowerCase().includes(q))return false;if(cat&&i.category!==cat)return false;return true;});
+  const rows=f.map(ing=>{const cpu=costPerUnit(ing),used=usedInCount(ing.id);return`<tr><td><strong>${ing.name}</strong></td><td><span class="pill pill-gray">${ing.category}</span></td><td class="mono">${ing.unit}</td><td class="mono">${ing.packSize}</td><td class="mono">${fmt(ing.packCost)}</td><td class="mono">$${cpu.toFixed(4)}/${ing.unit}</td><td style="color:var(--text2)">${used} recipe${used!==1?'s':''}</td><td><button class="btn" style="padding:4px 10px;font-size:12px" onclick="openEditIngModal('${ing.id}')">Edit</button></td></tr>`;}).join('')||`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No ingredients found</td></tr>`;
+  document.getElementById('ing-table-wrap').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Ingredient</th><th>Category</th><th>Unit</th><th>Pack size</th><th>Pack cost</th><th>Cost/unit</th><th>Used in</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
+function openNewIngModal(){document.getElementById('ni-cat').innerHTML=ingCategories.map(c=>`<option value="${c}">${c}</option>`).join('');['ni-name','ni-unit','ni-pack-size','ni-pack-cost'].forEach(id=>document.getElementById(id).value='');document.getElementById('new-ing-modal').classList.add('open');}
+function confirmNewIng(){const name=document.getElementById('ni-name').value.trim();if(!name){alert('Name required');return;}const ing={id:'ing'+Date.now(),name,category:document.getElementById('ni-cat').value,unit:document.getElementById('ni-unit').value,packSize:parseFloat(document.getElementById('ni-pack-size').value)||1,packCost:parseFloat(document.getElementById('ni-pack-cost').value)||0};ingredients.push(ing);if(!ingCategories.includes(ing.category))ingCategories.push(ing.category);closeModal('new-ing-modal');renderIngredients();}
+function openEditIngModal(id){const ing=getIngById(id);if(!ing)return;document.getElementById('ei-id').value=id;document.getElementById('ei-name').value=ing.name;document.getElementById('ei-unit').value=ing.unit;document.getElementById('ei-pack-size').value=ing.packSize;document.getElementById('ei-pack-cost').value=ing.packCost;document.getElementById('ei-cat').innerHTML=ingCategories.map(c=>`<option value="${c}" ${c===ing.category?'selected':''}>${c}</option>`).join('');document.getElementById('edit-ing-modal').classList.add('open');}
+function confirmEditIng(){const id=document.getElementById('ei-id').value;const idx=ingredients.findIndex(i=>i.id===id);if(idx<0)return;ingredients[idx]={...ingredients[idx],name:document.getElementById('ei-name').value,category:document.getElementById('ei-cat').value,unit:document.getElementById('ei-unit').value,packSize:parseFloat(document.getElementById('ei-pack-size').value)||1,packCost:parseFloat(document.getElementById('ei-pack-cost').value)||0};closeModal('edit-ing-modal');renderIngredients();if(currentRecipeId)updateCostSummary();}
+function openAddIngModal(){document.getElementById('modal-ing-select').innerHTML=ingredients.map(i=>`<option value="${i.id}">${i.name} (${i.unit})</option>`).join('');document.getElementById('modal-ing-qty').value='';document.getElementById('modal-ing-unit').value='';document.getElementById('add-ing-modal').classList.add('open');}
+function confirmAddIng(){const id=document.getElementById('modal-ing-select').value,qty=parseFloat(document.getElementById('modal-ing-qty').value)||0,unit=document.getElementById('modal-ing-unit').value.trim();const ing=getIngById(id);currentIngredients.push({ing:id,qty,unit:unit||(ing?ing.unit:'')});closeModal('add-ing-modal');renderRecipeIngredients();}
 
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-// ═══════════════════════════════════════════════════════════════
-// SETTINGS
-// ═══════════════════════════════════════════════════════════════
-
-function renderSettings() {
-  document.getElementById('target-cogs').value = SETTINGS.cogsPctTarget;
-  document.getElementById('target-labor').value = SETTINGS.laborRate;
-  document.getElementById('target-tax').value = SETTINGS.taxPct;
-  document.getElementById('target-pos-flat').value = SETTINGS.posFlatFee;
-  document.getElementById('target-pos-pct').value = SETTINGS.posPct;
-  renderCatTags('menu-cats-tags', menuCategories, 'menu');
-  renderCatTags('ing-cats-tags', ingCategories, 'ing');
+// ── SETTINGS ────────────────────────────────────────────────────
+function renderSettings(){
+  document.getElementById('sheet-id-input').value=SHEET_ID;
+  document.getElementById('webapp-url-input').value=localStorage.getItem('cogs_webapp_url')||'';
+  document.getElementById('target-cogs').value=SETTINGS.cogsPctTarget;document.getElementById('target-labor').value=SETTINGS.laborRate;
+  document.getElementById('target-tax').value=SETTINGS.taxPct;document.getElementById('target-pos-flat').value=SETTINGS.posFlatFee;document.getElementById('target-pos-pct').value=SETTINGS.posPct;
+  renderCatTags('menu-cats-tags',menuCategories,'menu');renderCatTags('ing-cats-tags',ingCategories,'ing');
+  if(SHEET_ID&&!getGIDs())renderGIDForm();
+  else if(SHEET_ID&&getGIDs()){showStatusMsg('connect-status',isConnected?'success':'info',isConnected?'Connected · data loaded.':'Sheet ID + GIDs saved. Click Pull from sheet.');}
 }
+function saveSettings(){SETTINGS.cogsPctTarget=parseFloat(document.getElementById('target-cogs').value)||30;SETTINGS.laborRate=parseFloat(document.getElementById('target-labor').value)||18;SETTINGS.taxPct=parseFloat(document.getElementById('target-tax').value)||6.5;SETTINGS.posFlatFee=parseFloat(document.getElementById('target-pos-flat').value)||0.15;SETTINGS.posPct=parseFloat(document.getElementById('target-pos-pct').value)||2.6;localStorage.setItem('cogs_settings',JSON.stringify(SETTINGS));alert('Settings saved.');}
+function renderCatTags(el,arr,type){document.getElementById(el).innerHTML=arr.map(c=>`<div class="tag">${c} <span class="tag-x" onclick="removeCat('${type}','${c}')">✕</span></div>`).join('');}
+function removeCat(t,c){if(t==='menu')menuCategories=menuCategories.filter(x=>x!==c);else ingCategories=ingCategories.filter(x=>x!==c);renderSettings();}
+function addMenuCat(){const v=document.getElementById('new-menu-cat').value.trim();if(v&&!menuCategories.includes(v)){menuCategories.push(v);document.getElementById('new-menu-cat').value='';renderSettings();}}
+function addIngCat(){const v=document.getElementById('new-ing-cat').value.trim();if(v&&!ingCategories.includes(v)){ingCategories.push(v);document.getElementById('new-ing-cat').value='';renderSettings();}}
 
-function renderCatTags(elId, arr, type) {
-  document.getElementById(elId).innerHTML = arr.map(c =>
-    `<div class="tag">${c} <span class="tag-x" onclick="removeCat('${type}','${c}')">✕</span></div>`
-  ).join('');
-}
+// ── EXPORT ─────────────────────────────────────────────────────
+function exportCSV(){const h=['id','name','category','sell_price','cogs','cogs_pct','act_margin','taxes','fees','total_margin_pct','price_at_30pct','recipe_json'];const r=recipes.map(r=>[`"${r.id}"`,`"${r.name}"`,`"${r.category}"`,r.sellPrice,r.cogs,r.cogsPct.toFixed(2)+'%',r.actMargin,r.taxes,r.fees,r.totalMarginPct.toFixed(2)+'%',r.price30,`"${JSON.stringify(r.recipeJson).replace(/"/g,'""')}"`]);const csv=[h.join(','),...r.map(x=>x.join(','))].join('\n');const b=new Blob([csv],{type:'text/csv'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='cogs_export.csv';a.click();URL.revokeObjectURL(u);}
 
-function removeCat(type, cat) {
-  if (type === 'menu') menuCategories = menuCategories.filter(c => c !== cat);
-  else ingCategories = ingCategories.filter(c => c !== cat);
-  renderSettings();
-}
-
-function addMenuCat() {
-  const val = document.getElementById('new-menu-cat').value.trim();
-  if (val && !menuCategories.includes(val)) { menuCategories.push(val); document.getElementById('new-menu-cat').value = ''; renderSettings(); }
-}
-
-function addIngCat() {
-  const val = document.getElementById('new-ing-cat').value.trim();
-  if (val && !ingCategories.includes(val)) { ingCategories.push(val); document.getElementById('new-ing-cat').value = ''; renderSettings(); }
-}
-
-function saveSettings() {
-  SETTINGS.cogsPctTarget = parseFloat(document.getElementById('target-cogs').value) || 30;
-  SETTINGS.laborRate = parseFloat(document.getElementById('target-labor').value) || 18;
-  SETTINGS.taxPct = parseFloat(document.getElementById('target-tax').value) || 6.5;
-  SETTINGS.posFlatFee = parseFloat(document.getElementById('target-pos-flat').value) || 0.15;
-  SETTINGS.posPct = parseFloat(document.getElementById('target-pos-pct').value) || 2.6;
-  alert('Settings saved.');
-}
-
-// ═══════════════════════════════════════════════════════════════
-// EXPORT / GOOGLE SHEETS
-// ═══════════════════════════════════════════════════════════════
-
-function exportCSV() {
-  const headers = ['name','category','sellPrice','cogs','cogsPct','actMargin','taxes','fees','totalMarginPct','price30','recipe_json'];
-  const rows = recipes.map(r => [
-    `"${r.name}"`, `"${r.category}"`, r.sellPrice, r.cogs, r.cogsPct.toFixed(2)+'%',
-    r.actMargin, r.taxes, r.fees, r.totalMarginPct.toFixed(2)+'%', r.price30,
-    `"${JSON.stringify(r.recipeJson).replace(/"/g,'""')}"`
-  ]);
-  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'cogs_export.csv'; a.click();
-  URL.revokeObjectURL(url);
-}
-
-function openSheetTemplate() {
-  const sheetUrl = buildSheetDataUrl();
-  window.open(sheetUrl, '_blank');
-}
-
-function buildSheetDataUrl() {
-  // In production this would use Google Sheets API. For now, shows the template URL.
-  return 'https://docs.google.com/spreadsheets/create';
-}
-
-function pullFromSheet() {
-  const url = document.getElementById('sheet-url').value.trim();
-  if (!url) { alert('Please enter a Google Sheets URL first.'); return; }
-  alert('Pull from sheet: In production, this would fetch data from your Google Sheet via the Sheets API (read-only with API key, or full access with OAuth) and update the local recipe and ingredient data.\n\nFor setup instructions, see the Google Sheets API documentation.');
-}
-
-function pushToSheet() {
-  const url = document.getElementById('sheet-url').value.trim();
-  if (!url) { alert('Please enter a Google Sheets URL first.'); return; }
-  alert('Push to sheet: In production, this would authenticate via OAuth and write all recipe and ingredient data back to your Google Sheet in the structured format shown in the JSON preview.\n\nFor setup instructions, see the Google Sheets API documentation.');
-}
-
-// ═══════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════
-renderDashboard();
+// ── INIT ───────────────────────────────────────────────────────
+try{const s=localStorage.getItem('cogs_settings');if(s)Object.assign(SETTINGS,JSON.parse(s));}catch(e){}
+if(SHEET_ID&&getGIDs()){setSyncState('loading','Loading…');loadAllData();}
+else setSyncState('','Not connected');
 </script>
 </body>
 </html>
