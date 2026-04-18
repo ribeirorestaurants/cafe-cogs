@@ -414,6 +414,7 @@ tbody tr:hover{background:var(--surface2)}
     <label class="form-label">Name</label><input class="form-input" id="ni-name">
     <div class="form-grid-2"><div><label class="form-label">Category</label><select class="form-input" id="ni-cat"></select></div><div><label class="form-label">Unit</label><input class="form-input" id="ni-unit"></div></div>
     <div class="form-grid-2"><div><label class="form-label">Pack size</label><input class="form-input" id="ni-pack-size" type="number"></div><div><label class="form-label">Pack cost ($)</label><input class="form-input" id="ni-pack-cost" type="number" step="0.01"></div></div>
+    <label class="form-label">Notes</label><input class="form-input" id="ni-notes" placeholder="Supplier, source, substitution notes…" style="margin-bottom:0">
     <div class="modal-footer"><button class="btn" onclick="closeModal('new-ing-modal')">Cancel</button><button class="btn btn-green" onclick="confirmNewIng()">Save</button></div>
   </div>
 </div>
@@ -424,6 +425,7 @@ tbody tr:hover{background:var(--surface2)}
     <label class="form-label">Name</label><input class="form-input" id="ei-name">
     <div class="form-grid-2"><div><label class="form-label">Category</label><select class="form-input" id="ei-cat"></select></div><div><label class="form-label">Unit</label><input class="form-input" id="ei-unit"></div></div>
     <div class="form-grid-2"><div><label class="form-label">Pack size</label><input class="form-input" id="ei-pack-size" type="number"></div><div><label class="form-label">Pack cost ($)</label><input class="form-input" id="ei-pack-cost" type="number" step="0.01"></div></div>
+    <label class="form-label">Notes</label><input class="form-input" id="ei-notes" placeholder="Supplier, source, substitution notes…" style="margin-bottom:0">
     <div class="modal-footer"><button class="btn" onclick="closeModal('edit-ing-modal')">Cancel</button><button class="btn btn-green" onclick="confirmEditIng()">Save changes</button></div>
   </div>
 </div>
@@ -513,11 +515,22 @@ function parseIngredients(rows){
     // Accept both naming conventions from the Apps Script setup
     packSize: parseFloat(r.pack_size||r.bulk_amt||r['pack size']||1)||1,
     packCost: parseFloat(r.pack_cost||r.bulk_price||r['pack cost']||r.bulk_Price||0)||0,
+    notes:    r.notes||r.Notes||'',
   })).filter(i=>i.id&&i.name);
 }
 function parseRecipes(rows){
   return rows.map(r=>{
-    let rj=[];try{rj=JSON.parse(r.recipe_json||'[]');}catch(e){}
+    let rj=[];
+    try{
+      const parsed=JSON.parse(r.recipe_json||'[]');
+      // Normalise each ingredient entry — accept both 'ing' and 'id' as the ingredient key
+      rj=parsed.map(x=>({
+        ing:  x.ing||x.id||x.ingredient_id||'',
+        name: x.name||x.ingredient_name||'',  // preserve name if stored in json
+        qty:  parseFloat(x.qty||x.quantity||0)||0,
+        unit: x.unit||'',
+      }));
+    }catch(e){}
     // cogsPct and totalMarginPct are stored as decimals in the sheet (e.g. 0.249 = 24.9%)
     // Detect decimal format: if value < 2, treat as decimal and convert to percent points
     const rawCogsPct   = parseFloat(r.cogs_pct||r['cogs%']||0);
@@ -643,9 +656,21 @@ function updateAuthButtons(){
 // ── HELPERS ────────────────────────────────────────────────────
 const fmt=n=>'$'+parseFloat(n).toFixed(2);
 const pct=n=>parseFloat(n).toFixed(1)+'%';
-const getIngById=id=>ingredients.find(i=>i.id===id);
+const getIngById=id=>{
+  if(!id)return null;
+  // First try exact ID match
+  let ing=ingredients.find(i=>i.id===id);
+  if(ing)return ing;
+  // Fallback: treat the value as a name and search case-insensitively
+  // This handles ID mismatches between recipe_json and the Ingredients tab
+  ing=ingredients.find(i=>i.name&&i.name.toLowerCase()===id.toLowerCase());
+  return ing||null;
+};
 const costPerUnit=ing=>ing&&ing.packSize?ing.packCost/ing.packSize:0;
-const recipeIngCost=rj=>(rj||[]).reduce((a,x)=>{const i=getIngById(x.ing);return a+(i?costPerUnit(i)*x.qty:0);},0);
+const recipeIngCost=rj=>(rj||[]).reduce((a,x)=>{
+  const i=getIngById(x.ing);
+  return a+(i?costPerUnit(i)*x.qty:0);
+},0);
 const usedInCount=id=>recipes.filter(r=>(r.recipeJson||[]).some(x=>x.ing===id)).length;
 
 function statusInfo(cogsPct,sellPrice){
@@ -765,7 +790,7 @@ function loadRecipeInEditor(id){
   renderRecipeIngredients();updateCostSummary();
 }
 function renderRecipeIngredients(){
-  document.getElementById('re-ingredients').innerHTML=currentIngredients.map((item,i)=>{const ing=getIngById(item.ing);const c=ing?(costPerUnit(ing)*item.qty).toFixed(2):'—';return`<div class="ing-row"><span class="ing-name">${ing?ing.name:item.ing}</span><input class="ing-qty" type="number" step="0.01" value="${item.qty}" onchange="updateIngQty(${i},this.value)"><span class="ing-unit">${item.unit}</span><span class="ing-cost">${ing?'$'+c:'—'}</span><span class="ing-remove" onclick="removeIng(${i})">✕</span></div>`;}).join('')||`<div style="color:var(--text3);font-size:13px;padding:8px 0">No ingredients yet. Click + Add to begin.</div>`;
+  document.getElementById('re-ingredients').innerHTML=currentIngredients.map((item,i)=>{const ing=getIngById(item.ing);const c=ing?(costPerUnit(ing)*item.qty).toFixed(2):'—';const displayName=ing?ing.name:(item.name||item.ing);return`<div class="ing-row"><span class="ing-name">${displayName}</span><input class="ing-qty" type="number" step="0.01" value="${item.qty}" onchange="updateIngQty(${i},this.value)"><span class="ing-unit">${item.unit}</span><span class="ing-cost">${ing?'$'+c:'—'}</span><span class="ing-remove" onclick="removeIng(${i})">✕</span></div>`;}).join('')||`<div style="color:var(--text3);font-size:13px;padding:8px 0">No ingredients yet. Click + Add to begin.</div>`;
   updateCostSummary();
 }
 function updateIngQty(i,v){currentIngredients[i].qty=parseFloat(v)||0;updateCostSummary();}
@@ -776,7 +801,7 @@ function updateCostSummary(){
   const si=statusInfo(cp,p);
   document.getElementById('cost-summary').innerHTML=`<div class="cs-row"><span>Ingredient cost</span><span class="val">${fmt(ic)}</span></div><div class="cs-row"><span>Labor (${lm} min @ $${SETTINGS.laborRate}/hr)</span><span class="val">${fmt(lc)}</span></div><div class="cs-row total"><span>Total COGS</span><span class="val">${fmt(tc)}</span></div><div class="cs-row"><span>Sell price</span><span class="val">${p>0?fmt(p):'—'}</span></div><div class="cs-row"><span>COGS %</span><span class="val ${si.cls.split(' ')[1]||''}">${p>0?pct(cp):'—'}</span></div><div class="cs-row"><span>Margin</span><span class="val cs-margin">${p>0?fmt(mg):'—'}</span></div>`;
   const name=document.getElementById('re-name').value,cat=document.getElementById('re-cat').value,notes=document.getElementById('re-notes').value;
-  const obj={id:currentRecipeId||'new',name,category:cat,sell_price:p,labor_min:lm,notes,cogs:+tc.toFixed(2),cogs_pct:+cp.toFixed(2),ingredients:currentIngredients.map(x=>{const i=getIngById(x.ing);return{id:x.ing,name:i?i.name:x.ing,qty:x.qty,unit:x.unit};})};
+  const obj={id:currentRecipeId||'new',name,category:cat,sell_price:p,labor_min:lm,notes,cogs:+tc.toFixed(2),cogs_pct:+cp.toFixed(2),ingredients:currentIngredients.map(x=>{const i=getIngById(x.ing);return{id:x.ing,name:i?i.name:(x.name||x.ing),qty:x.qty,unit:x.unit};})};
   document.getElementById('re-json').textContent=JSON.stringify(obj,null,2);
 }
 function newRecipe(){currentRecipeId='new_'+Date.now();currentIngredients=[];['re-name','re-price','re-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('re-labor').value='2';renderRecipeIngredients();updateCostSummary();}
@@ -808,13 +833,13 @@ function populateIngFilters(){document.getElementById('ing-cat-filter').innerHTM
 function renderIngredients(){
   const q=document.getElementById('ing-search').value.toLowerCase(),cat=document.getElementById('ing-cat-filter').value;
   const f=ingredients.filter(i=>{if(q&&!i.name.toLowerCase().includes(q))return false;if(cat&&i.category!==cat)return false;return true;});
-  const rows=f.map(ing=>{const cpu=costPerUnit(ing),used=usedInCount(ing.id);return`<tr><td><strong>${ing.name}</strong></td><td><span class="pill pill-gray">${ing.category}</span></td><td class="mono">${ing.unit}</td><td class="mono">${ing.packSize}</td><td class="mono">${fmt(ing.packCost)}</td><td class="mono">$${cpu.toFixed(4)}/${ing.unit}</td><td style="color:var(--text2)">${used} recipe${used!==1?'s':''}</td><td><button class="btn" style="padding:4px 10px;font-size:12px" onclick="openEditIngModal('${ing.id}')">Edit</button></td></tr>`;}).join('')||`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No ingredients found</td></tr>`;
-  document.getElementById('ing-table-wrap').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Ingredient</th><th>Category</th><th>Unit</th><th>Pack size</th><th>Pack cost</th><th>Cost/unit</th><th>Used in</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const rows=f.map(ing=>{const cpu=costPerUnit(ing),used=usedInCount(ing.id);return`<tr><td><strong>${ing.name}</strong></td><td><span class="pill pill-gray">${ing.category}</span></td><td class="mono">${ing.unit}</td><td class="mono">${ing.packSize}</td><td class="mono">${fmt(ing.packCost)}</td><td class="mono">$${cpu.toFixed(4)}/${ing.unit}</td><td style="color:var(--text2)">${used} recipe${used!==1?'s':''}</td><td style="color:var(--text3);font-size:12px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${ing.notes||''}">${ing.notes||'—'}</td><td><button class="btn" style="padding:4px 10px;font-size:12px" onclick="openEditIngModal('${ing.id}')">Edit</button></td></tr>`;}).join('')||`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No ingredients found</td></tr>`;
+  document.getElementById('ing-table-wrap').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Ingredient</th><th>Category</th><th>Unit</th><th>Pack size</th><th>Pack cost</th><th>Cost/unit</th><th>Used in</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
-function openNewIngModal(){document.getElementById('ni-cat').innerHTML=ingCategories.map(c=>`<option value="${c}">${c}</option>`).join('');['ni-name','ni-unit','ni-pack-size','ni-pack-cost'].forEach(id=>document.getElementById(id).value='');document.getElementById('new-ing-modal').classList.add('open');}
-function confirmNewIng(){const name=document.getElementById('ni-name').value.trim();if(!name){alert('Name required');return;}const ing={id:'ing'+Date.now(),name,category:document.getElementById('ni-cat').value,unit:document.getElementById('ni-unit').value,packSize:parseFloat(document.getElementById('ni-pack-size').value)||1,packCost:parseFloat(document.getElementById('ni-pack-cost').value)||0};ingredients.push(ing);if(!ingCategories.includes(ing.category))ingCategories.push(ing.category);closeModal('new-ing-modal');renderIngredients();}
-function openEditIngModal(id){const ing=getIngById(id);if(!ing)return;document.getElementById('ei-id').value=id;document.getElementById('ei-name').value=ing.name;document.getElementById('ei-unit').value=ing.unit;document.getElementById('ei-pack-size').value=ing.packSize;document.getElementById('ei-pack-cost').value=ing.packCost;document.getElementById('ei-cat').innerHTML=ingCategories.map(c=>`<option value="${c}" ${c===ing.category?'selected':''}>${c}</option>`).join('');document.getElementById('edit-ing-modal').classList.add('open');}
-function confirmEditIng(){const id=document.getElementById('ei-id').value;const idx=ingredients.findIndex(i=>i.id===id);if(idx<0)return;ingredients[idx]={...ingredients[idx],name:document.getElementById('ei-name').value,category:document.getElementById('ei-cat').value,unit:document.getElementById('ei-unit').value,packSize:parseFloat(document.getElementById('ei-pack-size').value)||1,packCost:parseFloat(document.getElementById('ei-pack-cost').value)||0};closeModal('edit-ing-modal');renderIngredients();if(currentRecipeId)updateCostSummary();}
+function openNewIngModal(){document.getElementById('ni-cat').innerHTML=ingCategories.map(c=>`<option value="${c}">${c}</option>`).join('');['ni-name','ni-unit','ni-pack-size','ni-pack-cost','ni-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('new-ing-modal').classList.add('open');}
+function confirmNewIng(){const name=document.getElementById('ni-name').value.trim();if(!name){alert('Name required');return;}const ing={id:'ing'+Date.now(),name,category:document.getElementById('ni-cat').value,unit:document.getElementById('ni-unit').value,packSize:parseFloat(document.getElementById('ni-pack-size').value)||1,packCost:parseFloat(document.getElementById('ni-pack-cost').value)||0,notes:document.getElementById('ni-notes').value};ingredients.push(ing);if(!ingCategories.includes(ing.category))ingCategories.push(ing.category);closeModal('new-ing-modal');renderIngredients();}
+function openEditIngModal(id){const ing=getIngById(id);if(!ing)return;document.getElementById('ei-id').value=id;document.getElementById('ei-name').value=ing.name;document.getElementById('ei-unit').value=ing.unit;document.getElementById('ei-pack-size').value=ing.packSize;document.getElementById('ei-pack-cost').value=ing.packCost;document.getElementById('ei-cat').innerHTML=ingCategories.map(c=>`<option value="${c}" ${c===ing.category?'selected':''}>${c}</option>`).join('');document.getElementById('ei-notes').value=ing.notes||'';document.getElementById('edit-ing-modal').classList.add('open');}
+function confirmEditIng(){const id=document.getElementById('ei-id').value;const idx=ingredients.findIndex(i=>i.id===id);if(idx<0)return;ingredients[idx]={...ingredients[idx],name:document.getElementById('ei-name').value,category:document.getElementById('ei-cat').value,unit:document.getElementById('ei-unit').value,packSize:parseFloat(document.getElementById('ei-pack-size').value)||1,packCost:parseFloat(document.getElementById('ei-pack-cost').value)||0,notes:document.getElementById('ei-notes').value};closeModal('edit-ing-modal');renderIngredients();if(currentRecipeId)updateCostSummary();}
 function openAddIngModal(){document.getElementById('modal-ing-select').innerHTML=ingredients.map(i=>`<option value="${i.id}">${i.name} (${i.unit})</option>`).join('');document.getElementById('modal-ing-qty').value='';document.getElementById('modal-ing-unit').value='';document.getElementById('add-ing-modal').classList.add('open');}
 function confirmAddIng(){const id=document.getElementById('modal-ing-select').value,qty=parseFloat(document.getElementById('modal-ing-qty').value)||0,unit=document.getElementById('modal-ing-unit').value.trim();const ing=getIngById(id);currentIngredients.push({ing:id,qty,unit:unit||(ing?ing.unit:'')});closeModal('add-ing-modal');renderRecipeIngredients();}
 
