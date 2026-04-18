@@ -227,10 +227,10 @@ tbody tr:hover{background:var(--surface2)}
   <!-- RECIPE EDITOR -->
   <div id="page-recipe" class="page">
     <div class="topbar">
-      <div><div class="page-title">Recipe editor</div><div class="page-sub">Edits save to sheet via Web App</div></div>
+      <div><div class="page-title">Recipe editor</div><div class="page-sub">Changes push to Google Sheet automatically</div></div>
       <div style="display:flex;gap:8px">
         <button class="btn" onclick="newRecipe()">+ New item</button>
-        <button class="btn btn-green" onclick="saveRecipe()">Save to sheet</button>
+        <button class="btn btn-green" onclick="saveRecipe()">Save recipe</button>
       </div>
     </div>
     <div class="content">
@@ -467,6 +467,63 @@ async function sheetsAppend(range,rows){
   const res=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({range,majorDimension:'ROWS',values:rows})});
   if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Sheets append error');}
   return await res.json();
+}
+
+// ── PUSH HELPERS ─────────────────────────────────────────────
+// Called automatically whenever a record is saved locally.
+// Shows a brief status indicator without blocking the UI.
+
+function ingToRow(ing){
+  // Column order must match Ingredients tab headers:
+  // id | name | category | unit | pack_size | pack_cost | cost_per_unit | used_in_count | notes
+  const cpu = ing.packSize ? ing.packCost / ing.packSize : 0;
+  const used = usedInCount(ing.id);
+  return [ing.id, ing.name, ing.category, ing.unit, ing.packSize, ing.packCost, +cpu.toFixed(6), used, ing.notes||''];
+}
+
+function recipeToRow(r){
+  // Column order must match Recipes tab headers:
+  // id | name | category | sell_price | labor_min | notes | cogs | cogs_pct | act_margin | taxes | fees | total_margin_pct | price_at_30pct | recipe_json
+  return [r.id, r.name, r.category, r.sellPrice, r.laborMin, r.notes||'', r.cogs, r.cogsPct/100, r.actMargin, r.taxes, r.fees, r.totalMarginPct/100, r.price30, JSON.stringify(r.recipeJson)];
+}
+
+async function pushIngredient(ing){
+  if(!accessToken||!SHEET_ID) return;
+  setSyncState('loading','Saving…');
+  try{
+    // Find the row in the sheet by id
+    const allRows = await sheetsGet('Ingredients!A:A');
+    const rowNum  = allRows.findIndex(r => r.id === ing.id);
+    if(rowNum >= 0){
+      await sheetsUpdate(`Ingredients!A${rowNum+2}:I${rowNum+2}`, [ingToRow(ing)]);
+    } else {
+      await sheetsAppend('Ingredients!A:I', [ingToRow(ing)]);
+    }
+    const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    setSyncState('connected','Saved '+t);
+  }catch(e){
+    setSyncState('connected','Sync error — check console');
+    console.error('pushIngredient failed:', e);
+  }
+}
+
+async function pushRecipe(r){
+  if(!accessToken||!SHEET_ID) return;
+  setSyncState('loading','Saving…');
+  try{
+    const allRows = await sheetsGet('Recipes!A:A');
+    const rowNum  = allRows.findIndex(row => row.id === r.id);
+    if(rowNum >= 0){
+      await sheetsUpdate(`Recipes!A${rowNum+2}:N${rowNum+2}`, [recipeToRow(r)]);
+    } else {
+      await sheetsAppend('Recipes!A:N', [recipeToRow(r)]);
+    }
+    const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    setSyncState('connected','Saved '+t);
+  }catch(e){
+    setSyncState('connected','Sync error — check console');
+    console.error('pushRecipe failed:', e);
+  }
 }
 
 function rowsToObjects(rows){
@@ -813,18 +870,7 @@ async function saveRecipe(){
   const updated={id:currentRecipeId,name,category:cat,sellPrice:sp,laborMin:lm,notes,cogs:+tc.toFixed(2),cogsPct:+cp.toFixed(2),actMargin:+am.toFixed(2),taxes:+tax.toFixed(2),fees:+fee.toFixed(2),totalMarginPct:+tmp.toFixed(2),price30:+p30.toFixed(2),recipeJson:JSON.parse(JSON.stringify(currentIngredients))};
   const idx=recipes.findIndex(r=>r.id===currentRecipeId);if(idx>=0)recipes[idx]=updated;else recipes.push(updated);
   renderRecipeMini();
-  if(accessToken&&SHEET_ID){
-    try{
-      const allRows=await sheetsGet('Recipes!A:A');
-      const rowNum=allRows.findIndex(r=>r.id===updated.id);
-      const rowData=[[updated.id,updated.name,updated.category,updated.sellPrice,updated.laborMin,updated.notes,updated.cogs,updated.cogsPct/100,updated.actMargin,updated.taxes,updated.fees,updated.totalMarginPct/100,updated.price30,JSON.stringify(updated.recipeJson)]];
-      if(rowNum>=0){await sheetsUpdate(`Recipes!A${rowNum+2}:N${rowNum+2}`,rowData);}
-      else{await sheetsAppend('Recipes!A:N',rowData);}
-      setSyncState('connected','Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
-    }catch(e){alert('Saved locally but sheet write failed: '+e.message);}
-  }else{
-    alert(`"${name}" saved locally.\n\nSign in via Settings to save to your sheet.`);
-  }
+  pushRecipe(updated);
 }
 function copyJSON(){navigator.clipboard.writeText(document.getElementById('re-json').textContent).then(()=>alert('Copied!'));}
 
@@ -837,9 +883,9 @@ function renderIngredients(){
   document.getElementById('ing-table-wrap').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Ingredient</th><th>Category</th><th>Unit</th><th>Pack size</th><th>Pack cost</th><th>Cost/unit</th><th>Used in</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function openNewIngModal(){document.getElementById('ni-cat').innerHTML=ingCategories.map(c=>`<option value="${c}">${c}</option>`).join('');['ni-name','ni-unit','ni-pack-size','ni-pack-cost','ni-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('new-ing-modal').classList.add('open');}
-function confirmNewIng(){const name=document.getElementById('ni-name').value.trim();if(!name){alert('Name required');return;}const ing={id:'ing'+Date.now(),name,category:document.getElementById('ni-cat').value,unit:document.getElementById('ni-unit').value,packSize:parseFloat(document.getElementById('ni-pack-size').value)||1,packCost:parseFloat(document.getElementById('ni-pack-cost').value)||0,notes:document.getElementById('ni-notes').value};ingredients.push(ing);if(!ingCategories.includes(ing.category))ingCategories.push(ing.category);closeModal('new-ing-modal');renderIngredients();}
+async function confirmNewIng(){const name=document.getElementById('ni-name').value.trim();if(!name){alert('Name required');return;}const ing={id:'ing'+Date.now(),name,category:document.getElementById('ni-cat').value,unit:document.getElementById('ni-unit').value,packSize:parseFloat(document.getElementById('ni-pack-size').value)||1,packCost:parseFloat(document.getElementById('ni-pack-cost').value)||0,notes:document.getElementById('ni-notes').value};ingredients.push(ing);if(!ingCategories.includes(ing.category))ingCategories.push(ing.category);closeModal('new-ing-modal');renderIngredients();pushIngredient(ing);}
 function openEditIngModal(id){const ing=getIngById(id);if(!ing)return;document.getElementById('ei-id').value=id;document.getElementById('ei-name').value=ing.name;document.getElementById('ei-unit').value=ing.unit;document.getElementById('ei-pack-size').value=ing.packSize;document.getElementById('ei-pack-cost').value=ing.packCost;document.getElementById('ei-cat').innerHTML=ingCategories.map(c=>`<option value="${c}" ${c===ing.category?'selected':''}>${c}</option>`).join('');document.getElementById('ei-notes').value=ing.notes||'';document.getElementById('edit-ing-modal').classList.add('open');}
-function confirmEditIng(){const id=document.getElementById('ei-id').value;const idx=ingredients.findIndex(i=>i.id===id);if(idx<0)return;ingredients[idx]={...ingredients[idx],name:document.getElementById('ei-name').value,category:document.getElementById('ei-cat').value,unit:document.getElementById('ei-unit').value,packSize:parseFloat(document.getElementById('ei-pack-size').value)||1,packCost:parseFloat(document.getElementById('ei-pack-cost').value)||0,notes:document.getElementById('ei-notes').value};closeModal('edit-ing-modal');renderIngredients();if(currentRecipeId)updateCostSummary();}
+async function confirmEditIng(){const id=document.getElementById('ei-id').value;const idx=ingredients.findIndex(i=>i.id===id);if(idx<0)return;ingredients[idx]={...ingredients[idx],name:document.getElementById('ei-name').value,category:document.getElementById('ei-cat').value,unit:document.getElementById('ei-unit').value,packSize:parseFloat(document.getElementById('ei-pack-size').value)||1,packCost:parseFloat(document.getElementById('ei-pack-cost').value)||0,notes:document.getElementById('ei-notes').value};closeModal('edit-ing-modal');renderIngredients();if(currentRecipeId)updateCostSummary();pushIngredient(ingredients[idx]);}
 function openAddIngModal(){document.getElementById('modal-ing-select').innerHTML=ingredients.map(i=>`<option value="${i.id}">${i.name} (${i.unit})</option>`).join('');document.getElementById('modal-ing-qty').value='';document.getElementById('modal-ing-unit').value='';document.getElementById('add-ing-modal').classList.add('open');}
 function confirmAddIng(){const id=document.getElementById('modal-ing-select').value,qty=parseFloat(document.getElementById('modal-ing-qty').value)||0,unit=document.getElementById('modal-ing-unit').value.trim();const ing=getIngById(id);currentIngredients.push({ing:id,qty,unit:unit||(ing?ing.unit:'')});closeModal('add-ing-modal');renderRecipeIngredients();}
 
