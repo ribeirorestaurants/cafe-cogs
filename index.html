@@ -349,6 +349,17 @@ tbody tr:hover{background:var(--surface2)}
       </div>
 
       <div class="settings-section">
+        <div class="settings-title">Troubleshooting — raw data preview</div>
+        <div class="connect-card">
+          <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Shows the first row returned from each sheet tab — useful for verifying column names match.</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <button class="btn" onclick="debugSheetData()">Inspect sheet data</button>
+          </div>
+          <div id="debug-output" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);background:var(--surface2);padding:12px;border-radius:var(--radius-sm);white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto;display:none"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
         <div class="settings-title">Cost targets</div>
         <div class="card">
           <div class="settings-row"><div><div class="key">Food / COGS % target</div><div class="desc">Items above this are flagged for review</div></div><input class="settings-input" id="target-cogs" value="30"></div>
@@ -494,20 +505,38 @@ async function loadAllData(){
 
 function parseIngredients(rows){
   return rows.map(r=>({
-    id:r.id||'',name:r.name||'',category:r.category||'',unit:r.unit||'',
-    packSize:parseFloat(r.pack_size||r.bulk_amt||1)||1,
-    packCost:parseFloat(r.pack_cost||r.bulk_price||0)||0,
+    id:       r.id||'',
+    name:     r.name||'',
+    category: r.category||'',
+    unit:     r.unit||'',
+    // Accept both naming conventions from the Apps Script setup
+    packSize: parseFloat(r.pack_size||r.bulk_amt||r['pack size']||1)||1,
+    packCost: parseFloat(r.pack_cost||r.bulk_price||r['pack cost']||r.bulk_Price||0)||0,
   })).filter(i=>i.id&&i.name);
 }
 function parseRecipes(rows){
   return rows.map(r=>{
     let rj=[];try{rj=JSON.parse(r.recipe_json||'[]');}catch(e){}
-    return{id:r.id,name:r.name,category:r.category||'',sellPrice:parseFloat(r.sell_price)||0,
-      laborMin:parseFloat(r.labor_min)||0,notes:r.notes||'',
-      cogs:parseFloat(r.cogs)||0,cogsPct:parseFloat(r.cogs_pct)||0,
-      actMargin:parseFloat(r.act_margin)||0,taxes:parseFloat(r.taxes)||0,
-      fees:parseFloat(r.fees)||0,totalMarginPct:parseFloat(r.total_margin_pct)||0,
-      price30:parseFloat(r.price_at_30pct)||0,recipeJson:rj};
+    // cogsPct and totalMarginPct are stored as decimals in the sheet (e.g. 0.249 = 24.9%)
+    // Detect decimal format: if value < 2, treat as decimal and convert to percent points
+    const rawCogsPct   = parseFloat(r.cogs_pct||r['cogs%']||0);
+    const rawMarginPct = parseFloat(r.total_margin_pct||r['total margin%']||0);
+    return{
+      id:             r.id,
+      name:           r.name,
+      category:       r.category||'',
+      sellPrice:      parseFloat(r.sell_price||r.sell_Price||0)||0,
+      laborMin:       parseFloat(r.labor_min||r['labor min']||0)||0,
+      notes:          r.notes||'',
+      cogs:           parseFloat(r.cogs)||0,
+      cogsPct:        rawCogsPct < 2 ? rawCogsPct * 100 : rawCogsPct,
+      actMargin:      parseFloat(r.act_margin||r['act margin']||r.act_Margin||0)||0,
+      taxes:          parseFloat(r.taxes)||0,
+      fees:           parseFloat(r.fees)||0,
+      totalMarginPct: rawMarginPct < 2 ? rawMarginPct * 100 : rawMarginPct,
+      price30:        parseFloat(r.price_at_30pct||r['price at 30pct']||r.price_30||0)||0,
+      recipeJson:     rj,
+    };
   }).filter(r=>r.id&&r.name);
 }
 
@@ -805,6 +834,45 @@ function renderSettings(){
   else if(CLIENT_ID&&SHEET_ID)showStatusMsg('connect-status','info','Client ID and Sheet ID saved. Click Sign in with Google.');
   else showStatusMsg('connect-status','info','Enter your Client ID and Sheet ID to get started.');
 }
+async function debugSheetData(){
+  const el=document.getElementById('debug-output');
+  el.style.display='block';
+  el.textContent='Fetching…';
+  if(!accessToken||!SHEET_ID){el.textContent='Not connected — sign in first.';return;}
+  try{
+    const [rRaw,iRaw]=await Promise.all([
+      sheetsGet('Recipes!A:Z'),
+      sheetsGet('Ingredients!A:Z'),
+    ]);
+    const recipeFirst  = rRaw[0]  || {};
+    const ingFirst     = iRaw[0]  || {};
+    const out = [
+      '=== Recipes tab ===',
+      'Row count: ' + rRaw.length,
+      'First row keys: ' + Object.keys(recipeFirst).join(', '),
+      'First row values:',
+      ...Object.entries(recipeFirst).map(([k,v])=>`  ${k}: "${v}"`),
+      '',
+      '=== Ingredients tab ===',
+      'Row count: ' + iRaw.length,
+      'First row keys: ' + Object.keys(ingFirst).join(', '),
+      'First row values:',
+      ...Object.entries(ingFirst).map(([k,v])=>`  ${k}: "${v}"`),
+      '',
+      '=== Parsed check (first recipe) ===',
+      'recipes loaded: ' + recipes.length,
+      'ingredients loaded: ' + ingredients.length,
+      recipes[0] ? JSON.stringify(recipes[0], null, 2) : 'no recipes parsed',
+      '',
+      '=== Parsed check (first ingredient) ===',
+      ingredients[0] ? JSON.stringify(ingredients[0], null, 2) : 'no ingredients parsed',
+    ];
+    el.textContent=out.join('\n');
+  }catch(e){
+    el.textContent='Error: '+e.message;
+  }
+}
+
 function saveSettings(){SETTINGS.cogsPctTarget=parseFloat(document.getElementById('target-cogs').value)||30;SETTINGS.laborRate=parseFloat(document.getElementById('target-labor').value)||18;SETTINGS.taxPct=parseFloat(document.getElementById('target-tax').value)||6.5;SETTINGS.posFlatFee=parseFloat(document.getElementById('target-pos-flat').value)||0.15;SETTINGS.posPct=parseFloat(document.getElementById('target-pos-pct').value)||2.6;localStorage.setItem('cogs_settings',JSON.stringify(SETTINGS));alert('Settings saved.');}
 function renderCatTags(el,arr,type){document.getElementById(el).innerHTML=arr.map(c=>`<div class="tag">${c} <span class="tag-x" onclick="removeCat('${type}','${c}')">✕</span></div>`).join('');}
 function removeCat(t,c){if(t==='menu')menuCategories=menuCategories.filter(x=>x!==c);else ingCategories=ingCategories.filter(x=>x!==c);renderSettings();}
