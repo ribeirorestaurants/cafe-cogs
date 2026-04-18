@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COGS Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{--bg:#F7F4EF;--surface:#fff;--surface2:#F0EDE7;--border:#E2DDD6;--border2:#CEC9BF;--text:#1A1714;--text2:#6B6560;--text3:#9C9590;--accent:#2C5F2E;--accent-light:#EBF2EB;--amber:#92400E;--amber-light:#FEF3C7;--red:#991B1B;--red-light:#FEE2E2;--blue:#1E3A5F;--blue-light:#EFF6FF;--gold:#B45309;--gold-light:#FFFBEB;--radius:10px;--radius-sm:6px;--shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.10)}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -312,34 +313,38 @@ tbody tr:hover{background:var(--surface2)}
     <div class="content">
 
       <div class="settings-section">
-        <div class="settings-title">Google Sheets connection (read — pull data)</div>
+        <div class="settings-title">Google Sheets — OAuth connection</div>
         <div class="connect-card">
+          <div style="margin-bottom:14px">
+            <label class="form-label">Google OAuth Client ID</label>
+            <div class="connect-input-wrap">
+              <input class="connect-input" id="client-id-input" placeholder="xxxxxxxxxxxx-xxxxxxxx.apps.googleusercontent.com">
+              <button class="btn btn-green" onclick="saveClientId()">Save</button>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;font-family:'DM Mono',monospace">From Google Cloud Console → APIs &amp; Services → Credentials → OAuth 2.0 Client ID</div>
+          </div>
           <div style="margin-bottom:14px">
             <label class="form-label">Google Sheet ID</label>
             <div class="connect-input-wrap">
               <input class="connect-input" id="sheet-id-input" placeholder="Paste your Sheet ID here">
-              <button class="btn btn-green" onclick="connectSheet()">Connect</button>
+              <button class="btn btn-green" onclick="saveSheetId()">Save</button>
             </div>
-            <div style="font-size:11px;color:var(--text3);margin-top:5px;font-family:'DM Mono',monospace">The ID is the long string between /d/ and /edit in your sheet URL</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;font-family:'DM Mono',monospace">The long string between /d/ and /edit in your sheet URL</div>
           </div>
           <div id="connect-status"></div>
-          <div id="gid-form-area"></div>
           <div class="sep"></div>
-          <div style="display:flex;gap:8px">
-            <button class="btn" onclick="loadAllData()">↓ Pull from sheet</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-green" id="btn-signin" onclick="signIn()">Sign in with Google</button>
+            <button class="btn" id="btn-signout" onclick="signOut()" style="display:none">Sign out</button>
+            <button class="btn" onclick="loadAllData()" id="btn-pull" disabled>↓ Pull from sheet</button>
           </div>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-title">Web App URL (write — push / save recipes)</div>
-        <div class="connect-card">
-          <p style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">Deploy your Apps Script as a Web App to enable saving recipe edits back to the sheet. Paste the deployed URL here.</p>
-          <div class="connect-input-wrap">
-            <input class="connect-input" id="webapp-url-input" placeholder="https://script.google.com/macros/s/…/exec">
-            <button class="btn btn-green" onclick="saveWebAppUrl()">Save</button>
+          <div class="sep"></div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Troubleshooting — clear stored credentials</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" onclick="clearClientId()" style="color:var(--red)">Clear Client ID</button>
+            <button class="btn" onclick="clearSheetId()" style="color:var(--red)">Clear Sheet ID</button>
+            <button class="btn" onclick="clearAllAuth()" style="color:var(--red)">Clear everything &amp; reset</button>
           </div>
-          <div id="webapp-status"></div>
         </div>
       </div>
 
@@ -420,48 +425,55 @@ let isConnected=false;
 let visibleCols={cogs:true,price:true,margin:true,cogs_pct:true,taxes:true,fees:true,total_margin:true,price30:true,status:true};
 const SETTINGS={cogsPctTarget:30,laborRate:18,taxPct:6.5,posFlatFee:0.15,posPct:2.6};
 let SHEET_ID=localStorage.getItem('cogs_sheet_id')||'';
+let CLIENT_ID=localStorage.getItem('cogs_client_id')||'';
 
-// ── GOOGLE SHEETS CSV FETCH ────────────────────────────────────
-// Reads published CSV tabs — sheet must be published to web (File → Share → Publish to web)
-function pubCsvUrl(id,gid){return`https://docs.google.com/spreadsheets/d/${id}/pub?gid=${gid}&single=true&output=csv`;}
-function expCsvUrl(id,gid){return`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;}
+// ── GOOGLE SHEETS API v4 (OAuth token) ────────────────────────
+const SHEETS_BASE='https://sheets.googleapis.com/v4/spreadsheets';
 
-function parseCSV(text){
-  const lines=text.trim().split('\n');
-  if(lines.length<2)return[];
-  const hdrs=splitLine(lines[0]);
-  return lines.slice(1).map(l=>{
-    const v=splitLine(l),o={};
-    hdrs.forEach((h,i)=>o[h.trim()]=(v[i]||'').trim());
+async function sheetsGet(range){
+  await ensureToken();
+  const url=`${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(range)}?majorDimension=ROWS`;
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Sheets API error');}
+  const json=await res.json();
+  return rowsToObjects(json.values||[]);
+}
+
+async function sheetsUpdate(range,rows){
+  await ensureToken();
+  const url=`${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
+  const res=await fetch(url,{method:'PUT',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({range,majorDimension:'ROWS',values:rows})});
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Sheets write error');}
+  return await res.json();
+}
+
+async function sheetsAppend(range,rows){
+  await ensureToken();
+  const url=`${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const res=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({range,majorDimension:'ROWS',values:rows})});
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Sheets append error');}
+  return await res.json();
+}
+
+function rowsToObjects(rows){
+  if(rows.length<2)return[];
+  const hdrs=rows[0].map(h=>String(h).trim());
+  return rows.slice(1).map(row=>{
+    const o={};
+    hdrs.forEach((h,i)=>o[h]=(row[i]!==undefined?String(row[i]).trim():''));
     return o;
   }).filter(r=>Object.values(r).some(v=>v!==''));
 }
-function splitLine(line){
-  const r=[];let cur='',inQ=false;
-  for(let i=0;i<line.length;i++){const c=line[i];if(c==='"')inQ=!inQ;else if(c===','&&!inQ){r.push(cur);cur='';}else cur+=c;}
-  r.push(cur);return r;
-}
-
-async function fetchTab(id,gid){
-  for(const url of[pubCsvUrl(id,gid),expCsvUrl(id,gid)]){
-    try{const r=await fetch(url);if(r.ok){const t=await r.text();if(t.includes(','))return parseCSV(t);}}catch(e){}
-  }
-  throw new Error('Could not fetch tab gid='+gid);
-}
-
-function getGIDs(){try{return JSON.parse(localStorage.getItem('cogs_gids')||'null');}catch(e){return null;}}
-function setGIDs(g){localStorage.setItem('cogs_gids',JSON.stringify(g));}
 
 async function loadAllData(){
   if(!SHEET_ID){showPage('settings');return;}
+  if(!accessToken){showPage('settings');showStatusMsg('connect-status','error','Not signed in. Click Sign in with Google.');return;}
   setSyncState('loading','Loading…');
   document.getElementById('btn-refresh').disabled=true;
-  const gids=getGIDs();
-  if(!gids){setSyncState('','Not connected');document.getElementById('btn-refresh').disabled=false;showPage('settings');return;}
   try{
     const [recRows,ingRows]=await Promise.all([
-      fetchTab(SHEET_ID,gids.recipes),
-      fetchTab(SHEET_ID,gids.ingredients),
+      sheetsGet('Recipes!A:Z'),
+      sheetsGet('Ingredients!A:Z'),
     ]);
     ingredients=parseIngredients(ingRows);
     recipes=parseRecipes(recRows);
@@ -475,7 +487,7 @@ async function loadAllData(){
   }catch(err){
     setSyncState('','Load failed');
     document.getElementById('btn-refresh').disabled=false;
-    showStatusMsg('connect-status','error','Could not load data. Check that the sheet is published and GIDs are correct.<br><small>'+err.message+'</small>');
+    showStatusMsg('connect-status','error','Could not load data: '+err.message);
     console.error(err);
   }
 }
@@ -499,46 +511,103 @@ function parseRecipes(rows){
   }).filter(r=>r.id&&r.name);
 }
 
-// ── CONNECTION UI ──────────────────────────────────────────────
-async function connectSheet(){
+// ── OAUTH 2.0 — Google Identity Services (implicit / token flow) ──
+let tokenClient=null, accessToken=null, tokenExpiry=null;
+
+function initGIS(){
+  if(!CLIENT_ID||typeof google==='undefined'||!google.accounts) return;
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:CLIENT_ID,
+    scope:'https://www.googleapis.com/auth/spreadsheets',
+    callback:(resp)=>{
+      if(resp.error){showStatusMsg('connect-status','error','Sign-in failed: '+resp.error);return;}
+      accessToken=resp.access_token;
+      tokenExpiry=Date.now()+(resp.expires_in-60)*1000;
+      updateAuthButtons();
+      showStatusMsg('connect-status','success','Signed in. Loading data…');
+      loadAllData();
+    },
+  });
+}
+
+function signIn(){
+  if(!CLIENT_ID){showStatusMsg('connect-status','error','Enter your Client ID first.');return;}
+  if(!SHEET_ID){showStatusMsg('connect-status','error','Enter your Sheet ID first.');return;}
+  if(!tokenClient)initGIS();
+  if(!tokenClient){showStatusMsg('connect-status','error','GIS library not loaded yet — try again in a moment.');return;}
+  tokenClient.requestAccessToken({prompt:''});
+}
+
+function signOut(){
+  if(accessToken)try{google.accounts.oauth2.revoke(accessToken,()=>{});}catch(e){}
+  accessToken=null;tokenExpiry=null;isConnected=false;
+  updateAuthButtons();setSyncState('','Signed out');
+  showStatusMsg('connect-status','info','Signed out. Click Sign in with Google to reconnect.');
+}
+
+function ensureToken(){
+  if(!accessToken||Date.now()>tokenExpiry){
+    return new Promise((resolve,reject)=>{
+      if(!tokenClient)initGIS();
+      if(!tokenClient){reject(new Error('GIS not ready'));return;}
+      const prev=tokenClient.callback;
+      tokenClient.callback=(resp)=>{
+        tokenClient.callback=prev;
+        if(resp.error){reject(new Error(resp.error));return;}
+        accessToken=resp.access_token;
+        tokenExpiry=Date.now()+(resp.expires_in-60)*1000;
+        resolve();
+      };
+      tokenClient.requestAccessToken({prompt:''});
+    });
+  }
+  return Promise.resolve();
+}
+
+function saveClientId(){
+  const v=document.getElementById('client-id-input').value.trim();
+  if(!v){showStatusMsg('connect-status','error','Please enter a Client ID.');return;}
+  CLIENT_ID=v;localStorage.setItem('cogs_client_id',CLIENT_ID);
+  tokenClient=null;initGIS();
+  showStatusMsg('connect-status','success','Client ID saved.');updateAuthButtons();
+}
+function saveSheetId(){
   const raw=document.getElementById('sheet-id-input').value.trim();
   if(!raw){showStatusMsg('connect-status','error','Please enter a Sheet ID or URL.');return;}
   const m=raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-  SHEET_ID=m?m[1]:raw;
-  localStorage.setItem('cogs_sheet_id',SHEET_ID);
+  SHEET_ID=m?m[1]:raw;localStorage.setItem('cogs_sheet_id',SHEET_ID);
   document.getElementById('sheet-id-input').value=SHEET_ID;
-  if(!getGIDs()){showStatusMsg('connect-status','info','Sheet ID saved. Enter the tab GIDs below.');renderGIDForm();return;}
-  showStatusMsg('connect-status','info','Connecting…');
-  await loadAllData();
+  showStatusMsg('connect-status','success','Sheet ID saved.');updateAuthButtons();
 }
-
-function renderGIDForm(){
-  const g=getGIDs()||{};
-  document.getElementById('gid-form-area').innerHTML=`
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-      <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.7">
-        Find each tab's GID in the sheet URL when that tab is active:<br>
-        <span style="font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:4px">…/edit#gid=<strong style="color:var(--accent)">1234567890</strong></span>
-      </div>
-      <div class="form-grid-2" style="gap:10px;margin-bottom:12px">
-        <div><label class="form-label">Recipes tab GID</label><input class="connect-input" id="gid-rec" placeholder="e.g. 0" value="${g.recipes||''}"></div>
-        <div><label class="form-label">Ingredients tab GID</label><input class="connect-input" id="gid-ing" placeholder="e.g. 123456789" value="${g.ingredients||''}"></div>
-      </div>
-      <button class="btn btn-green" onclick="saveGIDs()">Save GIDs & load data</button>
-    </div>`;
+function clearClientId(){
+  CLIENT_ID='';localStorage.removeItem('cogs_client_id');
+  tokenClient=null;accessToken=null;tokenExpiry=null;
+  document.getElementById('client-id-input').value='';
+  showStatusMsg('connect-status','info','Client ID cleared.');updateAuthButtons();
 }
-
-function saveGIDs(){
-  setGIDs({recipes:document.getElementById('gid-rec').value.trim(),ingredients:document.getElementById('gid-ing').value.trim()});
-  document.getElementById('gid-form-area').innerHTML='';
-  showStatusMsg('connect-status','info','GIDs saved. Loading…');
-  loadAllData();
+function clearSheetId(){
+  SHEET_ID='';localStorage.removeItem('cogs_sheet_id');
+  document.getElementById('sheet-id-input').value='';
+  showStatusMsg('connect-status','info','Sheet ID cleared.');updateAuthButtons();
 }
-
-function saveWebAppUrl(){
-  const url=document.getElementById('webapp-url-input').value.trim();
-  localStorage.setItem('cogs_webapp_url',url);
-  showStatusMsg('webapp-status','success','Web App URL saved.');
+function clearAllAuth(){
+  if(accessToken)try{google.accounts.oauth2.revoke(accessToken,()=>{});}catch(e){}
+  ['cogs_client_id','cogs_sheet_id','cogs_settings'].forEach(k=>localStorage.removeItem(k));
+  CLIENT_ID='';SHEET_ID='';accessToken=null;tokenExpiry=null;tokenClient=null;
+  isConnected=false;recipes=[];ingredients=[];menuCategories=[];ingCategories=[];
+  document.getElementById('client-id-input').value='';
+  document.getElementById('sheet-id-input').value='';
+  setSyncState('','Not connected');
+  showStatusMsg('connect-status','info','All credentials cleared and reset.');
+  updateAuthButtons();
+}
+function updateAuthButtons(){
+  const si=document.getElementById('btn-signin');
+  const so=document.getElementById('btn-signout');
+  const pull=document.getElementById('btn-pull');
+  if(si)si.style.display=accessToken?'none':'inline-block';
+  if(so)so.style.display=accessToken?'inline-block':'none';
+  if(pull)pull.disabled=!accessToken||!SHEET_ID;
 }
 
 // ── HELPERS ────────────────────────────────────────────────────
@@ -689,9 +758,18 @@ async function saveRecipe(){
   const updated={id:currentRecipeId,name,category:cat,sellPrice:sp,laborMin:lm,notes,cogs:+tc.toFixed(2),cogsPct:+cp.toFixed(2),actMargin:+am.toFixed(2),taxes:+tax.toFixed(2),fees:+fee.toFixed(2),totalMarginPct:+tmp.toFixed(2),price30:+p30.toFixed(2),recipeJson:JSON.parse(JSON.stringify(currentIngredients))};
   const idx=recipes.findIndex(r=>r.id===currentRecipeId);if(idx>=0)recipes[idx]=updated;else recipes.push(updated);
   renderRecipeMini();
-  const wau=localStorage.getItem('cogs_webapp_url');
-  if(wau){try{await fetch(wau,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'updateRecipe',recipe:updated})});setSyncState('connected','Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));}catch(e){alert('Saved locally but push to sheet failed.');}}
-  else{alert(`"${name}" saved locally.\n\nTo push to the sheet automatically, add your Web App URL in Settings.`);}
+  if(accessToken&&SHEET_ID){
+    try{
+      const allRows=await sheetsGet('Recipes!A:A');
+      const rowNum=allRows.findIndex(r=>r.id===updated.id);
+      const rowData=[[updated.id,updated.name,updated.category,updated.sellPrice,updated.laborMin,updated.notes,updated.cogs,updated.cogsPct/100,updated.actMargin,updated.taxes,updated.fees,updated.totalMarginPct/100,updated.price30,JSON.stringify(updated.recipeJson)]];
+      if(rowNum>=0){await sheetsUpdate(`Recipes!A${rowNum+2}:N${rowNum+2}`,rowData);}
+      else{await sheetsAppend('Recipes!A:N',rowData);}
+      setSyncState('connected','Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+    }catch(e){alert('Saved locally but sheet write failed: '+e.message);}
+  }else{
+    alert(`"${name}" saved locally.\n\nSign in via Settings to save to your sheet.`);
+  }
 }
 function copyJSON(){navigator.clipboard.writeText(document.getElementById('re-json').textContent).then(()=>alert('Copied!'));}
 
@@ -712,13 +790,20 @@ function confirmAddIng(){const id=document.getElementById('modal-ing-select').va
 
 // ── SETTINGS ────────────────────────────────────────────────────
 function renderSettings(){
+  document.getElementById('client-id-input').value=CLIENT_ID;
   document.getElementById('sheet-id-input').value=SHEET_ID;
-  document.getElementById('webapp-url-input').value=localStorage.getItem('cogs_webapp_url')||'';
-  document.getElementById('target-cogs').value=SETTINGS.cogsPctTarget;document.getElementById('target-labor').value=SETTINGS.laborRate;
-  document.getElementById('target-tax').value=SETTINGS.taxPct;document.getElementById('target-pos-flat').value=SETTINGS.posFlatFee;document.getElementById('target-pos-pct').value=SETTINGS.posPct;
-  renderCatTags('menu-cats-tags',menuCategories,'menu');renderCatTags('ing-cats-tags',ingCategories,'ing');
-  if(SHEET_ID&&!getGIDs())renderGIDForm();
-  else if(SHEET_ID&&getGIDs()){showStatusMsg('connect-status',isConnected?'success':'info',isConnected?'Connected · data loaded.':'Sheet ID + GIDs saved. Click Pull from sheet.');}
+  document.getElementById('target-cogs').value=SETTINGS.cogsPctTarget;
+  document.getElementById('target-labor').value=SETTINGS.laborRate;
+  document.getElementById('target-tax').value=SETTINGS.taxPct;
+  document.getElementById('target-pos-flat').value=SETTINGS.posFlatFee;
+  document.getElementById('target-pos-pct').value=SETTINGS.posPct;
+  renderCatTags('menu-cats-tags',menuCategories,'menu');
+  renderCatTags('ing-cats-tags',ingCategories,'ing');
+  updateAuthButtons();
+  if(isConnected)showStatusMsg('connect-status','success','Connected · data loaded from sheet.');
+  else if(CLIENT_ID&&SHEET_ID&&accessToken)showStatusMsg('connect-status','info','Authenticated. Click Pull from sheet.');
+  else if(CLIENT_ID&&SHEET_ID)showStatusMsg('connect-status','info','Client ID and Sheet ID saved. Click Sign in with Google.');
+  else showStatusMsg('connect-status','info','Enter your Client ID and Sheet ID to get started.');
 }
 function saveSettings(){SETTINGS.cogsPctTarget=parseFloat(document.getElementById('target-cogs').value)||30;SETTINGS.laborRate=parseFloat(document.getElementById('target-labor').value)||18;SETTINGS.taxPct=parseFloat(document.getElementById('target-tax').value)||6.5;SETTINGS.posFlatFee=parseFloat(document.getElementById('target-pos-flat').value)||0.15;SETTINGS.posPct=parseFloat(document.getElementById('target-pos-pct').value)||2.6;localStorage.setItem('cogs_settings',JSON.stringify(SETTINGS));alert('Settings saved.');}
 function renderCatTags(el,arr,type){document.getElementById(el).innerHTML=arr.map(c=>`<div class="tag">${c} <span class="tag-x" onclick="removeCat('${type}','${c}')">✕</span></div>`).join('');}
@@ -731,8 +816,9 @@ function exportCSV(){const h=['id','name','category','sell_price','cogs','cogs_p
 
 // ── INIT ───────────────────────────────────────────────────────
 try{const s=localStorage.getItem('cogs_settings');if(s)Object.assign(SETTINGS,JSON.parse(s));}catch(e){}
-if(SHEET_ID&&getGIDs()){setSyncState('loading','Loading…');loadAllData();}
-else setSyncState('','Not connected');
+window.addEventListener('load',()=>{if(CLIENT_ID&&typeof google!=='undefined'&&google.accounts)initGIS();});
+setSyncState('','Not connected');
+if(!CLIENT_ID||!SHEET_ID)setTimeout(()=>showPage('settings'),100);
 </script>
 </body>
 </html>
