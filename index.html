@@ -403,10 +403,19 @@ tbody tr:hover{background:var(--surface2)}
 <div class="modal-backdrop" id="add-ing-modal">
   <div class="modal">
     <div class="modal-title">Add ingredient</div>
-    <label class="form-label">Ingredient</label><select class="form-input" id="modal-ing-select"></select>
-    <label class="form-label">Quantity</label><input class="form-input" id="modal-ing-qty" type="number" step="0.01">
-    <label class="form-label">Unit</label><input class="form-input" id="modal-ing-unit" placeholder="ml, g, oz, ea…">
-    <div class="modal-footer"><button class="btn" onclick="closeModal('add-ing-modal')">Cancel</button><button class="btn btn-green" onclick="confirmAddIng()">Add</button></div>
+    <label class="form-label">Search ingredient</label>
+    <input class="form-input" id="modal-ing-search" placeholder="Type to search…" autocomplete="off" oninput="filterIngredientSearch()">
+    <div id="modal-ing-results" style="max-height:180px;overflow-y:auto;border:1px solid var(--border2);border-radius:var(--radius-sm);margin-bottom:14px;display:none"></div>
+    <div id="modal-ing-selected" style="display:none;padding:8px 12px;background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius-sm);margin-bottom:14px;font-size:13px;align-items:center;justify-content:space-between">
+      <span id="modal-ing-selected-name" style="font-weight:500"></span>
+      <span style="cursor:pointer;color:var(--text3);font-size:16px;margin-left:8px" onclick="clearIngredientSelection()">&#x2715;</span>
+    </div>
+    <input type="hidden" id="modal-ing-id">
+    <div class="form-grid-2" style="margin-bottom:0">
+      <div><label class="form-label">Quantity</label><input class="form-input" id="modal-ing-qty" type="number" step="0.01" style="margin-bottom:0"></div>
+      <div><label class="form-label">Unit</label><input class="form-input" id="modal-ing-unit" placeholder="auto-filled" style="margin-bottom:0"></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('add-ing-modal')">Cancel</button><button class="btn btn-green" id="btn-confirm-add-ing" onclick="confirmAddIng()" disabled>Add</button></div>
   </div>
 </div>
 <div class="modal-backdrop" id="new-ing-modal">
@@ -1007,8 +1016,61 @@ function openNewIngModal(){document.getElementById('ni-cat').innerHTML=ingCatego
 async function confirmNewIng(){const name=document.getElementById('ni-name').value.trim();if(!name){alert('Name required');return;}const ing={id:'ing'+Date.now(),name,category:document.getElementById('ni-cat').value,unit:document.getElementById('ni-unit').value,packSize:parseFloat(document.getElementById('ni-pack-size').value)||1,packCost:parseFloat(document.getElementById('ni-pack-cost').value)||0,notes:document.getElementById('ni-notes').value};ingredients.push(ing);if(!ingCategories.includes(ing.category))ingCategories.push(ing.category);closeModal('new-ing-modal');renderIngredients();pushIngredient(ing);}
 function openEditIngModal(id){const ing=getIngById(id);if(!ing)return;document.getElementById('ei-id').value=id;document.getElementById('ei-name').value=ing.name;document.getElementById('ei-unit').value=ing.unit;document.getElementById('ei-pack-size').value=ing.packSize;document.getElementById('ei-pack-cost').value=ing.packCost;document.getElementById('ei-cat').innerHTML=ingCategories.map(c=>`<option value="${c}" ${c===ing.category?'selected':''}>${c}</option>`).join('');document.getElementById('ei-notes').value=ing.notes||'';document.getElementById('edit-ing-modal').classList.add('open');}
 async function confirmEditIng(){const id=document.getElementById('ei-id').value;const idx=ingredients.findIndex(i=>i.id===id);if(idx<0)return;ingredients[idx]={...ingredients[idx],name:document.getElementById('ei-name').value,category:document.getElementById('ei-cat').value,unit:document.getElementById('ei-unit').value,packSize:parseFloat(document.getElementById('ei-pack-size').value)||1,packCost:parseFloat(document.getElementById('ei-pack-cost').value)||0,notes:document.getElementById('ei-notes').value};closeModal('edit-ing-modal');renderIngredients();if(currentRecipeId)updateCostSummary();pushIngredient(ingredients[idx]);}
-function openAddIngModal(){document.getElementById('modal-ing-select').innerHTML=ingredients.map(i=>`<option value="${i.id}">${i.name} (${i.unit})</option>`).join('');document.getElementById('modal-ing-qty').value='';document.getElementById('modal-ing-unit').value='';document.getElementById('add-ing-modal').classList.add('open');}
-function confirmAddIng(){const id=document.getElementById('modal-ing-select').value,qty=parseFloat(document.getElementById('modal-ing-qty').value)||0,unit=document.getElementById('modal-ing-unit').value.trim();const ing=getIngById(id);currentIngredients.push({ing:id,qty,unit:unit||(ing?ing.unit:'')});closeModal('add-ing-modal');renderRecipeIngredients();}
+function openAddIngModal(){
+  document.getElementById('modal-ing-search').value='';
+  document.getElementById('modal-ing-results').style.display='none';
+  document.getElementById('modal-ing-results').innerHTML='';
+  document.getElementById('modal-ing-selected').style.display='none';
+  document.getElementById('modal-ing-selected-name').textContent='';
+  document.getElementById('modal-ing-id').value='';
+  document.getElementById('modal-ing-qty').value='';
+  document.getElementById('modal-ing-unit').value='';
+  document.getElementById('btn-confirm-add-ing').disabled=true;
+  document.getElementById('add-ing-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('modal-ing-search').focus(),50);
+}
+function filterIngredientSearch(){
+  const q=document.getElementById('modal-ing-search').value.trim().toLowerCase();
+  const el=document.getElementById('modal-ing-results');
+  if(!q){el.style.display='none';el.innerHTML='';return;}
+  const matches=ingredients.filter(i=>i.name.toLowerCase().includes(q)).slice(0,20);
+  el.style.display='block';
+  if(!matches.length){el.innerHTML='<div style="padding:10px 12px;font-size:13px;color:var(--text3)">No ingredients found</div>';return;}
+  el.innerHTML=matches.map(i=>{
+    const cpu=(i.packSize?i.packCost/i.packSize:0).toFixed(4);
+    return `<div onclick="selectIngredient('${i.id}')" style="padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><span style="font-weight:500">${i.name}</span><span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">${i.unit} &middot; $${cpu}/${i.unit}</span></div>`;
+  }).join('');
+}
+function selectIngredient(id){
+  const ing=getIngById(id);if(!ing)return;
+  document.getElementById('modal-ing-id').value=id;
+  document.getElementById('modal-ing-selected-name').textContent=ing.name;
+  document.getElementById('modal-ing-selected').style.display='flex';
+  document.getElementById('modal-ing-results').style.display='none';
+  document.getElementById('modal-ing-search').value='';
+  document.getElementById('modal-ing-unit').value=ing.unit;
+  document.getElementById('btn-confirm-add-ing').disabled=false;
+  setTimeout(()=>document.getElementById('modal-ing-qty').focus(),50);
+}
+function clearIngredientSelection(){
+  document.getElementById('modal-ing-id').value='';
+  document.getElementById('modal-ing-selected').style.display='none';
+  document.getElementById('modal-ing-selected-name').textContent='';
+  document.getElementById('modal-ing-unit').value='';
+  document.getElementById('btn-confirm-add-ing').disabled=true;
+  document.getElementById('modal-ing-search').focus();
+}
+function confirmAddIng(){
+  const id=document.getElementById('modal-ing-id').value;
+  const qty=parseFloat(document.getElementById('modal-ing-qty').value)||0;
+  const unit=document.getElementById('modal-ing-unit').value.trim();
+  if(!id){alert('Please select an ingredient.');return;}
+  if(!qty){alert('Please enter a quantity.');return;}
+  const ing=getIngById(id);
+  currentIngredients.push({ing:id,qty,unit:unit||(ing?ing.unit:''),name:ing?ing.name:id});
+  closeModal('add-ing-modal');
+  renderRecipeIngredients();
+}
 
 // ── SETTINGS ────────────────────────────────────────────────────
 function renderSettings(){
