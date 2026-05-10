@@ -486,14 +486,18 @@ async function sheetsAppend(range,rows){
 // Called automatically whenever a record is saved locally.
 
 async function findSheetRow(tab,id){
-  // Reads column A WITHOUT filtering blank rows so the returned index
-  // correctly maps to the physical sheet row number (rowNum+2).
+  // Reads all columns so we can locate the 'id' column dynamically,
+  // avoiding off-by-one errors when id is not in column A (e.g. fmXXX ingredients).
   await ensureToken();
-  const url=`${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(tab+'!A:A')}?majorDimension=ROWS`;
+  const url=`${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(tab+'!A:Z')}?majorDimension=ROWS`;
   const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken},keepalive:isUnloading});
   if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Sheets API error');}
-  const rows=((await res.json()).values||[]).slice(1); // drop header row
-  return rows.findIndex(row=>String(row[0]||'').trim()===id);
+  const values=(await res.json()).values||[];
+  if(values.length<2)return -1;
+  const hdrs=values[0].map(h=>String(h).trim());
+  const idCol=hdrs.indexOf('id');
+  if(idCol<0)return -1;
+  return values.slice(1).findIndex(row=>String(row[idCol]||'').trim()===id);
 }
 // Shows a brief status indicator without blocking the UI.
 
