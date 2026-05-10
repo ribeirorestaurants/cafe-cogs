@@ -638,6 +638,7 @@ async function loadAllData(){
     ]);
     ingredients=parseIngredients(ingRows);
     recipes=parseRecipes(recRows);
+    recomputeRecipeCosts();
     menuCategories=[...new Set(recipes.map(r=>r.category).filter(Boolean))].sort();
     ingCategories=[...new Set(ingredients.map(i=>i.category).filter(Boolean))].sort();
     isConnected=true;
@@ -976,9 +977,9 @@ function updateIngQty(i,v){currentIngredients[i].qty=parseFloat(v)||0;const cost
 function removeIng(i){currentIngredients.splice(i,1);renderRecipeIngredients();scheduleAutoSave();}
 function updateCostSummary(){
   const ic=recipeIngCost(currentIngredients),lm=parseFloat(document.getElementById('re-labor').value)||0,p=parseFloat(document.getElementById('re-price').value)||0;
-  const lc=(lm/60)*SETTINGS.laborRate,tc=ic+lc,tax=p*(SETTINGS.taxPct/100),fee=p*(SETTINGS.posPct/100)+SETTINGS.posFlatFee,mg=p>0?p-tc-tax-fee:0,cp=p>0?(tc/p*100):0;
+  const lc=(lm/60)*SETTINGS.laborRate,tc=ic+lc,mg=p-tc,cp=p>0?(tc/p*100):0;
   const si=statusInfo(cp,p);
-  document.getElementById('cost-summary').innerHTML=`<div class="cs-row"><span>Ingredient cost</span><span class="val">${fmt(ic)}</span></div><div class="cs-row"><span>Labor (${lm} min @ $${SETTINGS.laborRate}/hr)</span><span class="val">${fmt(lc)}</span></div><div class="cs-row total"><span>Total COGS</span><span class="val">${fmt(tc)}</span></div><div class="cs-row"><span>Sell price</span><span class="val">${p>0?fmt(p):'—'}</span></div><div class="cs-row"><span>COGS %</span><span class="val ${si.cls.split(' ')[1]||''}">${p>0?pct(cp):'—'}</span></div><div class="cs-row"><span>Act. Margin</span><span class="val cs-margin ${mg<0&&p>0?'bad':''}">${p>0?fmt(mg):'—'}</span></div>`;
+  document.getElementById('cost-summary').innerHTML=`<div class="cs-row"><span>Ingredient cost</span><span class="val">${fmt(ic)}</span></div><div class="cs-row"><span>Labor (${lm} min @ $${SETTINGS.laborRate}/hr)</span><span class="val">${fmt(lc)}</span></div><div class="cs-row total"><span>Total COGS</span><span class="val">${fmt(tc)}</span></div><div class="cs-row"><span>Sell price</span><span class="val">${p>0?fmt(p):'—'}</span></div><div class="cs-row"><span>COGS %</span><span class="val ${si.cls.split(' ')[1]||''}">${p>0?pct(cp):'—'}</span></div><div class="cs-row"><span>Margin</span><span class="val cs-margin">${p>0?fmt(mg):'—'}</span></div>`;
   const name=document.getElementById('re-name').value,cat=document.getElementById('re-cat').value,notes=document.getElementById('re-notes').value;
   const obj={id:currentRecipeId||'new',name,category:cat,sell_price:p,labor_min:lm,notes,cogs:+tc.toFixed(2),cogs_pct:+cp.toFixed(2),ingredients:currentIngredients.map(x=>{const i=getIngById(x.ing);return{id:x.ing,name:i?i.name:(x.name||x.ing),qty:x.qty,unit:x.unit};})};
   document.getElementById('re-json').textContent=JSON.stringify(obj,null,2);
