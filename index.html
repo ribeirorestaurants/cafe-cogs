@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -175,16 +175,16 @@ tbody tr:hover{background:var(--surface2)}
     <div class="topbar">
       <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-sub">Connect your Google Sheet to get started</div></div>
       <div style="display:flex;gap:8px">
-        <button class="btn" id="btn-refresh" onclick="loadAllData()" disabled>↻ Refresh</button>
+        <button class="btn" id="btn-refresh" onclick="loadAllData()" disabled>â†» Refresh</button>
         <button class="btn btn-dark" onclick="showPage('settings')">Settings</button>
       </div>
     </div>
     <div class="content" id="dash-content">
       <div class="empty-state">
-        <div class="empty-icon">📊</div>
+        <div class="empty-icon">ðŸ“Š</div>
         <div class="empty-title">No data loaded</div>
         <div class="empty-sub">Go to Settings, enter your Google Sheet ID and tab GIDs.<br>Data will load automatically once connected.</div>
-        <br><button class="btn btn-green" onclick="showPage('settings')" style="margin-top:8px">Go to Settings →</button>
+        <br><button class="btn btn-green" onclick="showPage('settings')" style="margin-top:8px">Go to Settings â†’</button>
       </div>
     </div>
   </div>
@@ -192,15 +192,15 @@ tbody tr:hover{background:var(--surface2)}
   <!-- MENU COGS -->
   <div id="page-menu" class="page">
     <div class="topbar">
-      <div><div class="page-title">Menu COGS</div><div class="page-sub" id="menu-sub">—</div></div>
+      <div><div class="page-title">Menu COGS</div><div class="page-sub" id="menu-sub">â€”</div></div>
       <div style="display:flex;gap:8px">
-        <button class="btn" onclick="document.getElementById('col-panel').style.display=document.getElementById('col-panel').style.display==='none'?'flex':'none'">Columns ▾</button>
+        <button class="btn" onclick="document.getElementById('col-panel').style.display=document.getElementById('col-panel').style.display==='none'?'flex':'none'">Columns â–¾</button>
         <button class="btn" onclick="exportCSV()">Export CSV</button>
       </div>
     </div>
     <div class="content">
       <div class="filter-row">
-        <input type="text" id="menu-search" placeholder="Search items…" oninput="renderMenu()">
+        <input type="text" id="menu-search" placeholder="Search itemsâ€¦" oninput="renderMenu()">
         <select id="menu-cat" onchange="renderMenu()"><option value="">All categories</option></select>
         <select id="menu-status" onchange="renderMenu()">
           <option value="">All statuses</option><option value="good">On target</option>
@@ -219,7 +219,7 @@ tbody tr:hover{background:var(--surface2)}
         <label class="col-toggle active" data-col="status">Status</label>
       </div>
       <div class="card" id="menu-table-wrap">
-        <div class="loading-state"><div class="spinner"></div><div class="loading-label">Waiting for data…</div></div>
+        <div class="loading-state"><div class="spinner"></div><div class="loading-label">Waiting for dataâ€¦</div></div>
       </div>
     </div>
   </div>
@@ -236,8 +236,8 @@ tbody tr:hover{background:var(--surface2)}
     </div>
     <div class="content">
       <div class="filter-row" style="margin-bottom:20px">
-        <input type="text" id="recipe-search" placeholder="Search for an item to edit…" oninput="filterRecipeSearch()">
-        <button class="btn btn-dark" onclick="loadSelectedRecipe()">Load ↵</button>
+        <input type="text" id="recipe-search" placeholder="Search for an item to editâ€¦" oninput="filterRecipeSearch()">
+        <button class="btn btn-dark" onclick="loadSelectedRecipe()">Load â†µ</button>
       </div>
       <div id="recipe-search-results" style="display:none;margin-bottom:16px"></div>
       <div class="two-col">
@@ -246,15 +246,15 @@ tbody tr:hover{background:var(--surface2)}
             <div class="card-header">Item details</div>
             <div class="card-body">
               <div class="form-grid-2" style="margin-bottom:0">
-                <div><label class="form-label">Item name</label><input class="form-input" id="re-name" placeholder="e.g. Oat Milk Latte"></div>
-                <div><label class="form-label">Category</label><select class="form-input" id="re-cat"></select></div>
+                <div><label class="form-label">Item name</label><input class="form-input" id="re-name" placeholder="e.g. Oat Milk Latte" oninput="scheduleAutoSave()"></div>
+                <div><label class="form-label">Category</label><select class="form-input" id="re-cat" onchange="scheduleAutoSave()"></select></div>
               </div>
               <div class="form-grid-2" style="margin-bottom:0">
-                <div><label class="form-label">Sell price ($)</label><input class="form-input" id="re-price" type="number" step="0.01" oninput="updateCostSummary()"></div>
-                <div><label class="form-label">Labor time (min)</label><input class="form-input" id="re-labor" type="number" step="0.5" value="2" oninput="updateCostSummary()"></div>
+                <div><label class="form-label">Sell price ($)</label><input class="form-input" id="re-price" type="number" step="0.01" oninput="updateCostSummary();scheduleAutoSave()"></div>
+                <div><label class="form-label">Labor time (min)</label><input class="form-input" id="re-labor" type="number" step="0.5" value="2" oninput="updateCostSummary();scheduleAutoSave()"></div>
               </div>
               <label class="form-label">Notes</label>
-              <input class="form-input" id="re-notes" placeholder="Optional…" style="margin-bottom:0">
+              <input class="form-input" id="re-notes" placeholder="Optional…" style="margin-bottom:0" oninput="scheduleAutoSave()">
             </div>
           </div>
           <div class="card">
@@ -297,11 +297,11 @@ tbody tr:hover{background:var(--surface2)}
     </div>
     <div class="content">
       <div class="filter-row">
-        <input type="text" id="ing-search" placeholder="Search ingredients…" oninput="renderIngredients()">
+        <input type="text" id="ing-search" placeholder="Search ingredientsâ€¦" oninput="renderIngredients()">
         <select id="ing-cat-filter" onchange="renderIngredients()"><option value="">All categories</option></select>
       </div>
       <div class="card" id="ing-table-wrap">
-        <div class="loading-state"><div class="spinner"></div><div class="loading-label">Waiting for data…</div></div>
+        <div class="loading-state"><div class="spinner"></div><div class="loading-label">Waiting for dataâ€¦</div></div>
       </div>
     </div>
   </div>
@@ -315,7 +315,7 @@ tbody tr:hover{background:var(--surface2)}
     <div class="content">
 
       <div class="settings-section">
-        <div class="settings-title">Google Sheets — OAuth connection</div>
+        <div class="settings-title">Google Sheets â€” OAuth connection</div>
         <div class="connect-card">
           <div style="margin-bottom:14px">
             <label class="form-label">Google OAuth Client ID</label>
@@ -323,7 +323,7 @@ tbody tr:hover{background:var(--surface2)}
               <input class="connect-input" id="client-id-input" placeholder="xxxxxxxxxxxx-xxxxxxxx.apps.googleusercontent.com">
               <button class="btn btn-green" onclick="saveClientId()">Save</button>
             </div>
-            <div style="font-size:11px;color:var(--text3);margin-top:5px;font-family:'DM Mono',monospace">From Google Cloud Console → APIs &amp; Services → Credentials → OAuth 2.0 Client ID</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px;font-family:'DM Mono',monospace">From Google Cloud Console â†’ APIs &amp; Services â†’ Credentials â†’ OAuth 2.0 Client ID</div>
           </div>
           <div style="margin-bottom:14px">
             <label class="form-label">Google Sheet ID</label>
@@ -338,10 +338,10 @@ tbody tr:hover{background:var(--surface2)}
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <button class="btn btn-green" id="btn-signin" onclick="signIn()">Sign in with Google</button>
             <button class="btn" id="btn-signout" onclick="signOut()" style="display:none">Sign out</button>
-            <button class="btn" onclick="loadAllData()" id="btn-pull" disabled>↓ Pull from sheet</button>
+            <button class="btn" onclick="loadAllData()" id="btn-pull" disabled>â†“ Pull from sheet</button>
           </div>
           <div class="sep"></div>
-          <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Troubleshooting — clear stored credentials</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Troubleshooting â€” clear stored credentials</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn" onclick="clearClientId()" style="color:var(--red)">Clear Client ID</button>
             <button class="btn" onclick="clearSheetId()" style="color:var(--red)">Clear Sheet ID</button>
@@ -351,9 +351,9 @@ tbody tr:hover{background:var(--surface2)}
       </div>
 
       <div class="settings-section">
-        <div class="settings-title">Troubleshooting — raw data preview</div>
+        <div class="settings-title">Troubleshooting â€” raw data preview</div>
         <div class="connect-card">
-          <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Shows the first row returned from each sheet tab — useful for verifying column names match.</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Shows the first row returned from each sheet tab â€” useful for verifying column names match.</div>
           <div style="display:flex;gap:8px;margin-bottom:12px">
             <button class="btn" onclick="debugSheetData()">Inspect sheet data</button>
           </div>
@@ -377,7 +377,7 @@ tbody tr:hover{background:var(--surface2)}
         <div class="card" style="padding:16px 18px">
           <div class="tag-list" id="menu-cats-tags"></div>
           <div style="margin-top:12px;display:flex;gap:8px">
-            <input style="flex:1;padding:7px 11px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none" id="new-menu-cat" placeholder="Add category…">
+            <input style="flex:1;padding:7px 11px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none" id="new-menu-cat" placeholder="Add categoryâ€¦">
             <button class="btn" onclick="addMenuCat()">Add</button>
           </div>
         </div>
@@ -388,7 +388,7 @@ tbody tr:hover{background:var(--surface2)}
         <div class="card" style="padding:16px 18px">
           <div class="tag-list" id="ing-cats-tags"></div>
           <div style="margin-top:12px;display:flex;gap:8px">
-            <input style="flex:1;padding:7px 11px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none" id="new-ing-cat" placeholder="Add category…">
+            <input style="flex:1;padding:7px 11px;font-size:13px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none" id="new-ing-cat" placeholder="Add categoryâ€¦">
             <button class="btn" onclick="addIngCat()">Add</button>
           </div>
         </div>
@@ -404,7 +404,7 @@ tbody tr:hover{background:var(--surface2)}
   <div class="modal">
     <div class="modal-title">Add ingredient</div>
     <label class="form-label">Search ingredient</label>
-    <input class="form-input" id="modal-ing-search" placeholder="Type to search…" autocomplete="off" oninput="filterIngredientSearch()">
+    <input class="form-input" id="modal-ing-search" placeholder="Type to searchâ€¦" autocomplete="off" oninput="filterIngredientSearch()">
     <div id="modal-ing-results" style="max-height:180px;overflow-y:auto;border:1px solid var(--border2);border-radius:var(--radius-sm);margin-bottom:14px;display:none"></div>
     <div id="modal-ing-selected" style="display:none;padding:8px 12px;background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius-sm);margin-bottom:14px;font-size:13px;align-items:center;justify-content:space-between">
       <span id="modal-ing-selected-name" style="font-weight:500"></span>
@@ -424,7 +424,7 @@ tbody tr:hover{background:var(--surface2)}
     <label class="form-label">Name</label><input class="form-input" id="ni-name">
     <div class="form-grid-2"><div><label class="form-label">Category</label><select class="form-input" id="ni-cat"></select></div><div><label class="form-label">Unit</label><input class="form-input" id="ni-unit"></div></div>
     <div class="form-grid-2"><div><label class="form-label">Pack size</label><input class="form-input" id="ni-pack-size" type="number"></div><div><label class="form-label">Pack cost ($)</label><input class="form-input" id="ni-pack-cost" type="number" step="0.01"></div></div>
-    <label class="form-label">Notes</label><input class="form-input" id="ni-notes" placeholder="Supplier, source, substitution notes…" style="margin-bottom:0">
+    <label class="form-label">Notes</label><input class="form-input" id="ni-notes" placeholder="Supplier, source, substitution notesâ€¦" style="margin-bottom:0">
     <div class="modal-footer"><button class="btn" onclick="closeModal('new-ing-modal')">Cancel</button><button class="btn btn-green" onclick="confirmNewIng()">Save</button></div>
   </div>
 </div>
@@ -435,13 +435,13 @@ tbody tr:hover{background:var(--surface2)}
     <label class="form-label">Name</label><input class="form-input" id="ei-name">
     <div class="form-grid-2"><div><label class="form-label">Category</label><select class="form-input" id="ei-cat"></select></div><div><label class="form-label">Unit</label><input class="form-input" id="ei-unit"></div></div>
     <div class="form-grid-2"><div><label class="form-label">Pack size</label><input class="form-input" id="ei-pack-size" type="number"></div><div><label class="form-label">Pack cost ($)</label><input class="form-input" id="ei-pack-cost" type="number" step="0.01"></div></div>
-    <label class="form-label">Notes</label><input class="form-input" id="ei-notes" placeholder="Supplier, source, substitution notes…" style="margin-bottom:0">
-    <div class="modal-footer"><button class="btn" onclick="closeModal('edit-ing-modal')">Cancel</button><button class="btn btn-green" onclick="confirmEditIng()">Save changes</button></div>
+    <label class="form-label">Notes</label><input class="form-input" id="ei-notes" placeholder="Supplier, source, substitution notesâ€¦" style="margin-bottom:0">
+    <div class="modal-footer"><button class="btn btn-green" onclick="confirmEditIng()">Done</button></div>
   </div>
 </div>
 
 <script>
-// ── STATE (no hardcoded data) ──────────────────────────────────
+// â”€â”€ STATE (no hardcoded data) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let recipes=[], ingredients=[], menuCategories=[], ingCategories=[];
 let currentRecipeId=null, currentIngredients=[];
 let sortCol=null, sortDir=1;
@@ -451,7 +451,7 @@ const SETTINGS={cogsPctTarget:30,laborRate:18,taxPct:6.5,posFlatFee:0.15,posPct:
 let SHEET_ID=localStorage.getItem('cogs_sheet_id')||'';
 let CLIENT_ID=localStorage.getItem('cogs_client_id')||'';
 
-// ── GOOGLE SHEETS API v4 (OAuth token) ────────────────────────
+// â”€â”€ GOOGLE SHEETS API v4 (OAuth token) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SHEETS_BASE='https://sheets.googleapis.com/v4/spreadsheets';
 
 async function sheetsGet(range){
@@ -479,7 +479,7 @@ async function sheetsAppend(range,rows){
   return await res.json();
 }
 
-// ── PUSH HELPERS ─────────────────────────────────────────────
+// â”€â”€ PUSH HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Called automatically whenever a record is saved locally.
 // Shows a brief status indicator without blocking the UI.
 
@@ -499,7 +499,7 @@ function recipeToRow(r){
 
 async function pushIngredient(ing){
   if(!accessToken||!SHEET_ID) return;
-  setSyncState('loading','Saving…');
+  setSyncState('loading','Savingâ€¦');
   try{
     // Find the row in the sheet by id
     const allRows = await sheetsGet('Ingredients!A:A');
@@ -512,14 +512,14 @@ async function pushIngredient(ing){
     const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setSyncState('connected','Saved '+t);
   }catch(e){
-    setSyncState('connected','Sync error — check console');
+    setSyncState('connected','Sync error â€” check console');
     console.error('pushIngredient failed:', e);
   }
 }
 
 async function pushRecipe(r){
   if(!accessToken||!SHEET_ID) return;
-  setSyncState('loading','Saving…');
+  setSyncState('loading','Savingâ€¦');
   try{
     const allRows = await sheetsGet('Recipes!A:A');
     const rowNum  = allRows.findIndex(row => row.id === r.id);
@@ -531,7 +531,7 @@ async function pushRecipe(r){
     const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setSyncState('connected','Saved '+t);
   }catch(e){
-    setSyncState('connected','Sync error — check console');
+    setSyncState('connected','Sync error â€” check console');
     console.error('pushRecipe failed:', e);
   }
 }
@@ -541,7 +541,7 @@ async function deleteSheetRow(tab, id){
   if(!accessToken||!SHEET_ID) return;
   const allRows = await sheetsGet(`${tab}!A:A`);
   const rowNum  = allRows.findIndex(r => r.id === id);
-  if(rowNum < 0) return; // not found in sheet — nothing to delete remotely
+  if(rowNum < 0) return; // not found in sheet â€” nothing to delete remotely
   // Use batchUpdate deleteDimension to remove the row entirely
   await ensureToken();
   const sheetMeta = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties`,
@@ -575,13 +575,13 @@ This will permanently remove it from your Google Sheet.`);
   renderRecipeMini();
   renderDashboard();
   // Remove from sheet
-  setSyncState('loading','Deleting…');
+  setSyncState('loading','Deletingâ€¦');
   try{
     await deleteSheetRow('Recipes', id);
     const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setSyncState('connected','Deleted '+t);
   }catch(e){
-    setSyncState('connected','Sync error — check console');
+    setSyncState('connected','Sync error â€” check console');
     console.error('deleteRecipe failed:',e);
   }
 }
@@ -605,13 +605,13 @@ This will permanently remove it from your Google Sheet.`;
   renderIngredients();
   if(currentRecipeId) updateCostSummary();
   // Remove from sheet
-  setSyncState('loading','Deleting…');
+  setSyncState('loading','Deletingâ€¦');
   try{
     await deleteSheetRow('Ingredients', id);
     const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setSyncState('connected','Deleted '+t);
   }catch(e){
-    setSyncState('connected','Sync error — check console');
+    setSyncState('connected','Sync error â€” check console');
     console.error('deleteIngredient failed:',e);
   }
 }
@@ -629,7 +629,7 @@ function rowsToObjects(rows){
 async function loadAllData(){
   if(!SHEET_ID){showPage('settings');return;}
   if(!accessToken){showPage('settings');showStatusMsg('connect-status','error','Not signed in. Click Sign in with Google.');return;}
-  setSyncState('loading','Loading…');
+  setSyncState('loading','Loadingâ€¦');
   document.getElementById('btn-refresh').disabled=true;
   try{
     const [recRows,ingRows]=await Promise.all([
@@ -670,7 +670,7 @@ function parseRecipes(rows){
     let rj=[];
     try{
       const parsed=JSON.parse(r.recipe_json||'[]');
-      // Normalise each ingredient entry — accept both 'ing' and 'id' as the ingredient key
+      // Normalise each ingredient entry â€” accept both 'ing' and 'id' as the ingredient key
       rj=parsed.map(x=>({
         ing:  x.ing||x.id||x.ingredient_id||'',
         name: x.name||x.ingredient_name||'',  // preserve name if stored in json
@@ -701,7 +701,7 @@ function parseRecipes(rows){
   }).filter(r=>r.id&&r.name);
 }
 
-// ── OAUTH 2.0 — Google Identity Services (implicit / token flow) ──
+// â”€â”€ OAUTH 2.0 â€” Google Identity Services (implicit / token flow) â”€â”€
 let tokenClient=null, accessToken=null, tokenExpiry=null;
 
 function initGIS(){
@@ -714,7 +714,7 @@ function initGIS(){
       accessToken=resp.access_token;
       tokenExpiry=Date.now()+(resp.expires_in-60)*1000;
       updateAuthButtons();
-      showStatusMsg('connect-status','success','Signed in. Loading data…');
+      showStatusMsg('connect-status','success','Signed in. Loading dataâ€¦');
       loadAllData();
     },
   });
@@ -724,7 +724,7 @@ function signIn(){
   if(!CLIENT_ID){showStatusMsg('connect-status','error','Enter your Client ID first.');return;}
   if(!SHEET_ID){showStatusMsg('connect-status','error','Enter your Sheet ID first.');return;}
   if(!tokenClient)initGIS();
-  if(!tokenClient){showStatusMsg('connect-status','error','GIS library not loaded yet — try again in a moment.');return;}
+  if(!tokenClient){showStatusMsg('connect-status','error','GIS library not loaded yet â€” try again in a moment.');return;}
   tokenClient.requestAccessToken({prompt:''});
 }
 
@@ -800,7 +800,7 @@ function updateAuthButtons(){
   if(pull)pull.disabled=!accessToken||!SHEET_ID;
 }
 
-// ── HELPERS ────────────────────────────────────────────────────
+// â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const fmt=n=>'$'+parseFloat(n).toFixed(2);
 const pct=n=>parseFloat(n).toFixed(1)+'%';
 const getIngById=id=>{
@@ -831,14 +831,18 @@ function setSyncState(cls,label){
   const d=document.getElementById('sync-dot');
   d.className='sync-dot'+(cls?' '+cls:'');
   document.getElementById('sync-label').textContent=label;
-  document.getElementById('brand-sub').textContent=cls==='connected'?'CONNECTED':cls==='loading'?'LOADING…':'NOT CONNECTED';
+  document.getElementById('brand-sub').textContent=cls==='connected'?'CONNECTED':cls==='loading'?'LOADINGâ€¦':'NOT CONNECTED';
 }
 function showStatusMsg(elId,type,html){
   const el=document.getElementById(elId);if(!el)return;
-  const ic={error:'✕',success:'✓',info:'ℹ'};
+  const ic={error:'âœ•',success:'âœ“',info:'â„¹'};
   el.innerHTML=`<div class="status-msg ${type}">${ic[type]||''} ${html}</div>`;
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
+function recomputeRecipeCosts(){recipes.forEach(r=>{const ic=recipeIngCost(r.recipeJson),lc=(r.laborMin/60)*SETTINGS.laborRate,tc=ic+lc,sp=r.sellPrice,cp=sp>0?tc/sp*100:0,tax=sp*(SETTINGS.taxPct/100),fee=sp*(SETTINGS.posPct/100)+SETTINGS.posFlatFee,am=sp-tc-tax-fee,tmp=sp>0?(tax+fee+tc)/sp*100:0,p30=tc>0?tc/0.30:0;r.cogs=+tc.toFixed(2);r.cogsPct=+cp.toFixed(2);r.actMargin=+am.toFixed(2);r.taxes=+tax.toFixed(2);r.fees=+fee.toFixed(2);r.totalMarginPct=+tmp.toFixed(2);r.price30=+p30.toFixed(2);});}
+let autoSaveTimer=null;
+function scheduleAutoSave(){if(!currentRecipeId)return;clearTimeout(autoSaveTimer);autoSaveTimer=setTimeout(()=>{const n=document.getElementById('re-name').value.trim();if(n)saveRecipe();},1500);}
+
 
 function showUsedIn(ingId){
   const ing = ingredients.find(i=>i.id===ingId);
@@ -850,25 +854,25 @@ function showUsedIn(ingId){
     ? '<div style="color:var(--text3);padding:8px 0;font-size:13px">Not used in any recipes.</div>'
     : usedRecipes.map(r=>{
         const item = r.recipeJson.find(x=>x.ing===ingId);
-        const qty  = item ? `${item.qty} ${item.unit}` : '—';
+        const qty  = item ? `${item.qty} ${item.unit}` : 'â€”';
         const cost = item && ingredients.find(i=>i.id===ingId)
-          ? fmt(costPerUnit(ing)*item.qty) : '—';
+          ? fmt(costPerUnit(ing)*item.qty) : 'â€”';
         const si   = statusInfo(r.cogsPct, r.sellPrice);
         return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:12px">
           <div>
             <div style="font-weight:500;font-size:13px">${r.name}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">${r.category} · ${qty} · ${cost}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${r.category} Â· ${qty} Â· ${cost}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
             <span class="pill ${si.cls.split(' ')[0]}">${si.label}</span>
-            <button class="btn" style="padding:3px 10px;font-size:12px" onclick="closeModal('used-in-modal');loadRecipeInEditor('${r.id}');showPage('recipe')">Edit ↗</button>
+            <button class="btn" style="padding:3px 10px;font-size:12px" onclick="closeModal('used-in-modal');loadRecipeInEditor('${r.id}');showPage('recipe')">Edit â†—</button>
           </div>
         </div>`;
       }).join('');
   modal.classList.add('open');
 }
 
-// ── NAVIGATION ─────────────────────────────────────────────────
+// â”€â”€ NAVIGATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -885,7 +889,7 @@ function refreshCurrentPage(name){
   if(name==='ingredients'){populateIngFilters();renderIngredients();}
 }
 
-// ── DASHBOARD ──────────────────────────────────────────────────
+// â”€â”€ DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderDashboard(){
   if(!recipes.length)return;
   const t=SETTINGS.cogsPctTarget,priced=recipes.filter(r=>r.sellPrice>0);
@@ -893,15 +897,15 @@ function renderDashboard(){
   const aboveTarget=priced.filter(r=>r.cogsPct>t).length,tbdCount=recipes.filter(r=>!r.sellPrice).length;
   const best=priced.slice().sort((a,b)=>b.actMargin-a.actMargin)[0];
   const worst=priced.slice().sort((a,b)=>b.cogsPct-a.cogsPct)[0];
-  document.getElementById('dash-sub').textContent=`${recipes.length} items · ${priced.length} priced · ${tbdCount} TBD`;
+  document.getElementById('dash-sub').textContent=`${recipes.length} items Â· ${priced.length} priced Â· ${tbdCount} TBD`;
   document.getElementById('dash-content').innerHTML=`
     <div class="metric-grid">
-      <div class="metric-card"><div class="metric-label">Avg COGS %</div><div class="metric-value ${avgCogs<=t?'good':'bad'}">${pct(avgCogs)}</div><div class="metric-sub">Target: &lt;${t}% · priced items</div></div>
-      <div class="metric-card"><div class="metric-label">Items tracked</div><div class="metric-value">${recipes.length}</div><div class="metric-sub">${priced.length} priced · ${tbdCount} need pricing</div></div>
-      <div class="metric-card"><div class="metric-label">Best margin</div><div class="metric-value good">${best?fmt(best.actMargin):'—'}</div><div class="metric-sub">${best?best.name:'—'}</div></div>
-      <div class="metric-card"><div class="metric-label">Highest COGS %</div><div class="metric-value bad">${worst?pct(worst.cogsPct):'—'}</div><div class="metric-sub">${worst?worst.name:'—'}</div></div>
+      <div class="metric-card"><div class="metric-label">Avg COGS %</div><div class="metric-value ${avgCogs<=t?'good':'bad'}">${pct(avgCogs)}</div><div class="metric-sub">Target: &lt;${t}% Â· priced items</div></div>
+      <div class="metric-card"><div class="metric-label">Items tracked</div><div class="metric-value">${recipes.length}</div><div class="metric-sub">${priced.length} priced Â· ${tbdCount} need pricing</div></div>
+      <div class="metric-card"><div class="metric-label">Best margin</div><div class="metric-value good">${best?fmt(best.actMargin):'â€”'}</div><div class="metric-sub">${best?best.name:'â€”'}</div></div>
+      <div class="metric-card"><div class="metric-label">Highest COGS %</div><div class="metric-value bad">${worst?pct(worst.cogsPct):'â€”'}</div><div class="metric-sub">${worst?worst.name:'â€”'}</div></div>
     </div>
-    ${aboveTarget||tbdCount?`<div class="alert">⚠ ${[aboveTarget?`${aboveTarget} item${aboveTarget>1?'s':''} above ${t}% COGS target`:'',tbdCount?`${tbdCount} item${tbdCount>1?'s':''} need a sell price`:''].filter(Boolean).join(' · ')}.</div>`:''}
+    ${aboveTarget||tbdCount?`<div class="alert">âš  ${[aboveTarget?`${aboveTarget} item${aboveTarget>1?'s':''} above ${t}% COGS target`:'',tbdCount?`${tbdCount} item${tbdCount>1?'s':''} need a sell price`:''].filter(Boolean).join(' Â· ')}.</div>`:''}
     <div class="two-col">
       <div class="card"><div class="card-header">Avg COGS % by category</div><div class="card-body" id="cat-chart"></div></div>
       <div class="card"><div class="card-header">Highest COGS % items</div><div class="card-body" id="worst-chart"></div></div>
@@ -915,12 +919,12 @@ function renderDashboard(){
   const maxC=catA.length?Math.max(...catA.map(c=>c.a)):1;
   document.getElementById('cat-chart').innerHTML=catA.map(({c,a})=>{const si=statusInfo(a,1);return`<div class="bar-row"><span class="bar-label">${c}</span><div class="bar-track"><div class="bar-fill" style="width:${(a/maxC*100).toFixed(0)}%;background:${si.bar}"></div></div><span class="bar-val ${si.cls.split(' ')[1]||''}">${pct(a)}</span></div>`;}).join('');
   const w5=priced.slice().sort((a,b)=>b.cogsPct-a.cogsPct).slice(0,5);const maxW=w5.length?w5[0].cogsPct:1;
-  document.getElementById('worst-chart').innerHTML=w5.map(r=>{const si=statusInfo(r.cogsPct,r.sellPrice);const n=r.name.length>20?r.name.slice(0,20)+'…':r.name;return`<div class="bar-row"><span class="bar-label" title="${r.name}">${n}</span><div class="bar-track"><div class="bar-fill" style="width:${(r.cogsPct/maxW*100).toFixed(0)}%;background:${si.bar}"></div></div><span class="bar-val ${si.cls.split(' ')[1]||''}">${pct(r.cogsPct)}</span></div>`;}).join('');
+  document.getElementById('worst-chart').innerHTML=w5.map(r=>{const si=statusInfo(r.cogsPct,r.sellPrice);const n=r.name.length>20?r.name.slice(0,20)+'â€¦':r.name;return`<div class="bar-row"><span class="bar-label" title="${r.name}">${n}</span><div class="bar-track"><div class="bar-fill" style="width:${(r.cogsPct/maxW*100).toFixed(0)}%;background:${si.bar}"></div></div><span class="bar-val ${si.cls.split(' ')[1]||''}">${pct(r.cogsPct)}</span></div>`;}).join('');
   const sorted=[...priced.slice().sort((a,b)=>b.cogsPct-a.cogsPct),...recipes.filter(r=>!r.sellPrice)];
-  document.getElementById('dash-body').innerHTML=sorted.map(r=>{const si=statusInfo(r.cogsPct,r.sellPrice);return`<tr style="cursor:pointer" onclick="loadRecipeInEditor('${r.id}');showPage('recipe')"><td><strong>${r.name}</strong></td><td><span class="pill pill-gray">${r.category}</span></td><td class="mono">${r.cogs>0?fmt(r.cogs):'—'}</td><td class="mono">${r.sellPrice>0?fmt(r.sellPrice):'—'}</td><td class="mono good">${r.actMargin>0?fmt(r.actMargin):'—'}</td><td class="mono ${si.cls.split(' ')[1]||''}">${r.sellPrice>0?pct(r.cogsPct):'—'}</td><td><span class="pill ${si.cls.split(' ')[0]}">${si.label}</span></td></tr>`;}).join('');
+  document.getElementById('dash-body').innerHTML=sorted.map(r=>{const si=statusInfo(r.cogsPct,r.sellPrice);return`<tr style="cursor:pointer" onclick="loadRecipeInEditor('${r.id}');showPage('recipe')"><td><strong>${r.name}</strong></td><td><span class="pill pill-gray">${r.category}</span></td><td class="mono">${r.cogs>0?fmt(r.cogs):'â€”'}</td><td class="mono">${r.sellPrice>0?fmt(r.sellPrice):'â€”'}</td><td class="mono good">${r.actMargin>0?fmt(r.actMargin):'â€”'}</td><td class="mono ${si.cls.split(' ')[1]||''}">${r.sellPrice>0?pct(r.cogsPct):'â€”'}</td><td><span class="pill ${si.cls.split(' ')[0]}">${si.label}</span></td></tr>`;}).join('');
 }
 
-// ── MENU COGS ──────────────────────────────────────────────────
+// â”€â”€ MENU COGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function populateMenuFilters(){
   document.getElementById('menu-cat').innerHTML='<option value="">All categories</option>'+menuCategories.map(c=>`<option value="${c}">${c}</option>`).join('');
 }
@@ -936,16 +940,16 @@ function renderMenu(){
   document.getElementById('menu-sub').textContent=`${f.length} of ${recipes.length} items`;
   const cols=[{k:'name',l:'Item',a:true},{k:'category',l:'Category',a:true},{k:'cogs',l:'COGS ($)',c:'cogs'},{k:'sellPrice',l:'Sell Price',c:'price'},{k:'actMargin',l:'Act. Margin',c:'margin'},{k:'cogsPct',l:'COGS %',c:'cogs_pct'},{k:'taxes',l:'Taxes',c:'taxes'},{k:'fees',l:'Fees',c:'fees'},{k:'totalMarginPct',l:'Total Margin %',c:'total_margin'},{k:'price30',l:'30% Price',c:'price30'},{k:'_st',l:'Status',c:'status'}];
   const vis=cols.filter(c=>c.a||visibleCols[c.c]);
-  const th=vis.map(c=>`<th onclick="sortMenu('${c.k}')">${c.l}${sortCol===c.k?(sortDir===1?' ▲':' ▼'):''}</th>`).join('');
-  const tb=f.map(r=>{const si=statusInfo(r.cogsPct,r.sellPrice);return`<tr style="cursor:pointer" onclick="loadRecipeInEditor('${r.id}');showPage('recipe')">${vis.map(c=>{if(c.k==='name')return`<td><strong>${r.name}</strong></td>`;if(c.k==='category')return`<td><span class="pill pill-gray">${r.category}</span></td>`;if(c.k==='cogs')return`<td class="mono">${r.cogs>0?fmt(r.cogs):'—'}</td>`;if(c.k==='sellPrice')return`<td class="mono">${r.sellPrice>0?fmt(r.sellPrice):'—'}</td>`;if(c.k==='actMargin')return`<td class="mono good">${r.actMargin>0?fmt(r.actMargin):'—'}</td>`;if(c.k==='cogsPct')return`<td class="mono ${si.cls.split(' ')[1]||''}">${r.sellPrice>0?pct(r.cogsPct):'—'}</td>`;if(c.k==='taxes')return`<td class="mono">${r.taxes>0?fmt(r.taxes):'—'}</td>`;if(c.k==='fees')return`<td class="mono">${r.fees>0?fmt(r.fees):'—'}</td>`;if(c.k==='totalMarginPct')return`<td class="mono">${r.sellPrice>0?pct(r.totalMarginPct):'—'}</td>`;if(c.k==='price30')return`<td class="mono">${r.price30>0?fmt(r.price30):'—'}</td>`;if(c.k==='_st')return`<td><span class="pill ${si.cls.split(' ')[0]}">${si.label}</span></td>`;return'<td>—</td>';}).join('')}</tr>`;}).join('')||`<tr><td colspan="${vis.length}" style="text-align:center;padding:32px;color:var(--text3)">No items found</td></tr>`;
+  const th=vis.map(c=>`<th onclick="sortMenu('${c.k}')">${c.l}${sortCol===c.k?(sortDir===1?' â–²':' â–¼'):''}</th>`).join('');
+  const tb=f.map(r=>{const si=statusInfo(r.cogsPct,r.sellPrice);return`<tr style="cursor:pointer" onclick="loadRecipeInEditor('${r.id}');showPage('recipe')">${vis.map(c=>{if(c.k==='name')return`<td><strong>${r.name}</strong></td>`;if(c.k==='category')return`<td><span class="pill pill-gray">${r.category}</span></td>`;if(c.k==='cogs')return`<td class="mono">${r.cogs>0?fmt(r.cogs):'â€”'}</td>`;if(c.k==='sellPrice')return`<td class="mono">${r.sellPrice>0?fmt(r.sellPrice):'â€”'}</td>`;if(c.k==='actMargin')return`<td class="mono good">${r.actMargin>0?fmt(r.actMargin):'â€”'}</td>`;if(c.k==='cogsPct')return`<td class="mono ${si.cls.split(' ')[1]||''}">${r.sellPrice>0?pct(r.cogsPct):'â€”'}</td>`;if(c.k==='taxes')return`<td class="mono">${r.taxes>0?fmt(r.taxes):'â€”'}</td>`;if(c.k==='fees')return`<td class="mono">${r.fees>0?fmt(r.fees):'â€”'}</td>`;if(c.k==='totalMarginPct')return`<td class="mono">${r.sellPrice>0?pct(r.totalMarginPct):'â€”'}</td>`;if(c.k==='price30')return`<td class="mono">${r.price30>0?fmt(r.price30):'â€”'}</td>`;if(c.k==='_st')return`<td><span class="pill ${si.cls.split(' ')[0]}">${si.label}</span></td>`;return'<td>â€”</td>';}).join('')}</tr>`;}).join('')||`<tr><td colspan="${vis.length}" style="text-align:center;padding:32px;color:var(--text3)">No items found</td></tr>`;
   document.getElementById('menu-table-wrap').innerHTML=`<div class="tbl-wrap"><table><thead><tr>${th}</tr></thead><tbody>${tb}</tbody></table></div>`;
   document.querySelectorAll('.col-toggle').forEach(el=>{el.onclick=()=>{el.classList.toggle('active');visibleCols[el.dataset.col]=el.classList.contains('active');renderMenu();};});
 }
 function sortMenu(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}renderMenu();}
 
-// ── RECIPE EDITOR ──────────────────────────────────────────────
+// â”€â”€ RECIPE EDITOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function populateRecipeCats(){document.getElementById('re-cat').innerHTML=menuCategories.map(c=>`<option value="${c}">${c}</option>`).join('');}
-function renderRecipeMini(){document.getElementById('recipe-list-mini').innerHTML=recipes.map(r=>`<tr><td style="padding:7px 12px;border-bottom:1px solid var(--border);cursor:pointer" onclick="loadRecipeInEditor('${r.id}')">${r.name}</td><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer" onclick="loadRecipeInEditor('${r.id}')">${r.cogs>0?fmt(r.cogs):'—'}</td><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer" onclick="loadRecipeInEditor('${r.id}')">${r.sellPrice>0?fmt(r.sellPrice):'—'}</td><td style="padding:4px 8px;border-bottom:1px solid var(--border);text-align:right"><button class="btn" style="padding:2px 8px;font-size:11px;color:var(--red);border-color:var(--red)" onclick="event.stopPropagation();deleteRecipe('${r.id}')">✕</button></td></tr>`).join('');}
+function renderRecipeMini(){document.getElementById('recipe-list-mini').innerHTML=recipes.map(r=>`<tr><td style="padding:7px 12px;border-bottom:1px solid var(--border);cursor:pointer" onclick="loadRecipeInEditor('${r.id}')">${r.name}</td><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer" onclick="loadRecipeInEditor('${r.id}')">${r.cogs>0?fmt(r.cogs):'â€”'}</td><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer" onclick="loadRecipeInEditor('${r.id}')">${r.sellPrice>0?fmt(r.sellPrice):'â€”'}</td><td style="padding:4px 8px;border-bottom:1px solid var(--border);text-align:right"><button class="btn" style="padding:2px 8px;font-size:11px;color:var(--red);border-color:var(--red)" onclick="event.stopPropagation();deleteRecipe('${r.id}')">âœ•</button></td></tr>`).join('');}
 function filterRecipeSearch(){
   const q=document.getElementById('recipe-search').value.toLowerCase();
   if(!q){document.getElementById('recipe-search-results').style.display='none';return;}
@@ -965,16 +969,16 @@ function loadRecipeInEditor(id){
   renderRecipeIngredients();updateCostSummary();
 }
 function renderRecipeIngredients(){
-  document.getElementById('re-ingredients').innerHTML=currentIngredients.map((item,i)=>{const ing=getIngById(item.ing);const c=ing?(costPerUnit(ing)*item.qty).toFixed(2):'—';const displayName=ing?ing.name:(item.name||item.ing);return`<div class="ing-row"><span class="ing-name">${displayName}</span><input class="ing-qty" type="number" step="0.01" value="${item.qty}" onchange="updateIngQty(${i},this.value)"><span class="ing-unit">${item.unit}</span><span class="ing-cost">${ing?'$'+c:'—'}</span><span class="ing-remove" onclick="removeIng(${i})">✕</span></div>`;}).join('')||`<div style="color:var(--text3);font-size:13px;padding:8px 0">No ingredients yet. Click + Add to begin.</div>`;
+  document.getElementById('re-ingredients').innerHTML=currentIngredients.map((item,i)=>{const ing=getIngById(item.ing);const c=ing?(costPerUnit(ing)*item.qty).toFixed(2):'â€”';const displayName=ing?ing.name:(item.name||item.ing);return`<div class="ing-row"><span class="ing-name">${displayName}</span><input class="ing-qty" type="number" step="0.01" value="${item.qty}" onchange="updateIngQty(${i},this.value)"><span class="ing-unit">${item.unit}</span><span class="ing-cost">${ing?'$'+c:'â€”'}</span><span class="ing-remove" onclick="removeIng(${i})">âœ•</span></div>`;}).join('')||`<div style="color:var(--text3);font-size:13px;padding:8px 0">No ingredients yet. Click + Add to begin.</div>`;
   updateCostSummary();
 }
-function updateIngQty(i,v){currentIngredients[i].qty=parseFloat(v)||0;updateCostSummary();}
-function removeIng(i){currentIngredients.splice(i,1);renderRecipeIngredients();}
+function updateIngQty(i,v){currentIngredients[i].qty=parseFloat(v)||0;updateCostSummary();scheduleAutoSave();}
+function removeIng(i){currentIngredients.splice(i,1);renderRecipeIngredients();scheduleAutoSave();}
 function updateCostSummary(){
   const ic=recipeIngCost(currentIngredients),lm=parseFloat(document.getElementById('re-labor').value)||0,p=parseFloat(document.getElementById('re-price').value)||0;
   const lc=(lm/60)*SETTINGS.laborRate,tc=ic+lc,mg=p-tc,cp=p>0?(tc/p*100):0;
   const si=statusInfo(cp,p);
-  document.getElementById('cost-summary').innerHTML=`<div class="cs-row"><span>Ingredient cost</span><span class="val">${fmt(ic)}</span></div><div class="cs-row"><span>Labor (${lm} min @ $${SETTINGS.laborRate}/hr)</span><span class="val">${fmt(lc)}</span></div><div class="cs-row total"><span>Total COGS</span><span class="val">${fmt(tc)}</span></div><div class="cs-row"><span>Sell price</span><span class="val">${p>0?fmt(p):'—'}</span></div><div class="cs-row"><span>COGS %</span><span class="val ${si.cls.split(' ')[1]||''}">${p>0?pct(cp):'—'}</span></div><div class="cs-row"><span>Margin</span><span class="val cs-margin">${p>0?fmt(mg):'—'}</span></div>`;
+  document.getElementById('cost-summary').innerHTML=`<div class="cs-row"><span>Ingredient cost</span><span class="val">${fmt(ic)}</span></div><div class="cs-row"><span>Labor (${lm} min @ $${SETTINGS.laborRate}/hr)</span><span class="val">${fmt(lc)}</span></div><div class="cs-row total"><span>Total COGS</span><span class="val">${fmt(tc)}</span></div><div class="cs-row"><span>Sell price</span><span class="val">${p>0?fmt(p):'â€”'}</span></div><div class="cs-row"><span>COGS %</span><span class="val ${si.cls.split(' ')[1]||''}">${p>0?pct(cp):'â€”'}</span></div><div class="cs-row"><span>Margin</span><span class="val cs-margin">${p>0?fmt(mg):'â€”'}</span></div>`;
   const name=document.getElementById('re-name').value,cat=document.getElementById('re-cat').value,notes=document.getElementById('re-notes').value;
   const obj={id:currentRecipeId||'new',name,category:cat,sell_price:p,labor_min:lm,notes,cogs:+tc.toFixed(2),cogs_pct:+cp.toFixed(2),ingredients:currentIngredients.map(x=>{const i=getIngById(x.ing);return{id:x.ing,name:i?i.name:(x.name||x.ing),qty:x.qty,unit:x.unit};})};
   document.getElementById('re-json').textContent=JSON.stringify(obj,null,2);
@@ -1004,18 +1008,18 @@ async function saveRecipe(){
 }
 function copyJSON(){navigator.clipboard.writeText(document.getElementById('re-json').textContent).then(()=>alert('Copied!'));}
 
-// ── INGREDIENTS ────────────────────────────────────────────────
+// â”€â”€ INGREDIENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function populateIngFilters(){document.getElementById('ing-cat-filter').innerHTML='<option value="">All categories</option>'+ingCategories.map(c=>`<option value="${c}">${c}</option>`).join('');}
 function renderIngredients(){
   const q=document.getElementById('ing-search').value.toLowerCase(),cat=document.getElementById('ing-cat-filter').value;
   const f=ingredients.filter(i=>{if(q&&!i.name.toLowerCase().includes(q))return false;if(cat&&i.category!==cat)return false;return true;});
-  const rows=f.map(ing=>{const cpu=costPerUnit(ing),used=usedInCount(ing.id);return`<tr><td><strong>${ing.name}</strong></td><td><span class="pill pill-gray">${ing.category}</span></td><td class="mono">${ing.unit}</td><td class="mono">${ing.packSize}</td><td class="mono">${fmt(ing.packCost)}</td><td class="mono">$${cpu.toFixed(4)}/${ing.unit}</td><td><span onclick="showUsedIn('${ing.id}')" style="cursor:pointer;color:var(--blue);text-decoration:underline;text-underline-offset:2px;font-size:13px" title="Click to see recipes">${used} recipe${used!==1?'s':''}</span></td><td style="color:var(--text3);font-size:12px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${ing.notes||''}">${ing.notes||'—'}</td><td style="white-space:nowrap;display:flex;gap:6px;padding:9px 12px"><button class="btn" style="padding:4px 10px;font-size:12px" onclick="openEditIngModal('${ing.id}')">Edit</button><button class="btn" style="padding:4px 10px;font-size:12px;color:var(--red);border-color:var(--red)" onclick="deleteIngredient('${ing.id}')">Delete</button></td></tr>`;}).join('')||`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No ingredients found</td></tr>`;
+  const rows=f.map(ing=>{const cpu=costPerUnit(ing),used=usedInCount(ing.id);return`<tr><td><strong>${ing.name}</strong></td><td><span class="pill pill-gray">${ing.category}</span></td><td class="mono">${ing.unit}</td><td class="mono">${ing.packSize}</td><td class="mono">${fmt(ing.packCost)}</td><td class="mono">$${cpu.toFixed(4)}/${ing.unit}</td><td><span onclick="showUsedIn('${ing.id}')" style="cursor:pointer;color:var(--blue);text-decoration:underline;text-underline-offset:2px;font-size:13px" title="Click to see recipes">${used} recipe${used!==1?'s':''}</span></td><td style="color:var(--text3);font-size:12px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${ing.notes||''}">${ing.notes||'â€”'}</td><td style="white-space:nowrap;display:flex;gap:6px;padding:9px 12px"><button class="btn" style="padding:4px 10px;font-size:12px" onclick="openEditIngModal('${ing.id}')">Edit</button><button class="btn" style="padding:4px 10px;font-size:12px;color:var(--red);border-color:var(--red)" onclick="deleteIngredient('${ing.id}')">Delete</button></td></tr>`;}).join('')||`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No ingredients found</td></tr>`;
   document.getElementById('ing-table-wrap').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>Ingredient</th><th>Category</th><th>Unit</th><th>Pack size</th><th>Pack cost</th><th>Cost/unit</th><th>Used in</th><th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function openNewIngModal(){document.getElementById('ni-cat').innerHTML=ingCategories.map(c=>`<option value="${c}">${c}</option>`).join('');['ni-name','ni-unit','ni-pack-size','ni-pack-cost','ni-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('new-ing-modal').classList.add('open');}
 async function confirmNewIng(){const name=document.getElementById('ni-name').value.trim();if(!name){alert('Name required');return;}const ing={id:'ing'+Date.now(),name,category:document.getElementById('ni-cat').value,unit:document.getElementById('ni-unit').value,packSize:parseFloat(document.getElementById('ni-pack-size').value)||1,packCost:parseFloat(document.getElementById('ni-pack-cost').value)||0,notes:document.getElementById('ni-notes').value};ingredients.push(ing);if(!ingCategories.includes(ing.category))ingCategories.push(ing.category);closeModal('new-ing-modal');renderIngredients();pushIngredient(ing);}
 function openEditIngModal(id){const ing=getIngById(id);if(!ing)return;document.getElementById('ei-id').value=id;document.getElementById('ei-name').value=ing.name;document.getElementById('ei-unit').value=ing.unit;document.getElementById('ei-pack-size').value=ing.packSize;document.getElementById('ei-pack-cost').value=ing.packCost;document.getElementById('ei-cat').innerHTML=ingCategories.map(c=>`<option value="${c}" ${c===ing.category?'selected':''}>${c}</option>`).join('');document.getElementById('ei-notes').value=ing.notes||'';document.getElementById('edit-ing-modal').classList.add('open');}
-async function confirmEditIng(){const id=document.getElementById('ei-id').value;const idx=ingredients.findIndex(i=>i.id===id);if(idx<0)return;ingredients[idx]={...ingredients[idx],name:document.getElementById('ei-name').value,category:document.getElementById('ei-cat').value,unit:document.getElementById('ei-unit').value,packSize:parseFloat(document.getElementById('ei-pack-size').value)||1,packCost:parseFloat(document.getElementById('ei-pack-cost').value)||0,notes:document.getElementById('ei-notes').value};closeModal('edit-ing-modal');renderIngredients();if(currentRecipeId)updateCostSummary();pushIngredient(ingredients[idx]);}
+async function confirmEditIng(){const id=document.getElementById('ei-id').value;const idx=ingredients.findIndex(i=>i.id===id);if(idx<0)return;ingredients[idx]={...ingredients[idx],name:document.getElementById('ei-name').value,category:document.getElementById('ei-cat').value,unit:document.getElementById('ei-unit').value,packSize:parseFloat(document.getElementById('ei-pack-size').value)||1,packCost:parseFloat(document.getElementById('ei-pack-cost').value)||0,notes:document.getElementById('ei-notes').value};recomputeRecipeCosts();closeModal('edit-ing-modal');renderIngredients();if(currentRecipeId)renderRecipeIngredients();pushIngredient(ingredients[idx]);}
 function openAddIngModal(){
   document.getElementById('modal-ing-search').value='';
   document.getElementById('modal-ing-results').style.display='none';
@@ -1072,7 +1076,7 @@ function confirmAddIng(){
   renderRecipeIngredients();
 }
 
-// ── SETTINGS ────────────────────────────────────────────────────
+// â”€â”€ SETTINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderSettings(){
   document.getElementById('client-id-input').value=CLIENT_ID;
   document.getElementById('sheet-id-input').value=SHEET_ID;
@@ -1084,7 +1088,7 @@ function renderSettings(){
   renderCatTags('menu-cats-tags',menuCategories,'menu');
   renderCatTags('ing-cats-tags',ingCategories,'ing');
   updateAuthButtons();
-  if(isConnected)showStatusMsg('connect-status','success','Connected · data loaded from sheet.');
+  if(isConnected)showStatusMsg('connect-status','success','Connected Â· data loaded from sheet.');
   else if(CLIENT_ID&&SHEET_ID&&accessToken)showStatusMsg('connect-status','info','Authenticated. Click Pull from sheet.');
   else if(CLIENT_ID&&SHEET_ID)showStatusMsg('connect-status','info','Client ID and Sheet ID saved. Click Sign in with Google.');
   else showStatusMsg('connect-status','info','Enter your Client ID and Sheet ID to get started.');
@@ -1092,8 +1096,8 @@ function renderSettings(){
 async function debugSheetData(){
   const el=document.getElementById('debug-output');
   el.style.display='block';
-  el.textContent='Fetching…';
-  if(!accessToken||!SHEET_ID){el.textContent='Not connected — sign in first.';return;}
+  el.textContent='Fetchingâ€¦';
+  if(!accessToken||!SHEET_ID){el.textContent='Not connected â€” sign in first.';return;}
   try{
     const [rRaw,iRaw]=await Promise.all([
       sheetsGet('Recipes!A:Z'),
@@ -1129,15 +1133,15 @@ async function debugSheetData(){
 }
 
 function saveSettings(){SETTINGS.cogsPctTarget=parseFloat(document.getElementById('target-cogs').value)||30;SETTINGS.laborRate=parseFloat(document.getElementById('target-labor').value)||18;SETTINGS.taxPct=parseFloat(document.getElementById('target-tax').value)||6.5;SETTINGS.posFlatFee=parseFloat(document.getElementById('target-pos-flat').value)||0.15;SETTINGS.posPct=parseFloat(document.getElementById('target-pos-pct').value)||2.6;localStorage.setItem('cogs_settings',JSON.stringify(SETTINGS));alert('Settings saved.');}
-function renderCatTags(el,arr,type){document.getElementById(el).innerHTML=arr.map(c=>`<div class="tag">${c} <span class="tag-x" onclick="removeCat('${type}','${c}')">✕</span></div>`).join('');}
+function renderCatTags(el,arr,type){document.getElementById(el).innerHTML=arr.map(c=>`<div class="tag">${c} <span class="tag-x" onclick="removeCat('${type}','${c}')">âœ•</span></div>`).join('');}
 function removeCat(t,c){if(t==='menu')menuCategories=menuCategories.filter(x=>x!==c);else ingCategories=ingCategories.filter(x=>x!==c);renderSettings();}
 function addMenuCat(){const v=document.getElementById('new-menu-cat').value.trim();if(v&&!menuCategories.includes(v)){menuCategories.push(v);document.getElementById('new-menu-cat').value='';renderSettings();}}
 function addIngCat(){const v=document.getElementById('new-ing-cat').value.trim();if(v&&!ingCategories.includes(v)){ingCategories.push(v);document.getElementById('new-ing-cat').value='';renderSettings();}}
 
-// ── EXPORT ─────────────────────────────────────────────────────
+// â”€â”€ EXPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function exportCSV(){const h=['id','name','category','sell_price','cogs','cogs_pct','act_margin','taxes','fees','total_margin_pct','price_at_30pct','recipe_json'];const r=recipes.map(r=>[`"${r.id}"`,`"${r.name}"`,`"${r.category}"`,r.sellPrice,r.cogs,r.cogsPct.toFixed(2)+'%',r.actMargin,r.taxes,r.fees,r.totalMarginPct.toFixed(2)+'%',r.price30,`"${JSON.stringify(r.recipeJson).replace(/"/g,'""')}"`]);const csv=[h.join(','),...r.map(x=>x.join(','))].join('\n');const b=new Blob([csv],{type:'text/csv'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='cogs_export.csv';a.click();URL.revokeObjectURL(u);}
 
-// ── INIT ───────────────────────────────────────────────────────
+// â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 try{const s=localStorage.getItem('cogs_settings');if(s)Object.assign(SETTINGS,JSON.parse(s));}catch(e){}
 window.addEventListener('load',()=>{if(CLIENT_ID&&typeof google!=='undefined'&&google.accounts)initGIS();});
 setSyncState('','Not connected');
@@ -1158,3 +1162,6 @@ if(!CLIENT_ID||!SHEET_ID)setTimeout(()=>showPage('settings'),100);
 
 </body>
 </html>
+
+
+
