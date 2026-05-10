@@ -231,6 +231,7 @@ tbody tr:hover{background:var(--surface2)}
       <div style="display:flex;gap:8px">
         <button class="btn" style="color:var(--red);border-color:var(--red)" onclick="deleteCurrentRecipe()">Delete</button>
         <button class="btn" onclick="newRecipe()">+ New item</button>
+        <button class="btn" onclick="saveRecipe()">Push to sheet ↑</button>
         <button class="btn btn-green" onclick="saveRecipe()">Save recipe</button>
       </div>
     </div>
@@ -249,9 +250,10 @@ tbody tr:hover{background:var(--surface2)}
                 <div><label class="form-label">Item name</label><input class="form-input" id="re-name" placeholder="e.g. Oat Milk Latte" oninput="scheduleAutoSave()"></div>
                 <div><label class="form-label">Category</label><select class="form-input" id="re-cat" onchange="scheduleAutoSave()"></select></div>
               </div>
-              <div class="form-grid-2" style="margin-bottom:0">
+              <div class="form-grid-2" style="margin-bottom:0;grid-template-columns:1fr 1fr 1fr">
                 <div><label class="form-label">Sell price ($)</label><input class="form-input" id="re-price" type="number" step="0.5" oninput="updateCostSummary();scheduleAutoSave()"></div>
                 <div><label class="form-label">Labor time (min)</label><input class="form-input" id="re-labor" type="number" step="0.5" value="2" oninput="updateCostSummary();scheduleAutoSave()"></div>
+                <div><label class="form-label">Serving size</label><input class="form-input" id="re-serving" type="number" step="1" min="1" value="1" oninput="updateCostSummary();scheduleAutoSave()"></div>
               </div>
               <label class="form-label">Notes</label>
               <input class="form-input" id="re-notes" placeholder="Optional�" style="margin-bottom:0" oninput="scheduleAutoSave()">
@@ -493,8 +495,8 @@ function ingToRow(ing){
 
 function recipeToRow(r){
   // Column order must match Recipes tab headers:
-  // id | name | category | sell_price | labor_min | notes | cogs | cogs_pct | act_margin | taxes | fees | total_margin_pct | price_at_30pct | recipe_json
-  return [r.id, r.name, r.category, r.sellPrice, r.laborMin, r.notes||'', r.cogs, r.cogsPct/100, r.actMargin, r.taxes, r.fees, r.totalMarginPct/100, r.price30, JSON.stringify(r.recipeJson)];
+  // id | name | category | sell_price | labor_min | notes | cogs | cogs_pct | act_margin | taxes | fees | total_margin_pct | price_at_30pct | recipe_json | serving_size
+  return [r.id, r.name, r.category, r.sellPrice, r.laborMin, r.notes||'', r.cogs, r.cogsPct/100, r.actMargin, r.taxes, r.fees, r.totalMarginPct/100, r.price30, JSON.stringify(r.recipeJson), r.servingSize||1];
 }
 
 async function pushIngredient(ing){
@@ -524,9 +526,9 @@ async function pushRecipe(r){
     const allRows = await sheetsGet('Recipes!A:A');
     const rowNum  = allRows.findIndex(row => row.id === r.id);
     if(rowNum >= 0){
-      await sheetsUpdate(`Recipes!A${rowNum+2}:N${rowNum+2}`, [recipeToRow(r)]);
+      await sheetsUpdate(`Recipes!A${rowNum+2}:O${rowNum+2}`, [recipeToRow(r)]);
     } else {
-      await sheetsAppend('Recipes!A:N', [recipeToRow(r)]);
+      await sheetsAppend('Recipes!A:O', [recipeToRow(r)]);
     }
     const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setSyncState('connected','Saved '+t);
@@ -697,6 +699,7 @@ function parseRecipes(rows){
       fees:           parseFloat(r.fees)||0,
       totalMarginPct: rawMarginPct < 2 ? rawMarginPct * 100 : rawMarginPct,
       price30:        parseFloat(r.price_at_30pct||r['price at 30pct']||r.price_30||0)||0,
+      servingSize:    parseFloat(r.serving_size)||1,
       recipeJson:     rj,
     };
   }).filter(r=>r.id&&r.name);
@@ -840,7 +843,7 @@ function showStatusMsg(elId,type,html){
   el.innerHTML=`<div class="status-msg ${type}">${ic[type]||''} ${html}</div>`;
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-function recomputeRecipeCosts(){recipes.forEach(r=>{const ic=recipeIngCost(r.recipeJson),lc=(r.laborMin/60)*SETTINGS.laborRate,tc=ic+lc,sp=r.sellPrice,cp=sp>0?tc/sp*100:0,tax=sp*(SETTINGS.taxPct/100),fee=sp*(SETTINGS.posPct/100)+SETTINGS.posFlatFee,am=sp-tc-tax-fee,tmp=sp>0?(tax+fee+tc)/sp*100:0,p30=tc>0?tc/0.30:0;r.cogs=+tc.toFixed(2);r.cogsPct=+cp.toFixed(2);r.actMargin=+am.toFixed(2);r.taxes=+tax.toFixed(2);r.fees=+fee.toFixed(2);r.totalMarginPct=+tmp.toFixed(2);r.price30=+p30.toFixed(2);});}
+function recomputeRecipeCosts(){recipes.forEach(r=>{const sv=r.servingSize||1,ic=recipeIngCost(r.recipeJson),lc=(r.laborMin/60)*SETTINGS.laborRate,tc=(ic+lc)/sv,sp=r.sellPrice,cp=sp>0?tc/sp*100:0,tax=sp*(SETTINGS.taxPct/100),fee=sp*(SETTINGS.posPct/100)+SETTINGS.posFlatFee,am=sp-tc-tax-fee,tmp=sp>0?(tax+fee+tc)/sp*100:0,p30=tc>0?tc/0.30:0;r.cogs=+tc.toFixed(2);r.cogsPct=+cp.toFixed(2);r.actMargin=+am.toFixed(2);r.taxes=+tax.toFixed(2);r.fees=+fee.toFixed(2);r.totalMarginPct=+tmp.toFixed(2);r.price30=+p30.toFixed(2);});}
 let autoSaveTimer=null;
 function scheduleAutoSave(){if(!currentRecipeId)return;clearTimeout(autoSaveTimer);autoSaveTimer=setTimeout(()=>{const n=document.getElementById('re-name').value.trim();if(n)saveRecipe();},1500);}
 
@@ -963,7 +966,7 @@ function loadRecipeInEditor(id){
   const r=recipes.find(x=>x.id===id);if(!r)return;
   currentRecipeId=id;
   document.getElementById('re-name').value=r.name;document.getElementById('re-cat').value=r.category;
-  document.getElementById('re-price').value=r.sellPrice||'';document.getElementById('re-labor').value=r.laborMin||2;
+  document.getElementById('re-price').value=r.sellPrice||'';document.getElementById('re-labor').value=r.laborMin||2;document.getElementById('re-serving').value=r.servingSize||1;
   document.getElementById('re-notes').value=r.notes||'';
   currentIngredients=r.recipeJson?JSON.parse(JSON.stringify(r.recipeJson)):[];
   document.getElementById('recipe-search').value=r.name;document.getElementById('recipe-search-results').style.display='none';
@@ -976,10 +979,10 @@ function renderRecipeIngredients(){
 function updateIngQty(i,v){currentIngredients[i].qty=parseFloat(v)||0;const costs=document.querySelectorAll('#re-ingredients .ing-cost');if(costs[i]){const ing=getIngById(currentIngredients[i].ing);costs[i].textContent=ing?'$'+(costPerUnit(ing)*(parseFloat(v)||0)).toFixed(2):'-';}updateCostSummary();scheduleAutoSave();}
 function removeIng(i){currentIngredients.splice(i,1);renderRecipeIngredients();scheduleAutoSave();}
 function updateCostSummary(){
-  const ic=recipeIngCost(currentIngredients),lm=parseFloat(document.getElementById('re-labor').value)||0,p=parseFloat(document.getElementById('re-price').value)||0;
-  const lc=(lm/60)*SETTINGS.laborRate,tc=ic+lc,mg=p-tc,cp=p>0?(tc/p*100):0;
-  const si=statusInfo(cp,p);
-  document.getElementById('cost-summary').innerHTML=`<div class="cs-row"><span>Ingredient cost</span><span class="val">${fmt(ic)}</span></div><div class="cs-row"><span>Labor (${lm} min @ $${SETTINGS.laborRate}/hr)</span><span class="val">${fmt(lc)}</span></div><div class="cs-row total"><span>Total COGS</span><span class="val">${fmt(tc)}</span></div><div class="cs-row"><span>Sell price</span><span class="val">${p>0?fmt(p):'—'}</span></div><div class="cs-row"><span>COGS %</span><span class="val ${si.cls.split(' ')[1]||''}">${p>0?pct(cp):'—'}</span></div><div class="cs-row"><span>Margin</span><span class="val cs-margin">${p>0?fmt(mg):'—'}</span></div>`;
+  const ic=recipeIngCost(currentIngredients),lm=parseFloat(document.getElementById('re-labor').value)||0,p=parseFloat(document.getElementById('re-price').value)||0,sv=parseFloat(document.getElementById('re-serving').value)||1;
+  const lc=(lm/60)*SETTINGS.laborRate,tc=(ic+lc)/sv,mg=p-tc,cp=p>0?(tc/p*100):0;
+  const si=statusInfo(cp,p),per=sv>1?' / serving':'';
+  document.getElementById('cost-summary').innerHTML=`<div class="cs-row"><span>Ingredient cost${per}</span><span class="val">${fmt(ic/sv)}</span></div><div class="cs-row"><span>Labor (${lm} min @ $${SETTINGS.laborRate}/hr)${per}</span><span class="val">${fmt(lc/sv)}</span></div><div class="cs-row total"><span>Total COGS${per}</span><span class="val">${fmt(tc)}</span></div><div class="cs-row"><span>Sell price</span><span class="val">${p>0?fmt(p):'—'}</span></div><div class="cs-row"><span>COGS %</span><span class="val ${si.cls.split(' ')[1]||''}">${p>0?pct(cp):'—'}</span></div><div class="cs-row"><span>Margin</span><span class="val cs-margin">${p>0?fmt(mg):'—'}</span></div>`;
   const name=document.getElementById('re-name').value,cat=document.getElementById('re-cat').value,notes=document.getElementById('re-notes').value;
   const obj={id:currentRecipeId||'new',name,category:cat,sell_price:p,labor_min:lm,notes,cogs:+tc.toFixed(2),cogs_pct:+cp.toFixed(2),ingredients:currentIngredients.map(x=>{const i=getIngById(x.ing);return{id:x.ing,name:i?i.name:(x.name||x.ing),qty:x.qty,unit:x.unit};})};
   document.getElementById('re-json').textContent=JSON.stringify(obj,null,2);
@@ -992,17 +995,18 @@ function deleteCurrentRecipe(){
   currentIngredients=[];
   ['re-name','re-price','re-notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('re-labor').value='2';
+  document.getElementById('re-serving').value='1';
   renderRecipeIngredients();
   updateCostSummary();
 }
 
-function newRecipe(){currentRecipeId='new_'+Date.now();currentIngredients=[];['re-name','re-price','re-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('re-labor').value='2';renderRecipeIngredients();updateCostSummary();}
+function newRecipe(){currentRecipeId='new_'+Date.now();currentIngredients=[];['re-name','re-price','re-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('re-labor').value='2';document.getElementById('re-serving').value='1';renderRecipeIngredients();updateCostSummary();}
 async function saveRecipe(){
   const name=document.getElementById('re-name').value.trim();if(!name){alert('Please enter an item name.');return;}
-  const cat=document.getElementById('re-cat').value,sp=parseFloat(document.getElementById('re-price').value)||0,lm=parseFloat(document.getElementById('re-labor').value)||0,notes=document.getElementById('re-notes').value;
-  const ic=recipeIngCost(currentIngredients),lc=(lm/60)*SETTINGS.laborRate,tc=ic+lc,cp=sp>0?tc/sp*100:0;
+  const cat=document.getElementById('re-cat').value,sp=parseFloat(document.getElementById('re-price').value)||0,lm=parseFloat(document.getElementById('re-labor').value)||0,notes=document.getElementById('re-notes').value,sv=parseFloat(document.getElementById('re-serving').value)||1;
+  const ic=recipeIngCost(currentIngredients),lc=(lm/60)*SETTINGS.laborRate,tc=(ic+lc)/sv,cp=sp>0?tc/sp*100:0;
   const tax=sp*(SETTINGS.taxPct/100),fee=sp*(SETTINGS.posPct/100)+SETTINGS.posFlatFee,am=sp-tc-tax-fee,tmp=sp>0?(tax+fee+tc)/sp*100:0,p30=tc>0?tc/0.30:0;
-  const updated={id:currentRecipeId,name,category:cat,sellPrice:sp,laborMin:lm,notes,cogs:+tc.toFixed(2),cogsPct:+cp.toFixed(2),actMargin:+am.toFixed(2),taxes:+tax.toFixed(2),fees:+fee.toFixed(2),totalMarginPct:+tmp.toFixed(2),price30:+p30.toFixed(2),recipeJson:JSON.parse(JSON.stringify(currentIngredients))};
+  const updated={id:currentRecipeId,name,category:cat,sellPrice:sp,laborMin:lm,notes,servingSize:sv,cogs:+tc.toFixed(2),cogsPct:+cp.toFixed(2),actMargin:+am.toFixed(2),taxes:+tax.toFixed(2),fees:+fee.toFixed(2),totalMarginPct:+tmp.toFixed(2),price30:+p30.toFixed(2),recipeJson:JSON.parse(JSON.stringify(currentIngredients))};
   const idx=recipes.findIndex(r=>r.id===currentRecipeId);if(idx>=0)recipes[idx]=updated;else recipes.push(updated);
   renderRecipeMini();
   pushRecipe(updated);
@@ -1020,7 +1024,7 @@ function renderIngredients(){
 function openNewIngModal(){document.getElementById('ni-cat').innerHTML=ingCategories.map(c=>`<option value="${c}">${c}</option>`).join('');['ni-name','ni-unit','ni-pack-size','ni-pack-cost','ni-notes'].forEach(id=>document.getElementById(id).value='');document.getElementById('new-ing-modal').classList.add('open');}
 async function confirmNewIng(){const name=document.getElementById('ni-name').value.trim();if(!name){alert('Name required');return;}const ing={id:'ing'+Date.now(),name,category:document.getElementById('ni-cat').value,unit:document.getElementById('ni-unit').value,packSize:parseFloat(document.getElementById('ni-pack-size').value)||1,packCost:parseFloat(document.getElementById('ni-pack-cost').value)||0,notes:document.getElementById('ni-notes').value};ingredients.push(ing);if(!ingCategories.includes(ing.category))ingCategories.push(ing.category);closeModal('new-ing-modal');renderIngredients();pushIngredient(ing);}
 function openEditIngModal(id){const ing=getIngById(id);if(!ing)return;document.getElementById('ei-id').value=id;document.getElementById('ei-name').value=ing.name;document.getElementById('ei-unit').value=ing.unit;document.getElementById('ei-pack-size').value=ing.packSize;document.getElementById('ei-pack-cost').value=ing.packCost;document.getElementById('ei-cat').innerHTML=ingCategories.map(c=>`<option value="${c}" ${c===ing.category?'selected':''}>${c}</option>`).join('');document.getElementById('ei-notes').value=ing.notes||'';document.getElementById('edit-ing-modal').classList.add('open');}
-async function confirmEditIng(){const id=document.getElementById('ei-id').value;const idx=ingredients.findIndex(i=>i.id===id);if(idx<0)return;ingredients[idx]={...ingredients[idx],name:document.getElementById('ei-name').value,category:document.getElementById('ei-cat').value,unit:document.getElementById('ei-unit').value,packSize:parseFloat(document.getElementById('ei-pack-size').value)||1,packCost:parseFloat(document.getElementById('ei-pack-cost').value)||0,notes:document.getElementById('ei-notes').value};recomputeRecipeCosts();closeModal('edit-ing-modal');renderIngredients();if(currentRecipeId)renderRecipeIngredients();pushIngredient(ingredients[idx]);}
+async function confirmEditIng(){const id=document.getElementById('ei-id').value;const idx=ingredients.findIndex(i=>i.id===id);if(idx<0)return;ingredients[idx]={...ingredients[idx],name:document.getElementById('ei-name').value,category:document.getElementById('ei-cat').value,unit:document.getElementById('ei-unit').value,packSize:parseFloat(document.getElementById('ei-pack-size').value)||1,packCost:parseFloat(document.getElementById('ei-pack-cost').value)||0,notes:document.getElementById('ei-notes').value};recomputeRecipeCosts();closeModal('edit-ing-modal');renderIngredients();if(currentRecipeId)renderRecipeIngredients();pushIngredient(ingredients[idx]);recipes.filter(r=>(r.recipeJson||[]).some(x=>x.ing===id)).forEach(r=>pushRecipe(r));}
 function openAddIngModal(){
   document.getElementById('modal-ing-search').value='';
   document.getElementById('modal-ing-results').style.display='none';
