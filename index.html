@@ -972,7 +972,7 @@ function renderRecipeIngredients(){
   document.getElementById('re-ingredients').innerHTML=currentIngredients.map((item,i)=>{const ing=getIngById(item.ing);const c=ing?(costPerUnit(ing)*item.qty).toFixed(2):'—';const displayName=ing?ing.name:(item.name||item.ing);return`<div class="ing-row"><span class="ing-name">${displayName}</span><input class="ing-qty" type="number" step="0.01" value="${item.qty}" onchange="updateIngQty(${i},this.value)"><span class="ing-unit">${item.unit}</span><span class="ing-cost">${ing?'$'+c:'—'}</span><span class="ing-remove" onclick="removeIng(${i})">✕</span></div>`;}).join('')||`<div style="color:var(--text3);font-size:13px;padding:8px 0">No ingredients yet. Click + Add to begin.</div>`;
   updateCostSummary();
 }
-function updateIngQty(i,v){currentIngredients[i].qty=parseFloat(v)||0;const costs=document.querySelectorAll('#re-ingredients .ing-cost');if(costs[i]){const ing=getIngById(currentIngredients[i].ing);costs[i].textContent=ing?'
+function updateIngQty(i,v){currentIngredients[i].qty=parseFloat(v)||0;const costs=document.querySelectorAll('#re-ingredients .ing-cost');if(costs[i]){const ing=getIngById(currentIngredients[i].ing);costs[i].textContent=ing?'$'+(costPerUnit(ing)*(parseFloat(v)||0)).toFixed(2):'-';}updateCostSummary();scheduleAutoSave();}
 function removeIng(i){currentIngredients.splice(i,1);renderRecipeIngredients();scheduleAutoSave();}
 function updateCostSummary(){
   const ic=recipeIngCost(currentIngredients),lm=parseFloat(document.getElementById('re-labor').value)||0,p=parseFloat(document.getElementById('re-price').value)||0;
