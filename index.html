@@ -250,7 +250,7 @@ tbody tr:hover{background:var(--surface2)}
                 <div><label class="form-label">Category</label><select class="form-input" id="re-cat" onchange="scheduleAutoSave()"></select></div>
               </div>
               <div class="form-grid-2" style="margin-bottom:0">
-                <div><label class="form-label">Sell price ($)</label><input class="form-input" id="re-price" type="number" step="0.01" oninput="updateCostSummary();scheduleAutoSave()"></div>
+                <div><label class="form-label">Sell price ($)</label><input class="form-input" id="re-price" type="number" step="0.5" oninput="updateCostSummary();scheduleAutoSave()"></div>
                 <div><label class="form-label">Labor time (min)</label><input class="form-input" id="re-labor" type="number" step="0.5" value="2" oninput="updateCostSummary();scheduleAutoSave()"></div>
               </div>
               <label class="form-label">Notes</label>
@@ -412,7 +412,7 @@ tbody tr:hover{background:var(--surface2)}
     </div>
     <input type="hidden" id="modal-ing-id">
     <div class="form-grid-2" style="margin-bottom:0">
-      <div><label class="form-label">Quantity</label><input class="form-input" id="modal-ing-qty" type="number" step="0.01" style="margin-bottom:0"></div>
+      <div><label class="form-label">Quantity</label><input class="form-input" id="modal-ing-qty" type="number" step="0.5" style="margin-bottom:0"></div>
       <div><label class="form-label">Unit</label><input class="form-input" id="modal-ing-unit" placeholder="auto-filled" style="margin-bottom:0"></div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal('add-ing-modal')">Cancel</button><button class="btn btn-green" id="btn-confirm-add-ing" onclick="confirmAddIng()" disabled>Add</button></div>
@@ -423,7 +423,7 @@ tbody tr:hover{background:var(--surface2)}
     <div class="modal-title">New ingredient</div>
     <label class="form-label">Name</label><input class="form-input" id="ni-name">
     <div class="form-grid-2"><div><label class="form-label">Category</label><select class="form-input" id="ni-cat"></select></div><div><label class="form-label">Unit</label><input class="form-input" id="ni-unit"></div></div>
-    <div class="form-grid-2"><div><label class="form-label">Pack size</label><input class="form-input" id="ni-pack-size" type="number"></div><div><label class="form-label">Pack cost ($)</label><input class="form-input" id="ni-pack-cost" type="number" step="0.01"></div></div>
+    <div class="form-grid-2"><div><label class="form-label">Pack size</label><input class="form-input" id="ni-pack-size" type="number" step="0.5"></div><div><label class="form-label">Pack cost ($)</label><input class="form-input" id="ni-pack-cost" type="number" step="0.5"></div></div>
     <label class="form-label">Notes</label><input class="form-input" id="ni-notes" placeholder="Supplier, source, substitution notes…" style="margin-bottom:0">
     <div class="modal-footer"><button class="btn" onclick="closeModal('new-ing-modal')">Cancel</button><button class="btn btn-green" onclick="confirmNewIng()">Save</button></div>
   </div>
@@ -434,7 +434,7 @@ tbody tr:hover{background:var(--surface2)}
     <input type="hidden" id="ei-id">
     <label class="form-label">Name</label><input class="form-input" id="ei-name">
     <div class="form-grid-2"><div><label class="form-label">Category</label><select class="form-input" id="ei-cat"></select></div><div><label class="form-label">Unit</label><input class="form-input" id="ei-unit"></div></div>
-    <div class="form-grid-2"><div><label class="form-label">Pack size</label><input class="form-input" id="ei-pack-size" type="number"></div><div><label class="form-label">Pack cost ($)</label><input class="form-input" id="ei-pack-cost" type="number" step="0.01"></div></div>
+    <div class="form-grid-2"><div><label class="form-label">Pack size</label><input class="form-input" id="ei-pack-size" type="number" step="0.5"></div><div><label class="form-label">Pack cost ($)</label><input class="form-input" id="ei-pack-cost" type="number" step="0.5"></div></div>
     <label class="form-label">Notes</label><input class="form-input" id="ei-notes" placeholder="Supplier, source, substitution notes…" style="margin-bottom:0">
     <div class="modal-footer"><button class="btn btn-green" onclick="confirmEditIng()">Done</button></div>
   </div>
@@ -969,7 +969,7 @@ function loadRecipeInEditor(id){
   renderRecipeIngredients();updateCostSummary();
 }
 function renderRecipeIngredients(){
-  document.getElementById('re-ingredients').innerHTML=currentIngredients.map((item,i)=>{const ing=getIngById(item.ing);const c=ing?(costPerUnit(ing)*item.qty).toFixed(2):'—';const displayName=ing?ing.name:(item.name||item.ing);return`<div class="ing-row"><span class="ing-name">${displayName}</span><input class="ing-qty" type="number" step="0.01" value="${item.qty}" onchange="updateIngQty(${i},this.value)"><span class="ing-unit">${item.unit}</span><span class="ing-cost">${ing?'$'+c:'—'}</span><span class="ing-remove" onclick="removeIng(${i})">✕</span></div>`;}).join('')||`<div style="color:var(--text3);font-size:13px;padding:8px 0">No ingredients yet. Click + Add to begin.</div>`;
+  document.getElementById('re-ingredients').innerHTML=currentIngredients.map((item,i)=>{const ing=getIngById(item.ing);const c=ing?(costPerUnit(ing)*item.qty).toFixed(2):'—';const displayName=ing?ing.name:(item.name||item.ing);return`<div class="ing-row"><span class="ing-name">${displayName}</span><input class="ing-qty" type="number" step="0.5" value="${item.qty}" onchange="updateIngQty(${i},this.value)"><span class="ing-unit">${item.unit}</span><span class="ing-cost">${ing?'$'+c:'—'}</span><span class="ing-remove" onclick="removeIng(${i})">✕</span></div>`;}).join('')||`<div style="color:var(--text3);font-size:13px;padding:8px 0">No ingredients yet. Click + Add to begin.</div>`;
   updateCostSummary();
 }
 function updateIngQty(i,v){currentIngredients[i].qty=parseFloat(v)||0;const costs=document.querySelectorAll('#re-ingredients .ing-cost');if(costs[i]){const ing=getIngById(currentIngredients[i].ing);costs[i].textContent=ing?'$'+(costPerUnit(ing)*(parseFloat(v)||0)).toFixed(2):'-';}updateCostSummary();scheduleAutoSave();}
