@@ -484,6 +484,17 @@ async function sheetsAppend(range,rows){
 
 // ── PUSH HELPERS ─────────────────────────────────────────────
 // Called automatically whenever a record is saved locally.
+
+async function findSheetRow(tab,id){
+  // Reads column A WITHOUT filtering blank rows so the returned index
+  // correctly maps to the physical sheet row number (rowNum+2).
+  await ensureToken();
+  const url=`${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(tab+'!A:A')}?majorDimension=ROWS`;
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken},keepalive:isUnloading});
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Sheets API error');}
+  const rows=((await res.json()).values||[]).slice(1); // drop header row
+  return rows.findIndex(row=>String(row[0]||'').trim()===id);
+}
 // Shows a brief status indicator without blocking the UI.
 
 function ingToRow(ing){
@@ -504,9 +515,7 @@ async function pushIngredient(ing){
   if(!accessToken||!SHEET_ID) return;
   setSyncState('loading','Saving…');
   try{
-    // Find the row in the sheet by id
-    const allRows = await sheetsGet('Ingredients!A:A');
-    const rowNum  = allRows.findIndex(r => r.id === ing.id);
+    const rowNum = await findSheetRow('Ingredients', ing.id);
     if(rowNum >= 0){
       await sheetsUpdate(`Ingredients!A${rowNum+2}:I${rowNum+2}`, [ingToRow(ing)]);
     } else {
@@ -524,8 +533,7 @@ async function pushRecipe(r){
   if(!accessToken||!SHEET_ID) return;
   setSyncState('loading','Saving…');
   try{
-    const allRows = await sheetsGet('Recipes!A:A');
-    const rowNum  = allRows.findIndex(row => row.id === r.id);
+    const rowNum = await findSheetRow('Recipes', r.id);
     if(rowNum >= 0){
       await sheetsUpdate(`Recipes!A${rowNum+2}:O${rowNum+2}`, [recipeToRow(r)]);
     } else {
@@ -542,8 +550,7 @@ async function pushRecipe(r){
 async function deleteSheetRow(tab, id){
   // Fetches column A to find the row, then clears it and shifts up via batchUpdate
   if(!accessToken||!SHEET_ID) return;
-  const allRows = await sheetsGet(`${tab}!A:A`);
-  const rowNum  = allRows.findIndex(r => r.id === id);
+  const rowNum = await findSheetRow(tab, id);
   if(rowNum < 0) return; // not found in sheet — nothing to delete remotely
   // Use batchUpdate deleteDimension to remove the row entirely
   await ensureToken();
