@@ -448,6 +448,7 @@ let recipes=[], ingredients=[], menuCategories=[], ingCategories=[];
 let currentRecipeId=null, currentIngredients=[];
 let sortCol=null, sortDir=1;
 let isConnected=false;
+let isUnloading=false;
 let visibleCols={cogs:true,price:true,margin:true,cogs_pct:true,taxes:true,fees:true,total_margin:true,price30:true,status:true};
 const SETTINGS={cogsPctTarget:30,laborRate:18,taxPct:6.5,posFlatFee:0.15,posPct:2.6};
 let SHEET_ID=localStorage.getItem('cogs_sheet_id')||'';
@@ -459,7 +460,7 @@ const SHEETS_BASE='https://sheets.googleapis.com/v4/spreadsheets';
 async function sheetsGet(range){
   await ensureToken();
   const url=`${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(range)}?majorDimension=ROWS`;
-  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken},keepalive:isUnloading});
   if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Sheets API error');}
   const json=await res.json();
   return rowsToObjects(json.values||[]);
@@ -468,7 +469,7 @@ async function sheetsGet(range){
 async function sheetsUpdate(range,rows){
   await ensureToken();
   const url=`${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
-  const res=await fetch(url,{method:'PUT',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({range,majorDimension:'ROWS',values:rows})});
+  const res=await fetch(url,{method:'PUT',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({range,majorDimension:'ROWS',values:rows}),keepalive:isUnloading});
   if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Sheets write error');}
   return await res.json();
 }
@@ -476,7 +477,7 @@ async function sheetsUpdate(range,rows){
 async function sheetsAppend(range,rows){
   await ensureToken();
   const url=`${SHEETS_BASE}/${SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-  const res=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({range,majorDimension:'ROWS',values:rows})});
+  const res=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({range,majorDimension:'ROWS',values:rows}),keepalive:isUnloading});
   if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Sheets append error');}
   return await res.json();
 }
@@ -1149,6 +1150,12 @@ function exportCSV(){const h=['id','name','category','sell_price','cogs','cogs_p
 // ── INIT ───────────────────────────────────────────────────────
 try{const s=localStorage.getItem('cogs_settings');if(s)Object.assign(SETTINGS,JSON.parse(s));}catch(e){}
 window.addEventListener('load',()=>{if(CLIENT_ID&&typeof google!=='undefined'&&google.accounts)initGIS();});
+window.addEventListener('beforeunload',()=>{
+  isUnloading=true;
+  clearTimeout(autoSaveTimer);
+  const name=document.getElementById('re-name')?.value?.trim();
+  if(currentRecipeId&&name)saveRecipe();
+});
 setSyncState('','Not connected');
 if(!CLIENT_ID||!SHEET_ID)setTimeout(()=>showPage('settings'),100);
 </script>
